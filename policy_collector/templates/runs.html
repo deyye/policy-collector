@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}运行日志 - 政策文件归集系统{% endblock %}
+{% block content %}
+<h1>运行日志</h1>
+{% if running %}<div class="flash warn">有运行进行中，页面每 6 秒自动刷新…</div>{% endif %}
+
+<table class="list wide">
+  <thead>
+    <tr><th>状态</th><th>批次</th><th>来源</th><th>方式</th><th>开始</th><th>结束</th>
+        <th>发现</th><th>入库</th><th>重复</th><th>失败</th><th>待复核</th><th>排除</th></tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><span class="dot {{ r.status }}"></span> {{ r.status }}</td>
+      <td class="mono">{{ r.run_id }}</td>
+      <td>{{ smap.get(r.source_id, r.source_id or '-') }}</td>
+      <td>{{ r.kind }}</td>
+      <td class="meta">{{ (r.started_at or '')[:16] }}</td>
+      <td class="meta">{{ (r.finished_at or '')[:16] or '-' }}</td>
+      <td>{{ r.summary_obj.get('discovered', '-') }}</td>
+      <td>{{ r.summary_obj.get('ingested', '-') }}</td>
+      <td>{{ r.summary_obj.get('duplicates', '-') }}</td>
+      <td>{{ r.summary_obj.get('failed', '-') }}</td>
+      <td>{{ r.summary_obj.get('need_review', '-') }}</td>
+      <td>{{ r.summary_obj.get('excluded', '-') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block script %}
+{% if running %}
+<script>setTimeout(function(){ location.reload(); }, 6000);</script>
+{% endif %}
+{% endblock %}

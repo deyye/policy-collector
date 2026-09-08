@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}仪表盘 - 政策文件归集系统{% endblock %}
+{% block content %}
+<h1>仪表盘</h1>
+
+<div class="cards">
+  <div class="card"><div class="num">{{ stats.policies }}</div><div class="lbl">政策记录（含版本）</div></div>
+  <div class="card warn"><div class="num">{{ stats.pending_review }}</div><div class="lbl">待人工复核</div></div>
+  <div class="card"><div class="num">{{ stats.sources_enabled }}/{{ stats.sources }}</div><div class="lbl">启用来源</div></div>
+  <div class="card"><div class="num">{{ stats.runs }}</div><div class="lbl">累计运行批次</div></div>
+  <div class="card"><div class="num">{{ stats.fetches }}</div><div class="lbl">采集记录</div></div>
+  <div class="card"><div class="num">{{ stats.attachments }}</div><div class="lbl">登记附件</div></div>
+</div>
+
+<div class="quick">
+  <a class="btn primary" href="{{ url_for('sources') }}">运行采集</a>
+  <a class="btn" href="{{ url_for('policies', review='pending') }}">处理待复核</a>
+  <a class="btn" href="{{ url_for('policies') }}">浏览政策库</a>
+</div>
+
+<div class="cols">
+  <section>
+    <h2>最近入库</h2>
+    {% if recent %}
+    <table class="list">
+      {% for p in recent %}
+      <tr>
+        <td class="id">#{{ p.id }}</td>
+        <td>
+          <a href="{{ url_for('policy_detail', pid=p.id) }}">{{ p.title[:60] }}</a>
+          {% if p.need_review %}<span class="tag warn">待复核</span>{% endif %}
+        </td>
+        <td class="meta">{{ p.region }}<br>{{ (p.page_date or p.created_at or '')[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="empty">尚无入库政策 —— 从「来源与运行」点击一次 demo_local 即可离线演示。</p>{% endif %}
+  </section>
+
+  <section>
+    <h2>最近运行</h2>
+    {% if runs %}
+    <table class="list">
+      {% for r in runs %}
+      <tr>
+        <td><span class="dot {{ r.status }}"></span></td>
+        <td class="mono">{{ r.run_id }}</td>
+        <td class="meta">{{ r.started_at }}<br>{{ r.status }} · {{ r.kind }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="empty">暂无运行记录。</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

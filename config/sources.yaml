@@ -1,0 +1,62 @@
+# 政策文件归集系统 - 采集来源配置
+# 每站一条。sources 中的 name 全局唯一，作为 CLI --source / Web 界面运行参数。
+
+# 栏目规则说明：
+# - list_url:      栏目列表页地址（可含 {page} 占位符，从 1 开始）
+# - link_selector: 列表页中政策详情链接的 CSS 选择器；缺省时全页 <a> 按域名/路径过滤
+# - include:       绝对 URL 必须包含的片段（防抓站外链接/解读/导航噪音）
+# - exclude:       URL 含该片段则排除（如附件扩展名、纯索引页等）
+# - max_pages:     列表翻页上限
+# - 各站差异较大时，列表解析注册在 site_adapters.register_list_parser；
+#   详情页正文/标题/日期/附件解析注册在 site_adapters.register_detail_parser。
+
+sources:
+  # ---- 国家发展改革委（v0.1 已实测可抓：列表静态直出 ul.u-list，详情正文 div.TRS_Editor）----
+  - name: ndrc_zcwj
+    site: 国家发展改革委
+    region: 国家
+    category: 政策通知
+    enabled: true
+    list_url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/"   # 通知栏目；翻页为 index_1.html…
+    link_selector: "ul.u-list li a"
+    include: ["/xxgk/zcfb/tz/202"]   # 仅收本栏目详情页（../../jd 解读自动排除）
+    exclude: [".pdf", ".doc", ".docx", ".xls"]
+    max_pages: 1
+
+  - name: ndrc_ghxwj
+    site: 国家发展改革委
+    region: 国家
+    category: 规范性文件
+    enabled: true
+    list_url: "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/"  # 规范性文件栏目
+    link_selector: "ul.u-list li a"
+    include: ["/xxgk/zcfb/ghxwj/202"]
+    exclude: [".pdf", ".doc", ".docx", ".xls"]
+    max_pages: 1
+
+  # ---- 浙江省发展改革委（二期：列表迁入省政务公开 xxgk 异步接口，见 README 站点适配）----
+  # 注：原“投资项目政策”栏目号 col1229539002 已失效（404）；新版“政策文件”导航
+  # 经 col1599528 → col1229565788 走省政务公开平台，列表由带 token 的 JS 异步加载，
+  # 需在二期实现 xxgk 接口适配后启用；详情页 art_*.html 为静态，可直接解析。
+  - name: zjfgw_gsgg
+    site: 浙江省发展改革委
+    region: 浙江
+    category: 政策文件
+    enabled: false
+    list_url: "https://fzggw.zj.gov.cn/col/col1599528/index.html"
+    link_selector: ""
+    include: ["fzggw.zj.gov.cn", "art"]
+    exclude: []
+    max_pages: 2
+
+  # ---- 本地离线样例（demo 专用，不联网；Web 界面亦可用它一键演示）----
+  - name: demo_local
+    site: 本地样例
+    region: 样例
+    category: 演示
+    enabled: true
+    list_url: "file://samples/list.html"
+    link_selector: "li a"
+    include: ["policies"]
+    exclude: []
+    max_pages: 1

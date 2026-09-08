@@ -1,0 +1,6 @@
+# 运行时产物不入库
+data/
+*.pyc
+__pycache__/
+.venv/
+export_policies.csv

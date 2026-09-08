@@ -1,0 +1,102 @@
+/* 政策文件归集系统 Web 界面 —— 简洁政务风（浅色） */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #f4f6f9; color: #2b3440;
+  font: 14px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+a { color: #1d5fae; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.dim { color: #8a94a3; font-weight: normal; }
+.sm { font-size: 12px; }
+.meta { color: #8a94a3; font-size: 12px; white-space: nowrap; }
+.id { color: #8a94a3; white-space: nowrap; }
+
+/* 顶栏 */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #123a6d; color: #fff; padding: 0 24px; height: 52px;
+}
+.brand { font-weight: 700; font-size: 16px; letter-spacing: .5px; }
+.brand .sub { font-weight: 400; font-size: 12px; color: #b9ceea; margin-left: 10px; }
+.topbar nav a { color: #dbe7f5; margin-left: 18px; padding: 16px 2px; display: inline-block; }
+.topbar nav a:hover { color: #fff; text-decoration: none; border-bottom: 2px solid #ffc966; }
+
+main { max-width: 1180px; margin: 20px auto; padding: 0 20px; }
+h1 { font-size: 20px; margin: 6px 0 14px; }
+h2 { font-size: 15px; margin: 22px 0 8px; color: #33455c; border-left: 4px solid #1d5fae; padding-left: 8px; }
+.foot { text-align: center; color: #9aa5b1; font-size: 12px; padding: 26px 0 20px; }
+.crumb { margin: 0 0 4px; font-size: 13px; }
+.hint { color: #5b6b7d; background: #eef3fa; border: 1px solid #d7e3f2; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+
+/* 卡片与操作 */
+.cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin: 16px 0; }
+.card { background: #fff; border: 1px solid #e3e9f0; border-radius: 8px; padding: 14px 12px; text-align: center; }
+.card.warn { border-color: #f3d9a4; background: #fff8ec; }
+.card .num { font-size: 26px; font-weight: 700; color: #1d5fae; }
+.card.warn .num { color: #c97d0e; }
+.card .lbl { font-size: 12px; color: #7c8897; margin-top: 2px; }
+.quick { margin: 6px 0 10px; }
+.cols { display: grid; grid-template-columns: 3fr 2fr; gap: 18px; }
+.cols section { background: #fff; border: 1px solid #e3e9f0; border-radius: 8px; padding: 6px 14px 12px; }
+
+/* 按钮与标签 */
+.btn {
+  display: inline-block; border: 1px solid #cdd7e2; background: #fff; color: #33455c;
+  padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; line-height: 1.5;
+}
+.btn:hover { background: #f0f4fa; text-decoration: none; }
+.btn.primary { background: #1d5fae; border-color: #1d5fae; color: #fff; }
+.btn.primary:hover { background: #164f93; }
+.btn.ok { background: #e4f3e6; border-color: #b9dcbf; color: #1e7a34; }
+.btn.warn { background: #fdf0d7; border-color: #ecd49a; color: #9a6206; }
+.btn.sm { padding: 3px 10px; font-size: 12px; }
+
+.tag { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 12px; white-space: nowrap; }
+.tag.ok { background: #e4f3e6; color: #1e7a34; }
+.tag.warn { background: #fdf0d7; color: #9a6206; }
+.tag.bad { background: #fbe4e4; color: #b03030; }
+.chip { display: inline-block; background: #e8f0fb; color: #1d5fae; padding: 2px 10px; border-radius: 20px; font-size: 12px; margin-right: 6px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #b7c1cc; }
+.dot.ok { background: #2e9e4f; } .dot.running { background: #e0a020; }
+.dot.failed, .dot.partial { background: #d34a4a; }
+.empty { color: #97a2af; padding: 14px 2px; }
+
+/* 表格 */
+table.list { width: 100%; border-collapse: collapse; margin: 8px 0; }
+table.list th { text-align: left; font-size: 12px; color: #7c8897; font-weight: 600; border-bottom: 2px solid #e3e9f0; padding: 6px 8px; }
+table.list td { padding: 8px; border-bottom: 1px solid #edf1f6; vertical-align: top; }
+table.list tr:hover td { background: #f8fafd; }
+table.wide td, table.wide th { font-size: 13px; }
+td.tt { max-width: 420px; }
+.pager { display: flex; gap: 10px; align-items: center; margin: 12px 0; }
+.pg { color: #7c8897; font-size: 13px; }
+
+/* 筛选与详情 */
+.filter { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
+.filter input, .filter select { border: 1px solid #cdd7e2; border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #fff; }
+.filter input { flex: 1; min-width: 220px; }
+.detail-head { background: #fff; border: 1px solid #e3e9f0; border-radius: 8px; padding: 14px 18px; }
+.detail-head h2 { border: none; padding: 0; margin: 4px 0 8px; font-size: 17px; }
+.meta-line .kv { margin-right: 16px; color: #5b6b7d; font-size: 13px; }
+.cats { margin-top: 8px; }
+.review { background: #fff8ec; border: 1px solid #ecd49a; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.review.done { background: #f2f7f2; border-color: #cfe3d3; }
+.review-title { font-weight: 600; margin-bottom: 8px; color: #7a5204; }
+.review-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chk { font-size: 13px; color: #4a5a6d; }
+.adj-label { margin-left: 8px; }
+.reason { margin-top: 8px; font-size: 13px; color: #5b6b7d; }
+pre.content {
+  background: #fff; border: 1px solid #e3e9f0; border-radius: 8px;
+  padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
+  font-family: inherit; font-size: 13px; line-height: 1.9; max-height: 520px; overflow: auto;
+}
+.flash { padding: 8px 14px; border-radius: 6px; margin: 8px 0; font-size: 13px; }
+.flash.ok { background: #e4f3e6; color: #1e7a34; border: 1px solid #b9dcbf; }
+.flash.warn { background: #fdf0d7; color: #9a6206; border: 1px solid #ecd49a; }
+
+@media (max-width: 900px) {
+  .cards { grid-template-columns: repeat(3, 1fr); }
+  .cols { grid-template-columns: 1fr; }
+}
