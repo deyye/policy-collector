@@ -192,6 +192,29 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         if not path.is_relative_to(cfg.downloads_dir.resolve()) or not path.is_file(): abort(404)
         return send_file(path, as_attachment=True, download_name=path.name)
 
+    @app.route('/settings/model', methods=['GET','POST'])
+    def model_settings():
+        from .model_settings import save_model_settings, connection_check
+        result=None
+        if request.method=='POST':
+            if _RUN_LOCK.locked():
+                flash('采集运行中，请结束后再修改或检查模型配置','warn')
+                return redirect(url_for('model_settings'))
+            try:
+                if request.form.get('action')=='check':
+                    result=connection_check(cfg)
+                else:
+                    save_model_settings(cfg,request.form.get('provider','dashscope'),
+                        request.form.get('base_url',''),request.form.get('model',''),
+                        request.form.get('api_key','').strip(),request.form.get('api_key_env',''))
+                    flash('配置已保存在本机，后续新采集任务使用新配置；可点击检查连接。','ok')
+                    return redirect(url_for('model_settings'))
+            except ValueError as exc:
+                flash(str(exc),'warn')
+        return render_template('model_settings.html',base_url=cfg.llm.base_url,model=cfg.llm.effective_model,
+            key_env=cfg.llm.api_key_env,key_configured=bool(cfg.llm.api_key),result=result,
+            provider='dashscope' if 'aliyun' in cfg.llm.base_url else 'custom')
+
     @app.get("/health")
     def health():
         return {"ok": True, "db": str(cfg.db_path)}

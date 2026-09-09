@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import ast
 import json
 import re
 import time
@@ -154,7 +155,7 @@ class ListPageParser:
             if href in seen or not self._match(href):
                 continue
             seen.add(href)
-            title = " ".join(a.get_text(" ", strip=True).split()) or a.get("title", "")
+            title = a.get("title") or " ".join(a.get_text(" ", strip=True).split())
             links.append(CandidateLink(href, title[:300]))
         return links
 
@@ -182,28 +183,33 @@ def parse_gov_feed(raw: bytes, src: SourceConfig) -> list[CandidateLink]:
 # 栏目页不含列表，通过 <script ... unitbuild.js url="..." queryData="..."> 声明构建参数；
 # 前端 GET url?queryData 得到 {"data":{"html":"<ul>…政策列表…</ul>"}}。不执行网页脚本。
 
-_UNITBUILD_TAG_RE = re.compile(r'<script\b[^>]*AuthorizedRead/unitbuild\.js[^>]*>', re.I)
-_ATTR_RE = re.compile(r'\burl="([^"]+)"', re.I)
-_QDATA_RE = re.compile(r'\bqueryData="([^"]+)"', re.I)
-
-
 def extract_unitbuild_spec(page_html: str) -> tuple[str, dict] | None:
     """从栏目页提取 (接口相对/绝对 URL, queryData 参数 dict)。未命中返回 None。"""
-    m = _UNITBUILD_TAG_RE.search(page_html)
-    if not m:
-        return None
-    tag = m.group(0)
-    um = _ATTR_RE.search(tag)
-    qm = _QDATA_RE.search(tag)
-    if not um or not qm:
-        return None
-    try:
-        params = json.loads(qm.group(1).replace("'", '"'))
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(params, dict):
-        return None
-    return um.group(1), params
+    candidates = []
+    for tag in BeautifulSoup(page_html, "lxml").find_all("script"):
+        if "AuthorizedRead/unitbuild.js" not in tag.get("src", ""):
+            continue
+        value = tag.get("querydata", "")
+        try:
+            try:
+                params = json.loads(value)
+            except json.JSONDecodeError:
+                params = ast.literal_eval(value)
+        except (ValueError, SyntaxError):
+            continue
+        if isinstance(params, dict) and tag.get("url"):
+            candidates.append((tag["url"], params))
+    # 同页可能还有导航/页脚构建单元，优先信息列表。
+    return next((x for x in candidates if x[1].get("tagId") == "信息列表"),
+                candidates[0] if len(candidates) == 1 else None)
+
+
+class DiscoveryError(ValueError):
+    """列表未完整采完；此前成功页的候选仍可入队。"""
+
+    def __init__(self, message: str, links: list[CandidateLink]):
+        super().__init__(message)
+        self.links = list(links)
 
 
 def unit_list_links(list_html: str, src: SourceConfig, base_url: str = "") -> list[CandidateLink]:
@@ -235,6 +241,9 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
         raise ValueError("栏目页未发现 unitbuild 构建参数（结构变化或反爬页）")
     api_url, base_params = spec
     api_url = urllib.parse.urljoin(page_url, api_url)
+    endpoint, origin = urllib.parse.urlsplit(api_url), urllib.parse.urlsplit(page_url)
+    if (endpoint.scheme, endpoint.netloc) != (origin.scheme, origin.netloc) or not endpoint.path.startswith("/api-gateway/"):
+        raise ValueError("列表构建接口不在官网同源公开网关内")
     links, seen = [], set()
     for page_no in range(1, max_pages + 1):
         params = dict(base_params)
@@ -243,18 +252,18 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
             ensure_ascii=False)
         result = collector.fetch(api_url, params=params)
         if not result.ok:
-            raise ValueError(f"单元构建接口第{page_no}页请求失败: {result.error}")
+            raise DiscoveryError(f"单元构建接口第{page_no}页请求失败: {result.error}", links)
         collector.save(src.name, api_url, result.content, "json")
         try:
             payload = json.loads(result.content.decode("utf-8", "ignore"))
         except json.JSONDecodeError as e:
-            raise ValueError(f"单元构建接口第{page_no}页返回非 JSON: {e}") from e
-        if not payload.get("success"):
-            raise ValueError(f"单元构建失败: {payload.get('message') or payload.get('code')}")
+            raise DiscoveryError(f"单元构建接口第{page_no}页返回非 JSON", links) from e
+        if not isinstance(payload, dict) or payload.get("success") is not True:
+            raise DiscoveryError(f"单元构建接口第{page_no}页返回失败或结构变化", links)
         data = payload.get("data") or {}
         list_html = data.get("html", "") if isinstance(data, dict) else ""
-        if not list_html:
-            raise ValueError("单元构建返回为空（列表未生成）")
+        if not isinstance(list_html, str) or not list_html:
+            raise DiscoveryError("单元构建返回为空（列表未生成）", links)
         page_links = unit_list_links(list_html, src, base_url=page_url)
         fresh = [l for l in page_links if l.url not in seen]
         for l in fresh:
@@ -262,6 +271,6 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
         links.extend(fresh)
         if not page_links:      # 空页：翻页到底
             break
-        if not fresh:           # 全重复（异常循环保护）
-            break
+        if not fresh:           # 重复页不等于已采完，提示翻页参数/接口需维护。
+            raise DiscoveryError(f"第{page_no}页完全重复，未确认历史列表采完", links)
     return links

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}模型配置 - 政策归集{% endblock %}
+{% block content %}
+<h1>模型配置</h1>
+<p class="hint">配置实际使用的模型服务。密钥只保存到本机数据目录，不回显。环境变量的配置优先于本机配置。</p>
+<p>密钥状态：{{ '已配置（尚不代表连接成功）' if key_configured else '尚未配置' }}</p>
+<form method="post" class="review">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<p><label>服务类型 <select name="provider"><option value="dashscope" {% if provider=='dashscope' %}selected{% endif %}>阿里云百炼</option><option value="custom" {% if provider=='custom' %}selected{% endif %}>其他兼容服务 / 本机模型</option></select></label></p>
+<p><label>Base URL <input style="width:75%" name="base_url" value="{{ base_url }}" placeholder="百炼可留空采用北京兼容地址，或填控制台业务空间地址"></label></p>
+<p><label>模型名称 <input name="model" value="{{ model }}" placeholder="百炼留空使用 qwen-plus"></label></p>
+<p><label>API Key <input type="password" name="api_key" autocomplete="new-password" placeholder="填写新密钥；留空保留同地址旧密钥"></label></p>
+<p><label>密钥环境变量（可选） <input name="api_key_env" placeholder="留空采用对应服务的默认名称"></label></p>
+<button class="btn primary" name="action" value="save">保存配置</button>
+</form>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" name="action" value="check">检查已保存配置的连接</button></form>
+<p class="hint">连接检查只发送一条最小 JSON 请求，会产生少量模型调用费用；不做政策分类评测。百炼密钥地域须与服务地址一致。</p>
+{% if result %}<p class="flash {{ 'ok' if result.ok else 'warn' }}">{{ '连接成功' if result.ok else '连接未成功' }} · {{ result.error }}</p>{% endif %}
+{% endblock %}

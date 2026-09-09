@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import os
+import re
+import shlex
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -33,9 +35,17 @@ def _load_dotenv(path: Path) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        key, value = key.strip(), value.strip().strip('"').strip("'")
-        if key:
+        key = key.strip()
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            continue
+        try:
+            parts = shlex.split(value, comments=True, posix=True)
+        except ValueError:
+            continue
+        value = " ".join(parts)
+        if value:  # .env.example 的空值不覆盖 YAML/本机配置
             os.environ.setdefault(key, value)
+
 
 
 @dataclass
@@ -49,13 +59,16 @@ class LLMConfig:
     timeout_seconds: int = 60
     retries: int = 2
 
+    enable_thinking: bool | None = None
+    local_api_key: str = field(default="", repr=False)
+
     @property
     def api_key(self) -> str:
-        return os.environ.get(self.api_key_env, "")
+        return os.environ.get("LLM_API_KEY") or os.environ.get(self.api_key_env) or self.local_api_key
 
     @property
     def effective_model(self) -> str:
-        return self.model or os.environ.get("LLM_MODEL", "")
+        return os.environ.get("LLM_MODEL") or self.model
 
 
 @dataclass
@@ -100,8 +113,8 @@ class AppConfig:
             cfg.data_dir = Path(os.environ["POLICY_DATA_DIR"]).expanduser().resolve()
             cfg.downloads_dir = cfg.data_dir / "downloads"
             cfg.db_path = cfg.data_dir / "policy.db"
-        cfg.llm.base_url = os.environ.get("LLM_BASE_URL", cfg.llm.base_url)
-        return cfg
+        from .model_settings import load_model_settings
+        return load_model_settings(cfg)
 
     def _apply_yaml(self, path: Path) -> None:
         raw = self._load_yaml(path)
@@ -123,6 +136,7 @@ class AppConfig:
             max_chunks=max(1, int(lm.get("max_chunks", 24))),
             timeout_seconds=int(lm.get("timeout_seconds", 60)),
             retries=int(lm.get("retries", 2)),
+            enable_thinking=lm.get("enable_thinking"),
         )
         fc = raw.get("fetch") or {}
         self.fetch = FetchConfig(

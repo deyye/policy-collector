@@ -18,4 +18,4 @@
 演示：python -m policy_collector.cli demo --source demo_local
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

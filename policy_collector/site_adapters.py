@@ -148,10 +148,6 @@ def _zjfgw_detail(soup: BeautifulSoup, page_url: str) -> Optional[DetailResult]:
                   soup.get_text(" ", strip=True))
     if m:
         page_date = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
-    if not page_date:  # 页脚常见「发布：2026-06-05」
-        m = re.search(r"(20\d{2})-(\d{1,2})-(\d{1,2})", soup.get_text(" ", strip=True))
-        if m:
-            page_date = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
 
     attachments = []
     for a in soup.find_all("a", href=True):

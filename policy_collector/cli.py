@@ -186,6 +186,23 @@ def cmd_schedule(args: argparse.Namespace) -> int:
     return sched.run_forever(source_names=args.source.split(",") if args.source else None, prefer=args.prefer, cycles=args.cycles, limit=args.limit)
 
 
+def cmd_configure_llm(args):
+    from .model_settings import save_model_settings
+    import getpass
+    cfg=_cfg(args)
+    key='' if args.env_only else getpass.getpass('模型 API Key（不回显，仅保存在本机数据目录）：')
+    if not args.env_only and not key.strip():raise ValueError('密钥不能为空；如使用环境变量请加 --env-only')
+    save_model_settings(cfg,args.provider,args.base_url,args.model,key.strip(),args.key_env)
+    print('模型配置已保存至本机；可执行 llm-check 检查连接。')
+    return 0
+
+def cmd_llm_check(args):
+    from .model_settings import connection_check
+    result=connection_check(_cfg(args))
+    print(json.dumps(result,ensure_ascii=False,indent=2))
+    return 0 if result['ok'] else 1
+
+
 def cmd_doctor(args):
     cfg = _cfg(args)
     cfg.data_dir.mkdir(parents=True,exist_ok=True)
@@ -258,6 +275,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--limit", type=int, default=100000)
     p.add_argument("--review", default="", help="可限定 confirmed/adjusted/pending")
 
+    p=sub.add_parser('configure-llm',help='交互配置本机真实模型服务，密钥不回显')
+    p.add_argument('--provider',choices=['dashscope','custom'],default='dashscope')
+    p.add_argument('--base-url',default='')
+    p.add_argument('--model',default='')
+    p.add_argument('--key-env',default='')
+    p.add_argument('--env-only',action='store_true',help='只存服务参数，使用环境变量密钥')
+    sub.add_parser('llm-check',help='一次最小JSON连接检查，不做分类评测')
     sub.add_parser("doctor", help="检查模型配置与来源状态（不打印密钥）")
     sub.add_parser("stats", help="统计与最近运行日志")
 
@@ -289,6 +313,8 @@ def main(argv: list[str] | None = None) -> int:
         "export": cmd_export,
         "stats": cmd_stats,
         "doctor": cmd_doctor,
+        "configure-llm":cmd_configure_llm,
+        "llm-check":cmd_llm_check,
         "schedule": cmd_schedule,
         "web": cmd_web,
     }[args.cmd]

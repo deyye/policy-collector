@@ -29,7 +29,8 @@ class LLMClient:
                     headers={'Authorization':f'Bearer {self.cfg.api_key}'},
                     json={'model':self.cfg.effective_model,'temperature':temperature,
                           'response_format':{'type':'json_object'},
-                          'messages':[{'role':'system','content':system},{'role':'user','content':user}]},
+                          'messages':[{'role':'system','content':system},{'role':'user','content':user}],
+                          **({'enable_thinking':self.cfg.enable_thinking} if self.cfg.enable_thinking is not None else {})},
                     timeout=self.cfg.timeout_seconds) as r:
                     if r.status_code >= 400:
                         self.last_error=f'模型接口 HTTP {r.status_code}'

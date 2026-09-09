@@ -31,6 +31,7 @@ class RunStats:
     attachments_downloaded:int=0
     attachments_failed:int=0
     attachments_unparsed:int=0
+    documents_incomplete:int=0
     llm_classified:int=0
     rule_classified:int=0
     llm_fallback:int=0
@@ -42,7 +43,7 @@ class RunStats:
     def to_dict(self):return asdict(self)
     def __add__(self,other):return RunStats(**{k:getattr(self,k)+getattr(other,k) for k in asdict(self)})
     @property
-    def has_errors(self):return bool(self.failed or self.attachments_failed or self.llm_fallback)
+    def has_errors(self):return bool(self.failed or self.attachments_failed or self.attachments_unparsed or self.documents_incomplete or self.llm_fallback)
 
 class Pipeline:
     def __init__(self,cfg:AppConfig):
@@ -112,6 +113,7 @@ class Pipeline:
                     raise ValueError('未发现候选链接：请核实栏目、动态列表接口或选择器')
                 links.extend(found)
             except Exception as e:
+                links.extend(getattr(e, 'links', []))
                 stats.failed+=1
                 self.discovery_errors.append(f'{url}: {e}')
         for item in links:
@@ -141,6 +143,8 @@ class Pipeline:
                 fmt=self._fmt(att['url'],raw,content_type)
                 if fmt not in ('pdf','docx','doc','txt','xls','xlsx','zip','rar','ofd','wps'):
                     fmt=att.get('fmt') or fmt
+                if fmt != 'txt' and ('text/html' in content_type.lower() or raw.lstrip().lower().startswith((b'<!doctype html', b'<html'))):
+                    raise ValueError('附件返回HTML网页，未取得文件原件')
                 # A HTTP-200 error page is not a successfully downloaded PDF.
                 if fmt=='pdf' and not raw.startswith(b'%PDF-'):raise ValueError('PDF附件返回非PDF内容')
                 if fmt in ('doc','docx') and not (raw.startswith(b'PK') or raw.startswith(b'\xd0\xcf\x11\xe0')):
@@ -197,6 +201,8 @@ class Pipeline:
             if not doc.title:doc.title=(existing or {}).get('title','') or '待核实标题'
             self._attachments(source,doc,stats)
             stats.parsed+=1
+            if doc.parse_error:
+                stats.documents_incomplete+=1
             old=self.db.policy_for_url(url)
             if old and stats.attachments_failed:
                 # Do not create a false revision simply because a previously available attachment failed today.
@@ -204,6 +210,19 @@ class Pipeline:
             decision=self.dedup.check(doc)
             if decision.decision=='duplicate_skip':
                 self.db.link_source(decision.policy_id,fid,sid,url)
+                if old and old['id'] == decision.policy_id:
+                    # 同一来源重采可补齐空元数据，不改业务分类或伪造正文修订版本。
+                    current = self.db.get_policy(decision.policy_id)
+                    filled = {k: getattr(doc, k) for k in ('wenhao','page_date','doc_date','issuing_authority')
+                              if not current.get(k) and getattr(doc, k)}
+                    if filled:
+                        with self.db.tx() as c:
+                            c.execute('UPDATE policies SET '+','.join(k+'=?' for k in filled)+' WHERE id=?',
+                                      (*filled.values(), decision.policy_id))
+                            c.execute('INSERT INTO review_events(policy_id,action,before_json,after_json,note,created_at) VALUES(?,?,?,?,?,?)',
+                                (decision.policy_id, 'metadata_backfill',
+                                 json.dumps({k:current.get(k) for k in filled},ensure_ascii=False),
+                                 json.dumps(filled,ensure_ascii=False), '同一来源重采补齐空字段：'+url, now()))
                 if reclassify and not doc.parse_error and all(a['parse_status']=='ok' for a in doc.attachments) and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
                     cls=self.classifier.classify(doc,prefer)
                     self._count_classification(cls,stats)
@@ -288,12 +307,10 @@ class Pipeline:
                 if not retry_only:
                     total+=self.discover(src,run_id)
                     note='\n'.join(self.discovery_errors)
-                # Fairly rotate all known URLs, including processed/old pages. New discoveries and
-                # failures get priority, but their oldest check time prevents retry starvation.
+                # 新发现优先，其余按最近检查时间轮转；持续失败不能永远压住已采记录。
                 where=" AND status='failed'" if retry_only else ''
                 queue=self.db._conn.execute(f"""SELECT * FROM fetch_records WHERE source_id=? {where}
-                    ORDER BY CASE WHEN status IN ('discovered','failed','downloaded') THEN 0 ELSE 1 END,
-                    COALESCE(last_checked_at,''),id LIMIT ?""",(row['id'],limit)).fetchall()
+                    ORDER BY COALESCE(last_checked_at,''),id LIMIT ?""",(row['id'],limit)).fetchall()
                 for fr in queue:
                     total+=self._ingest_url(src,fr['page_url'],prefer=prefer,reclassify=reclassify)
                     with self.db.tx() as c:

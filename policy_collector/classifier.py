@@ -37,20 +37,26 @@ class RuleClassifier:
         kw_inc = [_norm(k) for k in rel.get("keywords_include", [])]
         excl = [_norm(k) for k in rel.get("exclude_types", [])]
 
-        # 1. 强排除型：标题命中会议/人事/任免/采购/解读等 → 明确不收
-        if any(e in _norm(doc.title or "") for e in excl):
+        title = _norm(doc.title or "")
+        policy_marker = any(k in title for k in ("办法", "制度", "规定", "条例", "规划", "目录", "细则", "指引"))
+        # “联席会议制度”“采购管理办法”不能因单个词被当成新闻公告。
+        if any(e in title for e in excl) and not policy_marker:
             return Classification(is_investment_policy="no", need_review=False,
                                   reason="命中排除类型关键词（会议/人事/采购等）", doc_type="其他")
         # 2. 文件类型（先算，供相关性判断复用）
         doc_type = self._doc_type(doc, head)
+        if doc_type in ("项目批复", "解读"):
+            return Classification(is_investment_policy="no", need_review=True,
+                                  reason="单个项目批复或解读不作为普遍适用政策正文归集",
+                                  doc_type=doc_type, model_version="rule-v2")
 
         # 3. 投资政策相关性
         hits = [k for k in kw_inc if k in text]
-        if len(hits) >= 2 or doc_type in ("申报通知", "项目批复"):
+        if len(hits) >= 2:
             is_inv = "yes"
         elif len(hits) == 1:
             is_inv = "pending"
-        elif doc_type in ("正式政策", "征求意见稿"):
+        elif doc_type in ("正式政策", "征求意见稿", "申报通知"):
             # 正式政策文件但正文未命中投资关键词（如印发通知正文短、内容在附件）：
             # 不武断排除，判 pending 入库交人工复核
             is_inv = "pending"
@@ -91,7 +97,7 @@ class RuleClassifier:
             need_review=True,
             reason="规则命中：" + "；".join(evidence_hits) if evidence_hits else "未命中显著规则关键词",
             evidence="",
-            model_version="rule-v1",
+            model_version="rule-v2",
         )
         if hint:
             cls.reviewer_hint = hint
@@ -102,6 +108,12 @@ class RuleClassifier:
     def _doc_type(self, doc: Document, head: str) -> str:
         dt = self.rules.get("doc_types", {})
         t = _norm(doc.title or "")
+        if any(k in t for k in ("办法", "制度", "规定", "条例", "规划", "目录", "细则", "指引")):
+            if any(_norm(k) in t for k in dt.get("draft", [])):
+                return "征求意见稿"
+            if any(k in t for k in ("解读", "一图读懂", "问答")):
+                return "解读"
+            return "正式政策"
         for key in ("draft", "interpretation", "approval", "notice", "formal"):
             kws = dt.get(key, [])
             for k in kws:

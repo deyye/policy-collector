@@ -25,7 +25,7 @@ def attachment_links(soup, page_url: str) -> list[dict]:
     _NAME_PARAMS = {"filename", "name", "file", "fileurl", "url", "attachname", "filename1", "downloadname"}
     for a in soup.find_all("a"):
         href = a.get('href','').strip()
-        name = a.get_text(' ',strip=True)
+        name = a.get('download') or a.get_text(' ',strip=True)
         # 重庆规范性文件的公开下载按钮：只解析两个字符串参数，不执行网页脚本。
         click = re.fullmatch(r"\s*downloadFj\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\);?\s*", a.get('onclick',''))
         if click:
@@ -56,7 +56,6 @@ def attachment_links(soup, page_url: str) -> list[dict]:
         path = urllib.parse.unquote(parsed.path)
         result.append({"name": name or Path(path).name,
                        "url": url, "fmt": m.group(1).lower()})
-    return result
     return result
 
 
@@ -134,17 +133,29 @@ class Parser:
         if not doc.doc_date:
             m = re.search(r"(?:成文日期|生成日期|成文时间)\s*[:：]?\s*([\d年月日/ .-]{8,24})", all_text)
             if m:
-                doc.doc_date = date_value(m.group(1))
+                doc.doc_date = doc.doc_date or date_value(m.group(1))
         if not doc.wenhao:
             # 文件编号/发文字号/文号：如浙江页面"文件编号：浙发改能源〔2026〕116号"
             m = re.search(r"(?:文件编号|发文字号|文号)\s*[:：]?\s*(\S{2,45}号)", all_text)
             if m:
                 doc.wenhao = m.group(1)
+        publisher = ""
         if not doc.issuing_authority:
             m = re.search(r"(?:发布机构|发文机关)\s*[:：]\s*(\S{2,30}?(?:发改委|政府|厅|局|委|办公室|部))", all_text)
             if m:
-                doc.issuing_authority = m.group(1)
+                publisher = m.group(1)
+        # 文号可能在正文容器外，也可能被 Word 内联标签切碎。
+        # 仅接受独立元数据/段落中的完整文号，避免把正文引用当成本文件文号。
+        if not doc.wenhao:
+            for tag in soup.select("p, span, td, .rules_tit1"):
+                value = tag.get_text("", strip=True)
+                if self._WENHAO_RE.fullmatch(value):
+                    doc.wenhao = re.sub(r"\s+", "", value)
+                    break
         doc.attachments = attachment_links(soup, page_url)
+        for tag in soup.select("p"):
+            if not tag.find(["p", "div", "table", "br", "a", "img"]):
+                tag.string = tag.get_text("", strip=True)
         from .site_adapters import get_detail_adapter
         adapter = get_detail_adapter(page_url)
         parsed = adapter(soup, page_url) if adapter else None
@@ -159,16 +170,18 @@ class Parser:
             for tag in soup.select("script,style,noscript,header,footer,nav,.toolbar,.share,.print,.breadcrumb"):
                 tag.decompose()
             main = None
-            for selector in ("#UCAP-CONTENT", "#zoom", ".TRS_Editor", "#zoomcon", ".article-content",
-                             ".article_con", ".art_con", ".bt_content", "#content", "article", ".content"):
+            for selector in ("#UCAP-CONTENT", "#zoom", ".TRS_Editor", ".TRS_UEDITOR", ".tyxlContent", "#zoomcon", ".article-content",
+                             ".tys-main-zt-show", ".article_con", ".art_con", ".bt_content", "#content", "article", ".content"):
                 candidate = soup.select_one(selector)
                 if candidate and len(candidate.get_text(strip=True)) > 20:
                     main = candidate
                     break
             if main is None:
                 main = soup.body or soup
+                doc.parse_error = '未定位正文容器，整页文本仅供复核，需维护来源适配'
             doc.content = re.sub(r"\n{3,}", "\n\n", main.get_text("\n", strip=True)).strip()
         self._fill_meta(doc, doc.content)
+        doc.issuing_authority = doc.issuing_authority or publisher
         return doc
 
     def _fill_meta(self, doc: Document, text: str) -> None:
@@ -180,17 +193,17 @@ class Parser:
             m = own or self._WENHAO_RE.search(doc.title)
             if m:
                 doc.wenhao = re.sub(r"\s+", "", m.group(1))
-        if not doc.doc_date:
+        if not doc.doc_date or not doc.issuing_authority:
             # Only a standalone signature date; never the first effective/cited date.
             dates = list(re.finditer(r"(?m)^\s*((?:19|20)\d{2}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)\s*$", text))
             if dates:
                 m = dates[-1]
-                doc.doc_date = date_value(m.group(1))
+                doc.doc_date = doc.doc_date or date_value(m.group(1))
                 if not doc.issuing_authority:
                     before = [x.strip() for x in text[:m.start()].splitlines() if x.strip()]
                     issuers = []
-                    for line in reversed(before[-5:]):
-                        if len(line) <= 45 and re.search(r"(?:人民政府|委员会|部|局|厅|办公室|发展改革委)$", line):
+                    for line in reversed(before[-20:]):
+                        if len(line) <= 45 and re.search(r"(?:人民政府|委员会|部|局|厅|办公室|发展改革委|中心)$", line):
                             issuers.insert(0, line)
                         else:
                             break

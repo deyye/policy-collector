@@ -7,7 +7,7 @@
 <table class="list wide">
   <thead>
     <tr><th>状态</th><th>批次</th><th>来源</th><th>方式</th><th>开始</th><th>结束</th>
-        <th>发现</th><th>入库</th><th>重复</th><th>失败</th><th>待复核</th><th>排除</th></tr>
+        <th>发现</th><th>入库</th><th>重复</th><th>失败</th><th>待复核</th><th>排除</th><th>需处理的问题</th></tr>
   </thead>
   <tbody>
   {% for r in rows %}
@@ -24,6 +24,13 @@
       <td>{{ r.summary_obj.get('failed', '-') }}</td>
       <td>{{ r.summary_obj.get('need_review', '-') }}</td>
       <td>{{ r.summary_obj.get('excluded', '-') }}</td>
+      <td class="meta">
+        {% if r.summary_obj.get('documents_incomplete') %}<div>正文不完整：{{ r.summary_obj.documents_incomplete }}</div>{% endif %}
+        {% if r.summary_obj.get('attachments_failed') %}<div>附件下载失败：{{ r.summary_obj.attachments_failed }}</div>{% endif %}
+        {% if r.summary_obj.get('attachments_unparsed') %}<div>附件待解析：{{ r.summary_obj.attachments_unparsed }}</div>{% endif %}
+        {% if r.summary_obj.get('llm_fallback') %}<div>模型回退：{{ r.summary_obj.llm_fallback }}</div>{% endif %}
+        {% if r.note %}<details><summary>查看详情</summary>{{ r.note }}</details>{% endif %}
+      </td>
     </tr>
   {% endfor %}
   </tbody>

@@ -241,7 +241,7 @@ def test_zj_detail_metadata_and_gateway_attachment():
     doc = Parser().parse(raw, 'html', page_url='https://fzggw.zj.gov.cn/col/col1229123351/art/2026/art_937add6719f140bdac86d5b97c525d28.html')
     assert doc.title.startswith('省发展改革委关于印发《浙江省固定资产投资项目节能审查和碳排放评价实施办法》')
     assert doc.wenhao == '浙发改能源〔2026〕116号'          # 元数据表"文件编号"
-    assert '浙江省发改委' in doc.issuing_authority
+    assert doc.issuing_authority == '浙江省发展和改革委员会'  # 优先正文落款全称，发布机构作兜底
     assert doc.doc_date == '2026-06-02' and doc.page_date == '2026-06-05'
     assert '印发给你们' in doc.content                       # div#zoom 印发通知正文
     assert len(doc.attachments) == 1
@@ -338,3 +338,36 @@ def test_jiangsu_list_and_trs_detail():
     # 页面级访问验证识别(防把验证页当政策)
     raw = (base / 'js_detail.html').read_text(encoding='utf-8', errors='ignore')
     assert _jsfgw_detail is not None and raw.count('TRS_Editor') >= 1
+
+
+def test_same_source_metadata_backfill_without_new_version_or_review_loss(pipe, cfg):
+    source = cfg.sources['test']; url = 'https://agency.gov.cn/policy/metadata.html'
+    raw = html().replace(b'<meta name="PubDate" content="2026-09-01">', b'')
+    pipe.ingest_url(source, url, raw=raw, prefer='rule')
+    row = pipe.db.query_policies()[0]
+    pipe.db.audit(row['id'], 'adjust', ['guarantee'], '已审核')
+    stats = pipe.ingest_url(source, url, raw=html(), prefer='rule')
+    updated = pipe.db.get_policy(row['id'])
+    assert stats.duplicates == 1 and len(pipe.db.versions(row['policy_key'])) == 1
+    assert updated['page_date'] == '2026-09-01' and updated['review_status'] == 'adjusted'
+    assert updated['category'] == 'guarantee'
+    assert pipe.db.review_history(row['id'])[0]['action'] == 'metadata_backfill'
+
+
+def test_failed_url_does_not_starve_older_successful_refresh(pipe, cfg, monkeypatch):
+    source = cfg.sources['test']; pipe.sync_sources(); sid = pipe.db.get_source('test')['id']
+    ok_url = 'https://agency.gov.cn/policy/ok.html'
+    pipe.ingest_url(source, ok_url, raw=html(), prefer='rule')
+    ok_row = pipe.db.get_fetch(sid, ok_url)
+    pipe.db.update_fetch(ok_row['id'], last_checked_at='2026-01-01T00:00:00')
+    failed_id = pipe.db.add_fetch(sid, 'https://agency.gov.cn/policy/failed.html', status='failed')
+    pipe.db.update_fetch(failed_id, last_checked_at='2026-09-01T00:00:00')
+    from policy_collector.pipeline import RunStats
+    monkeypatch.setattr(pipe, 'discover', lambda *a: RunStats())
+    requested = []
+    def fetch(url):
+        requested.append(url)
+        return FetchResult(content=html(), final_url=url)
+    monkeypatch.setattr(pipe.collector, 'fetch', fetch)
+    stats = pipe.run_source('test', prefer='rule', limit=1)
+    assert requested == [ok_url] and stats.duplicates == 1

@@ -83,9 +83,42 @@ sources:
     include: ["art_284_"]       # 栏目码在文件名中(art_284_<id>.html)；art_314(解读)/art_28x(要闻) 自动排除
     detail_url_pattern: "/art/20[0-9]{2}/[0-9]+/[0-9]+/art_284_[0-9]+[.]html$"
     exclude: ["index"]
-    max_pages: 1                 # 首页以 script 内嵌 XML(recordset/CDATA)输出最新 10 条；翻页为 dataproxy.jsp(POST/XML/多单元)，暂未接入
+    max_pages: 1                 # 首页以 script 内嵌 XML(recordset/CDATA)输出最新 30 条；翻页为 dataproxy.jsp(POST/XML/多单元)，暂未接入
     note: "2026-09-09 真实源验证：栏目列表(script 内嵌 recordset 记录)发现 + 详情 div.TRS_Editor 解析入库成功；CDATA 列表解析为 ListPageParser 通用能力。历史翻页待接入 dataproxy 接口。"
     link_selector: ""
+
+  - name: fj_normative
+    site: 福建省发展和改革委员会
+    region: 福建
+    category: 行政规范性文件
+    enabled: true
+    list_url: "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/"
+    include: ["/zfxxgkzl/zfxxgkzc/gfwjk/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]htm$"
+    max_pages: 1
+    note: "规范性文件库，按详情地址过滤栏目与下载按钮；附件不支持格式保留原件。"
+
+  - name: sx_normative
+    site: 陕西省发展和改革委员会
+    region: 陕西
+    category: 行政规范性文件
+    enabled: true
+    list_url: "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/"
+    include: ["/zfxxgk/zc/fgwj/xzgfxwj/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    max_pages: 1
+    note: "省发改委行政规范性文件栏目；按详情路径过滤其他信息公开导航。"
+
+  - name: hn_local_rules
+    site: 湖南省发展和改革委员会
+    region: 湖南
+    category: 地方性法规规章
+    enabled: true
+    list_url: "https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/newxxgklist.html"
+    include: ["/fgw/xxgk_70899/zcfg/dfxfg/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    max_pages: 1
+    note: "省发改委地方性法规规章栏目；省政府站外原文不纳入此来源。"
 
   - name: demo_local
     site: 本地样例（合成数据）
