@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}政策库 - 政策文件归集系统{% endblock %}
+{% block content %}
+<h1>政策库</h1>
+
+<form class="filter" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="标题 / 文号 / 正文关键词">
+  <select name="region">
+    <option value="">全部地区</option>
+    {% for r in regions %}<option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
+  <select name="category">
+    <option value="">全部类别</option>
+    {% for code, name in cat_codes.items() %}
+      <option value="{{ name }}" {% if name == category %}selected{% endif %}>{{ name }}</option>
+    {% endfor %}
+  </select>
+  <select name="review">
+    <option value="">全部状态</option>
+    <option value="pending" {% if review == 'pending' %}selected{% endif %}>待复核</option>
+    <option value="confirmed_auto" {% if review == 'confirmed_auto' %}selected{% endif %}>模型自动通过</option>
+    <option value="confirmed" {% if review == 'confirmed' %}selected{% endif %}>人工确认</option>
+    <option value="adjusted" {% if review == 'adjusted' %}selected{% endif %}>已调整</option>
+    <option value="rejected" {% if review == 'rejected' %}selected{% endif %}>已剔除</option>
+  </select>
+  <button class="btn primary" type="submit">查询</button>
+  <a class="btn" href="{{ url_for('policies') }}">清空</a>
+</form>
+
+{% if rows %}
+<table class="list wide">
+  <thead><tr><th>ID</th><th>标题</th><th>文号</th><th>类别</th><th>地区</th><th>日期</th><th>状态</th></tr></thead>
+  <tbody>
+  {% for p in rows %}
+    <tr>
+      <td class="id">#{{ p.id }}<span class="dim">v{{ p.version }}</span></td>
+      <td class="tt"><a href="{{ url_for('policy_detail', pid=p.id) }}">{{ p.title[:70] }}</a></td>
+      <td class="mono">{{ p.wenhao or '-' }}</td>
+      <td>{{ p.category_names or '未分类' }}</td>
+      <td>{{ p.region or '-' }}</td>
+      <td class="meta">{{ (p.page_date or '')[:10] or '-' }}</td>
+      <td>
+        {% if p.review_status == 'pending' %}<span class="tag warn">待复核</span>
+        {% elif p.review_status == 'rejected' %}<span class="tag bad">已剔除</span>
+        {% else %}<span class="tag ok">{{ {'confirmed':'人工确认','confirmed_auto':'自动','adjusted':'已调整'}.get(p.review_status, p.review_status) }}</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<div class="pager">
+  {% if page > 1 %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, page=page-1) }}">上一页</a>{% endif %}
+  <span class="pg">第 {{ page }} 页</span>
+  {% if has_more %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, page=page+1) }}">下一页</a>{% endif %}
+</div>
+{% else %}
+<p class="empty">没有匹配的政策记录。</p>
+{% endif %}
+{% endblock %}

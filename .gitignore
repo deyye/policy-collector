@@ -1,0 +1,12 @@
+# 运行时产物不入库
+data/
+*.pyc
+__pycache__/
+.venv/
+export_policies.csv
+
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.ingest.lock

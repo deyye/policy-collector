@@ -1,0 +1,99 @@
+# 政策文件归集系统 - 采集来源配置
+# 每站一条。sources 中的 name 全局唯一，作为 CLI --source / Web 界面运行参数。
+
+# 栏目规则说明：
+# - list_url:      栏目列表页地址（可含 {page} 占位符，从 1 开始）
+# - link_selector: 列表页中政策详情链接的 CSS 选择器；缺省时全页 <a> 按域名/路径过滤
+# - include:       绝对 URL 必须包含的片段（防抓站外链接/解读/导航噪音）
+# - exclude:       URL 含该片段则排除（如附件扩展名、纯索引页等）
+# - max_pages:     列表翻页上限
+# - 各站差异较大时，列表解析注册在 site_adapters.register_list_parser；
+#   详情页正文/标题/日期/附件解析注册在 site_adapters.register_detail_parser。
+
+sources:
+  # ---- 国家发展改革委（v0.1 已实测可抓：列表静态直出 ul.u-list，详情正文 div.TRS_Editor）----
+  - name: ndrc_zcwj
+    site: 国家发展改革委
+    region: 国家
+    category: 政策通知
+    enabled: true
+    list_url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/"   # 通知栏目；翻页为 index_1.html…
+    link_selector: "ul.u-list li a"
+    include: ["/xxgk/zcfb/tz/202"]   # 仅收本栏目详情页（../../jd 解读自动排除）
+    exclude: [".pdf", ".doc", ".docx", ".xls"]
+    max_pages: 2
+    pagination: trs
+
+  - name: ndrc_ghxwj
+    site: 国家发展改革委
+    region: 国家
+    category: 规范性文件
+    enabled: true
+    list_url: "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/"  # 规范性文件栏目
+    link_selector: "ul.u-list li a"
+    include: ["/xxgk/zcfb/ghxwj/202"]
+    exclude: [".pdf", ".doc", ".docx", ".xls"]
+    max_pages: 2
+    pagination: trs
+
+  - name: gov_latest
+    site: 中国政府网
+    region: 国家
+    category: 最新政策
+    enabled: true
+    list_url: "https://www.gov.cn/zhengce/zuixin/"
+    list_format: gov_json
+    feed_url: "https://www.gov.cn/zhengce/zuixin/ZUIXINZHENGCE.json"
+    allowed_hosts: [www.gov.cn]
+    include: ["/zhengce/"]
+    exclude: [".json"]
+    max_pages: 2
+    note: "已完成公开 JSON 列表发现、正文解析和规则模式入库验证；真实模型分类待验收。"
+
+  - name: cq_normative
+    site: 重庆市发展和改革委员会
+    region: 重庆
+    category: 行政规范性文件
+    enabled: true
+    list_url: "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/"
+    include: ["/zwgk/zfxxgkml/zcwj/xzgfxwj/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    max_pages: 1
+    note: "已采集投资政策并入库，已收紧详情网址规则排除栏目导航；不含废止失效栏目。"
+
+  - name: zjfgw_gsgg
+    site: 浙江省发展改革委
+    region: 浙江
+    category: 行政规范性文件
+    enabled: true
+    list_url: "https://fzggw.zj.gov.cn/col/col1229565788/index.html"
+    list_format: zj_unit        # 栏目页声明 unitbuild 参数 → GET JPaaS 单元接口 → data.html 列表
+    include: ["/art/"]          # 新路径 /col/.../art/YYYY/art_<hex>.html 与旧路径 /art/YYYY/M/D/art_<colid>_<id>.html 均含 /art/
+    detail_url_pattern: "/art_[0-9a-z_]+[.]html$"
+    max_pages: 40               # 每页 15 条翻页直至空页自动停止；实测 26 页有数据、第 27 页空即停，去重 387 条（2026-06→2020-01 发布），上限留余量
+    note: "已接通动态列表全量翻页（单元构建接口 paramJson pageNo/pageSize，空页自停，含新旧 art 路径），2026-09-09 真实源验证 387 条/27 页；接口参数随栏目页动态读取，不硬编码。详见 VALIDATION.md。"
+
+  - name: jsfgw_tzgg
+    site: 江苏省发展改革委
+    region: 江苏
+    category: 通知公告
+    enabled: true
+    list_url: "https://fzggw.jiangsu.gov.cn/col/col284/index.html"
+    include: ["art_284_"]       # 栏目码在文件名中(art_284_<id>.html)；art_314(解读)/art_28x(要闻) 自动排除
+    detail_url_pattern: "/art/20[0-9]{2}/[0-9]+/[0-9]+/art_284_[0-9]+[.]html$"
+    exclude: ["index"]
+    max_pages: 1                 # 首页以 script 内嵌 XML(recordset/CDATA)输出最新 10 条；翻页为 dataproxy.jsp(POST/XML/多单元)，暂未接入
+    note: "2026-09-09 真实源验证：栏目列表(script 内嵌 recordset 记录)发现 + 详情 div.TRS_Editor 解析入库成功；CDATA 列表解析为 ListPageParser 通用能力。历史翻页待接入 dataproxy 接口。"
+    link_selector: ""
+
+  - name: demo_local
+    site: 本地样例（合成数据）
+    region: 样例
+    category: 演示
+    enabled: false
+    list_url: "file://samples/list.html"
+    link_selector: "li a"
+    include: ["policies"]
+    max_pages: 1
+    note: "通过 demo 命令单独运行，不参与定期官网采集。"

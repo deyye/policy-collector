@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}来源与运行 - 政策文件归集系统{% endblock %}
+{% block content %}
+<h1>来源与运行</h1>
+
+<p class="hint">点击「运行」会执行 发现新链接 → 下载 → 解析 → 分类 → 去重 → 入库 全流程（后台运行，可到运行日志看进度）。
+真实官网站点为串行抓取，首次全量较慢属正常；分类默认使用大模型；未配置或失败时明确标记回退并进入待复核。</p>
+
+{% if not rows %}
+<div class="flash warn">来源列表为空：尚未同步 sources.yaml。请先执行 <span class="mono">python -m policy_collector.cli init-db</span>，
+或重启 Web 界面（新版启动时会自动同步）。</div>
+{% endif %}
+
+<table class="list wide">
+  <thead>
+    <tr><th>名称</th><th>站点 / 栏目</th><th>地区</th><th>类别</th><th>状态</th><th>最近检查</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+  {% for s in rows %}
+    <tr>
+      <td class="mono">{{ s.name }}</td>
+      <td>{{ s.site }}<br><span class="dim sm">{{ s.category }}</span><p class="hint">{{ s.note }}</p><p class="hint">{{ s.last_error }}</p></td>
+      <td>{{ s.region }}</td>
+      <td class="sm">{{ s.list_url[:55] }}</td>
+      <td>
+        {% if s.enabled %}<span class="tag ok">启用</span>{% else %}<span class="tag bad">停用</span>{% endif %}
+        {% if not s.in_config %}<span class="tag warn">不在配置</span>{% endif %}
+      </td>
+      <td class="meta">{{ (s.last_checked_at or '')[:16] or '-' }}</td>
+      <td>
+        {% if s.in_config and s.enabled %}
+        <form method="post" action="{{ url_for('source_run', name=s.name) }}" onsubmit="return confirm('开始运行来源 [{{ s.name }}]？');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <select name="prefer"><option value="llm">大模型</option><option value="rule">规则演示</option></select><button class="btn primary sm">运行</button>
+        </form>
+        {% else %}<span class="dim">-</span>{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="hint">启用表示纳入运行；以运行日志和最近成功时间判断实际采集情况。停用来源需补充适配并验收后启用。</p>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}政策详情 - 政策文件归集系统{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('policies') }}">← 政策库</a></p>
+<h1>#{{ p.id }} <span class="dim">v{{ p.version }}</span></h1>
+
+<div class="detail-head">
+  <h2>{{ p.title }}</h2>
+  <div class="meta-line">
+    <span class="tag {{ review_style }}">{{ {'pending':'待复核','confirmed':'人工确认','confirmed_auto':'模型自动通过（未人工复核）','adjusted':'已调整','rejected':'已剔除'}.get(p.review_status, p.review_status) }}</span>
+    {% if p.wenhao %}<span class="kv">文号：<b class="mono">{{ p.wenhao }}</b></span>{% endif %}
+    {% if p.issuing_authority %}<span class="kv">发文机关：{{ p.issuing_authority }}</span>{% endif %}
+    {% if p.region %}<span class="kv">地区：{{ p.region }}</span>{% endif %}
+    {% if p.site %}<span class="kv">来源：{{ p.site }}</span>{% endif %}
+    {% if p.page_date %}<span class="kv">发布日期：{{ p.page_date[:10] }}</span>{% endif %}
+    {% if p.doc_date %}<span class="kv">成文日期：{{ p.doc_date[:10] }}</span>{% endif %}
+    <span class="kv">模型：{{ p.model_version or 'rule' }}</span>
+  </div>
+  {% if p.category_names %}
+  <div class="cats">
+    {% for c in cats %}<span class="chip">{{ _cat_label(c) }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% if p.review_status == 'pending' or p.need_review %}
+<form class="review" method="post" action="{{ url_for('policy_review', pid=p.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="review-title">人工复核（待确认项：分类结果与"是否投资政策"需人工把关）</div>
+  <div class="review-row">
+    <button class="btn ok" name="action" value="confirm">确认采纳</button>
+    <button class="btn warn" name="action" value="reject">剔除（非政策）</button>
+    <span class="dim adj-label">调整为：</span>
+    {% for code, name in cat_codes.items() %}
+      <label class="chk"><input type="checkbox" name="categories" value="{{ code }}"
+        {% if code in cats %}checked{% endif %}> {{ name }}</label>
+    {% endfor %}
+    <button class="btn primary" name="action" value="adjust">调整分类</button>
+  </div>
+  {% if p.reason %}<div class="reason"><b>判断理由：</b>{{ p.reason }}</div>{% endif %}
+  {% if p.evidence %}<div class="reason"><b>证据：</b>{{ p.evidence }}</div>{% endif %}
+</form>
+{% else %}
+<div class="review done">
+  <span>处理状态：{{ p.review_status }}</span>
+  {% if p.reason %}<div class="reason"><b>判断理由：</b>{{ p.reason }}</div>{% endif %}
+</div>
+{% endif %}
+
+{% if p.page_url %}
+<p class="kv">原文：<a href="{{ p.page_url }}" target="_blank" rel="noopener">{{ p.page_url[:100] }}</a></p>
+{% endif %}
+
+<p class="hint">分类方式：{{ p.classification_method or '历史记录' }}。{{ p.reviewer_hint }} {{ p.fallback_reason }}</p>
+<h2>附件与原件</h2>
+{% if attachments %}
+<table class="list wide">
+  <thead><tr><th>名称</th><th>格式</th><th>解析状态</th><th>地址</th></tr></thead>
+  <tbody>
+  {% for a in attachments %}
+    <tr>
+      <td>{{ a.name }}{% if a.local_path %}<br><a href="{{ url_for('attachment_download',aid=a.id) }}">下载留存原件</a>{% endif %}
+{% if a.error %}<p class="hint">{{ a.error }}</p>{% endif %}
+{% if a.parsed_text %}<details><summary>解析文本</summary><pre class="content">{{ a.parsed_text }}</pre></details>{% endif %}</td>
+      <td class="mono">{{ a.fmt }}</td>
+      <td>{{ {'not_parsed':'未解析','ok':'已解析','failed':'失败'}.get(a.parse_status, a.parse_status) }}</td>
+      <td class="mono sm"><a href="{{ a.url }}" target="_blank" rel="noopener">{{ a.url[:80] }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p class="empty">该记录未登记附件。</p>{% endif %}
+
+<h2>来源记录</h2>
+{% for source in provenance %}<p>{{ source.site }} · <a href="{{ source.page_url }}" rel="noopener" target="_blank">{{ source.page_url }}</a></p>{% endfor %}
+{% if history %}<h2>人工复核记录</h2>{% for item in history %}<p>{{ item.created_at }} · {{ item.action }} · {{ item.note }}</p>{% endfor %}{% endif %}
+<h2>正文内容</h2>
+<pre class="content">{{ p.content }}</pre>
+
+{% if versions|length > 1 %}
+<h2>版本历史（{{ versions|length }}）</h2>
+<table class="list wide">
+  <thead><tr><th>版本</th><th>标题</th><th>日期</th><th>状态</th></tr></thead>
+  <tbody>
+  {% for v in versions %}
+    <tr>
+      <td>v{{ v.version }}</td>
+      <td><a href="{{ url_for('policy_detail', pid=v.id) }}">{{ v.title[:60] }}</a></td>
+      <td class="meta">{{ (v.created_at or '')[:16] }}</td>
+      <td>{{ v.review_status }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

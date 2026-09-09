@@ -1,0 +1,19 @@
+# 政策文件归集系统 - Python 依赖
+# 安装: pip install -r requirements.txt
+
+# HTTP 采集
+requests>=2.31.0
+
+# HTML 解析
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# PDF / Word 解析（附件正文抽取）
+pypdf>=4.0.0
+python-docx>=1.1.0
+
+# 配置读取
+PyYAML>=6.0
+
+# Web 管理界面（python -m policy_collector.cli web）
+flask>=3.0.0
