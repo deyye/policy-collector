@@ -1,0 +1,2157 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>投资政策工作台 · 界面预览</title><style>/* Investment policy workspace — sober institutional blue, paper white, restrained vermilion. */
+:root {
+  --navy:#142e4c;
+  --navy-deep:#10253e;
+  --blue:#245e98;
+  --ink:#20344d;
+  --muted:#738297;
+  --line:#e5eaf0;
+  --paper:#fff;
+  --bg:#f3f5f8;
+  --red:#b4524d;
+  --gold:#b09564;
+  --radius:9px;
+  --shadow:0 3px 16px #17324f04
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  color:var(--ink);
+  background:var(--bg);
+  font:14px/1.65 "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased
+}
+a {
+  color:var(--blue);
+  text-decoration:none
+}
+button,input,select,textarea {
+  font:inherit
+}
+button,a,input,select,summary {
+  touch-action:manipulation
+}
+a:hover {
+  color:#163e68
+}
+svg.icon {
+  flex-shrink:0;
+  vertical-align:middle
+}
+h1,h2,h3,p {
+  margin:0
+}
+h1 {
+  font-size:27px;
+  line-height:1.4;
+  font-weight:650;
+  letter-spacing:.6px
+}
+h2 {
+  font-size:16px;
+  font-weight:650
+}
+h3 {
+  font-size:14px;
+  font-weight:550
+}
+input,select,textarea {
+  color:var(--ink);
+  background:white;
+  border:1px solid #dbe2eb;
+  border-radius:5px;
+  padding:9px 12px;
+  min-height:40px;
+  max-width:100%
+}
+input::placeholder {
+  color:#8995a5
+}
+input[type=checkbox] {
+  min-height:0;
+  accent-color:var(--blue)
+}
+input:focus,select:focus,textarea:focus {
+  border-color:#4c7caa;
+  outline:3px solid #245e9814
+}
+a:focus-visible,button:focus-visible,summary:focus-visible {
+  outline:3px solid #a58043;
+  outline-offset:4px
+}
+button {
+  cursor:pointer
+}
+summary {
+  cursor:pointer;
+  color:var(--blue)
+}
+details[open] summary {
+  margin-bottom:10px
+}
+.skip-link {
+  position:fixed;
+  left:12px;
+  top:-80px;
+  z-index:100;
+  background:white;
+  padding:10px 18px
+}
+.skip-link:focus {
+  top:10px
+}
+.sidebar {
+  position:fixed;
+  inset:0 auto 0 0;
+  width:230px;
+  background:linear-gradient(170deg,#173453 0%,#11273f 75%);
+  color:#ccd7e4;
+  display:flex;
+  flex-direction:column;
+  z-index:20
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:32px 25px 35px;
+  color:white
+}
+.brand:hover {
+  color:white
+}
+.brand strong {
+  display:block;
+  font-size:22px;
+  letter-spacing:3px;
+  line-height:1.45;
+  font-weight:650
+}
+.brand small {
+  font-size:10px;
+  color:#adbed1;
+  letter-spacing:1px
+}
+.brand-mark {
+  height:37px;
+  width:34px;
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  transform:skewY(-9deg)
+}
+.brand-mark i {
+  width:8px;
+  background:#f4f6fa;
+  height:24px
+}
+.brand-mark i:nth-child(2) {
+  height:36px
+}
+.brand-mark i:nth-child(3) {
+  height:29px;
+  background:#bf6b61
+}
+.nav-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:0 24px 14px;
+  color:#8ea5bd;
+  font-size:11px;
+  letter-spacing:1px
+}
+.nav-caption span {
+  font-size:8px;
+  letter-spacing:1.6px;
+  opacity:.7
+}
+.side-nav {
+  padding:0 13px
+}
+.nav-item {
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:14px 17px;
+  margin-bottom:7px;
+  color:#becddd;
+  font-size:13px;
+  border:1px solid transparent;
+  border-radius:5px;
+  transition:background .18s
+}
+.nav-item .icon {
+  width:18px;
+  height:18px;
+  opacity:.85
+}
+.nav-item:hover {
+  color:#fff;
+  background:#ffffff08
+}
+.nav-item.active {
+  color:white;
+  background:#ffffff10;
+  border-color:#ffffff08
+}
+.nav-item.active:before {
+  content:"";
+  position:absolute;
+  left:-14px;
+  width:3px;
+  height:22px;
+  background:#c56c61;
+  border-radius:0 3px 3px 0
+}
+.nav-indicator {
+  margin-left:auto;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#d0b786
+}
+.sidebar-note {
+  margin:auto 30px 34px;
+  padding-top:60px
+}
+.note-line {
+  display:block;
+  width:26px;
+  height:2px;
+  background:#af9363;
+  margin-bottom:16px
+}
+.sidebar-note p {
+  font-size:22px;
+  font-family:"Noto Serif CJK SC","STSong","SimSun",serif;
+  line-height:1.8;
+  letter-spacing:6px;
+  color:#d8e0e9
+}
+.sidebar-note small {
+  display:block;
+  font-size:10px;
+  color:#8ea3bb;
+  margin-top:12px
+}
+.sidebar-foot {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin:0 23px;
+  padding:22px 0;
+  border-top:1px solid #ffffff12;
+  font-size:10px;
+  color:#a3b5c9
+}
+.sidebar-foot small {
+  display:block;
+  color:#7c94ae;
+  margin-top:3px
+}
+.workspace {
+  margin-left:230px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column
+}
+.workspace-bar {
+  height:70px;
+  background:white;
+  border-bottom:1px solid var(--line);
+  padding:0 36px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px
+}
+.breadcrumb {
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:13px
+}
+.breadcrumb strong {
+  font-weight:500;
+  color:#31465f
+}
+.breadcrumb>span {
+  color:#c3ccd6
+}
+.bar-meta {
+  display:flex;
+  gap:21px;
+  align-items:center;
+  color:#7c8999;
+  font-size:11px
+}
+.edition {
+  color:#8b6e43;
+  background:#f7f3ec;
+  border:1px solid #ece2d0;
+  border-radius:3px;
+  padding:3px 9px;
+  font-size:10px
+}
+main {
+  width:100%;
+  max-width:1650px;
+  margin:0 auto;
+  padding:29px 36px 24px;
+  flex:1;
+  min-width:0
+}
+.page-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  margin-bottom:25px
+}
+.eyebrow {
+  font-size:9px;
+  letter-spacing:2px;
+  color:#8391a2;
+  font-weight:500;
+  margin-bottom:6px
+}
+.page-heading p {
+  font-size:12px;
+  color:var(--muted);
+  margin-top:7px
+}
+.heading-action {
+  flex-shrink:0
+}
+.foot {
+  padding:16px 36px 22px;
+  color:#8b97a7;
+  font-size:10px;
+  display:flex;
+  justify-content:space-between
+}
+.footer-sep {
+  margin:0 9px
+}
+.hero {
+  min-height:223px;
+  background:linear-gradient(108deg,#173553,#244b6b);
+  border-radius:var(--radius);
+  position:relative;
+  overflow:hidden;
+  padding:27px 32px;
+  color:#fff;
+  display:flex;
+  justify-content:space-between
+}
+.hero-copy {
+  position:relative;
+  z-index:1
+}
+.hero-label {
+  font-size:10px;
+  color:#c4d0db;
+  letter-spacing:1.3px;
+  display:flex;
+  align-items:center;
+  gap:9px
+}
+.hero-label i {
+  height:5px;
+  width:5px;
+  border-radius:50%;
+  background:#c7ae7e
+}
+.hero h2 {
+  font-size:28px;
+  line-height:1.55;
+  letter-spacing:2px;
+  margin:12px 0 8px;
+  font-weight:550
+}
+.hero p {
+  color:#bdcddd;
+  font-size:11px
+}
+.hero a {
+  display:flex;
+  align-items:center;
+  gap:17px;
+  color:#e7edf3;
+  font-size:11px;
+  margin-top:17px;
+  width:fit-content
+}
+.hero a .icon {
+  width:15px
+}
+.hero-art {
+  position:absolute;
+  width:53%;
+  height:100%;
+  right:0;
+  bottom:0
+}
+.hero-art svg {
+  width:100%;
+  height:100%;
+  object-fit:cover
+}
+.hero-art>span {
+  position:absolute;
+  right:31px;
+  bottom:21px;
+  font-size:9px;
+  letter-spacing:4px;
+  color:#afc0cf;
+  opacity:.6
+}
+.metrics-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:17px;
+  margin:21px 0 27px
+}
+.metric {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:19px 21px;
+  box-shadow:var(--shadow)
+}
+.metric-top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  color:#64758a;
+  font-size:12px
+}
+.metric-icon {
+  background:#f0f4f9;
+  border-radius:6px;
+  color:#6282a3;
+  padding:6px;
+  line-height:1
+}
+.metric-icon .icon {
+  width:17px;
+  height:17px
+}
+.metric-value {
+  font-family:"Segoe UI",Arial,sans-serif;
+  font-size:34px;
+  line-height:1.4;
+  font-weight:600;
+  color:#1c3c60;
+  margin:4px 0 1px;
+  font-variant-numeric:tabular-nums
+}
+.metric-value>span {
+  font:11px "Microsoft YaHei",sans-serif;
+  color:#8b98a6;
+  margin-left:9px
+}
+.metric-sub {
+  font-size:10px;
+  color:#8b98a6
+}
+.metric.attention .metric-icon {
+  background:#faf1ee;
+  color:#b56b5d
+}
+.metric.attention .metric-value {
+  color:#a25449
+}
+.section-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:13px
+}
+.section-heading span {
+  color:#8a97a6;
+  font-size:10px
+}
+.category-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:15px;
+  margin-bottom:25px
+}
+.category-card {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:19px 17px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  color:var(--ink);
+  transition:border-color .2s,transform .2s
+}
+.category-card:hover {
+  border-color:#bbc9d7;
+  transform:translateY(-2px)
+}
+.category-icon {
+  color:#577b9f;
+  background:#f0f4f8;
+  border-radius:5px;
+  display:flex;
+  padding:8px
+}
+.category-icon .icon {
+  width:19px;
+  height:19px
+}
+.category-card h3 {
+  font-size:12px;
+  white-space:nowrap
+}
+.category-card h3 span {
+  font-size:9px;
+  margin-left:7px;
+  color:#8693a3;
+  font-weight:400
+}
+.category-card p {
+  font-size:9px;
+  color:#8a97a5;
+  margin-top:5px;
+  white-space:nowrap
+}
+.category-arrow {
+  margin-left:auto;
+  width:13px;
+  height:13px;
+  color:#a3afbb
+}
+.access .category-icon {
+  color:#68867f;
+  background:#eef4f2
+}
+.guarantee .category-icon {
+  color:#9a835c;
+  background:#f7f4ec
+}
+.incentive .category-icon {
+  color:#a76e65;
+  background:#f8f0ee
+}
+.dashboard-columns {
+  display:grid;
+  grid-template-columns:minmax(0,1.8fr) minmax(280px,1fr);
+  gap:22px;
+  align-items:start
+}
+.panel {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  min-width:0;
+  overflow:hidden
+}
+.panel-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  padding:19px 23px;
+  border-bottom:1px solid #edf0f4
+}
+.panel-heading h2 {
+  font-size:14px;
+  position:relative;
+  padding-left:12px
+}
+.panel-heading h2:before {
+  content:"";
+  position:absolute;
+  left:0;
+  top:5px;
+  width:3px;
+  height:13px;
+  background:#b55850;
+  border-radius:2px
+}
+.text-link {
+  font-size:10px;
+  white-space:nowrap;
+  color:#74879c
+}
+.text-link .icon {
+  width:13px;
+  height:13px;
+  margin-left:4px
+}
+.policy-feed {
+  padding:0 22px
+}
+.feed-row {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:20px 0;
+  border-bottom:1px solid #eef1f5;
+  color:var(--ink)
+}
+.feed-row:last-child {
+  border-bottom:0
+}
+.feed-row:hover h3 {
+  color:var(--blue)
+}
+.document-icon {
+  background:#f2f5f9;
+  color:#788fa6;
+  padding:9px 8px;
+  border-radius:5px;
+  line-height:1;
+  align-self:flex-start
+}
+.document-icon .icon {
+  width:17px;
+  height:17px
+}
+.feed-content {
+  flex:1;
+  min-width:0
+}
+.feed-content h3 {
+  font-size:12px;
+  line-height:1.8;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden
+}
+.feed-content p {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  font-size:9px;
+  color:#8c99a9;
+  margin-top:8px
+}
+.feed-content p>span+span:before {
+  content:"";
+  display:inline-block;
+  height:8px;
+  width:1px;
+  background:#dfe5ed;
+  margin-right:10px
+}
+.feed-row .tag {
+  align-self:center;
+  flex-shrink:0
+}
+.dashboard-aside {
+  display:grid;
+  gap:19px
+}
+.review-callout {
+  padding:23px 24px;
+  background:#f4f0ea;
+  border:1px solid #e9e0d3;
+  border-radius:var(--radius);
+  position:relative;
+  overflow:hidden
+}
+.review-callout:after {
+  content:"";
+  position:absolute;
+  width:135px;
+  height:135px;
+  border:1px solid #b69c701a;
+  transform:rotate(35deg);
+  right:-43px;
+  top:58px;
+  pointer-events:none
+}
+.callout-top {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:10px;
+  color:#90764f
+}
+.callout-top .icon {
+  width:16px;
+  height:16px
+}
+.review-callout h3 {
+  font-family:"Noto Serif CJK SC","STSong","SimSun",serif;
+  font-size:21px;
+  line-height:1.7;
+  letter-spacing:1px;
+  margin:13px 0 8px;
+  color:#615440
+}
+.review-callout p {
+  font-size:10px;
+  color:#928573
+}
+.review-callout .btn {
+  margin-top:19px;
+  display:flex;
+  justify-content:space-between;
+  border-color:#dfd4c1;
+  color:#78613f;
+  background:#ffffff70;
+  font-size:11px;
+  position:relative;
+  z-index:1
+}
+.review-callout .btn>span {
+  margin-left:auto;
+  margin-right:12px;
+  font-weight:600
+}
+.review-callout .btn .icon {
+  width:14px
+}
+.run-feed {
+  padding:5px 22px 9px
+}
+.run-item {
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  padding:15px 0;
+  position:relative
+}
+.run-item:not(:last-child):after {
+  position:absolute;
+  left:3px;
+  top:29px;
+  bottom:-11px;
+  width:1px;
+  background:#e7ecf2;
+  content:""
+}
+.timeline-dot {
+  position:relative;
+  z-index:1;
+  width:7px;
+  height:7px;
+  background:#899bae;
+  border-radius:50%;
+  margin-top:7px;
+  flex-shrink:0
+}
+.timeline-dot.ok {
+  background:#6c9685
+}
+.timeline-dot.failed {
+  background:#b86b61
+}
+.timeline-dot.partial {
+  background:#b79b6a
+}
+.run-item>div {
+  width:100%;
+  min-width:0
+}
+.run-item p {
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  font-size:9px;
+  color:#8c98a6;
+  margin-top:5px
+}
+.overview-strip {
+  display:flex;
+  align-items:center;
+  gap:28px;
+  padding:16px 3px 0;
+  font-size:10px;
+  color:#8492a3;
+  flex-wrap:wrap
+}
+.overview-strip>div {
+  display:flex;
+  gap:9px;
+  align-items:center
+}
+.overview-strip .icon {
+  width:14px;
+  height:14px
+}
+.overview-strip strong {
+  font:500 13px "Segoe UI",sans-serif;
+  color:#556c83
+}
+.overview-strip>p {
+  margin-left:auto
+}
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:9px 16px;
+  border:1px solid #d5dee8;
+  border-radius:5px;
+  background:white;
+  color:#4e627a;
+  font-size:12px;
+  min-height:39px;
+  white-space:nowrap;
+  font-weight:500;
+  transition:background .16s,border-color .16s
+}
+.btn .icon {
+  width:16px;
+  height:16px
+}
+.btn:hover {
+  background:#f3f6fa;
+  color:#27496b;
+  border-color:#b7c8d9
+}
+.btn.primary {
+  background:#245b90;
+  border-color:#245b90;
+  color:white;
+  box-shadow:0 3px 6px #1e528514
+}
+.btn.primary:hover {
+  background:#184a7b
+}
+.btn.ok {
+  background:#f0f6f3;
+  color:#48795f;
+  border-color:#ccdfd5
+}
+.btn.warn {
+  background:#faf1ed;
+  color:#a46948;
+  border-color:#ead7c9
+}
+.btn.sm {
+  padding:6px 10px;
+  min-height:32px;
+  font-size:11px
+}
+.tag,.chip {
+  display:inline-block;
+  font-size:10px;
+  line-height:1.8;
+  padding:2px 8px;
+  border-radius:3px;
+  white-space:nowrap;
+  background:#edf2f8;
+  color:#587898;
+  font-weight:400
+}
+.tag.warn {
+  background:#faf3e7;
+  color:#9b7a41
+}
+.tag.bad {
+  background:#faeeed;
+  color:#ad645e
+}
+.tag.ok {
+  background:#edf5f1;
+  color:#548772
+}
+.chip {
+  margin:3px 5px 0 0
+}
+.status-pill {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  color:#63758a;
+  white-space:nowrap
+}
+.status-pill>i,.dot {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  display:inline-block;
+  background:#94a4b5
+}
+.status-pill.ok {
+  color:#56816c
+}
+.status-pill.ok>i,.dot.ok {
+  background:#63927a
+}
+.status-pill.partial {
+  color:#9c8255
+}
+.status-pill.partial>i,.dot.partial {
+  background:#b79b6a
+}
+.status-pill.failed {
+  color:#ad645e
+}
+.status-pill.failed>i,.dot.failed {
+  background:#b96860
+}
+.status-pill.running {
+  color:#3f77a9
+}
+.status-pill.running>i,.dot.running {
+  background:#598dc0
+}
+.empty-state {
+  text-align:center;
+  padding:48px 24px
+}
+.empty-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:#f2f5f9;
+  color:#8b9fb4;
+  margin-bottom:13px
+}
+.empty-icon .icon {
+  width:25px;
+  height:25px
+}
+.empty-state h3 {
+  color:#75879a;
+  font-size:13px
+}
+.empty-state p {
+  color:#98a3af;
+  font-size:11px;
+  margin-top:7px
+}
+.empty {
+  padding:30px;
+  color:#8b98a7;
+  font-size:12px;
+  text-align:center
+}
+.flash,.hint,.preview-banner {
+  padding:13px 17px;
+  border:1px solid #dfe8f0;
+  border-radius:6px;
+  background:#edf3f8;
+  font-size:12px;
+  color:#657c92;
+  margin-bottom:18px;
+  line-height:1.9
+}
+.flash.ok {
+  background:#edf5f0;
+  color:#47785e;
+  border-color:#cfe1d6
+}
+.flash.warn,.preview-banner {
+  background:#faf4e9;
+  color:#957749;
+  border-color:#ece0c8
+}
+.preview-banner {
+  font-size:11px;
+  padding:8px 14px
+}
+.notice {
+  display:flex;
+  gap:11px;
+  align-items:flex-start;
+  background:#edf3f8;
+  padding:16px 19px;
+  border:1px solid #dfe8f0;
+  border-radius:7px;
+  font-size:12px;
+  color:#657c92;
+  margin-bottom:22px
+}
+.notice .icon {
+  color:#819ab3;
+  margin-top:1px;
+  width:17px;
+  flex-shrink:0
+}
+.notice strong {
+  display:block;
+  font-weight:500;
+  color:#4c6b88;
+  margin-bottom:3px
+}
+.notice p {
+  font-size:11px
+}
+.dim,.meta,.id {
+  color:#8b98a7;
+  font-size:11px
+}
+.mono {
+  font-family:Consolas,"SFMono-Regular",monospace;
+  font-size:11px;
+  overflow-wrap:anywhere
+}
+.sm {
+  font-size:11px
+}
+.id {
+  white-space:nowrap
+}
+.id .dim {
+  display:block;
+  font-size:9px
+}
+.meta {
+  white-space:nowrap
+}
+.table-scroll {
+  overflow:auto
+}
+.table-scroll:focus-visible {
+  outline:2px solid #b09564;
+  outline-offset:-2px
+}
+table.list {
+  width:100%;
+  border-collapse:collapse;
+  text-align:left
+}
+table.list th {
+  padding:14px 18px;
+  background:#f8fafc;
+  color:#7d8b9c;
+  font-size:10px;
+  font-weight:500;
+  white-space:nowrap;
+  border-bottom:1px solid var(--line)
+}
+table.list td {
+  padding:18px;
+  border-bottom:1px solid #edf0f4;
+  vertical-align:top;
+  font-size:11px;
+  line-height:1.9
+}
+table.list tr:last-child td {
+  border-bottom:0
+}
+table.list tbody tr:hover {
+  background:#fafbfd
+}
+td.tt {
+  min-width:230px;
+  max-width:420px
+}
+td.tt a {
+  font-size:12px;
+  color:#324c68;
+  font-weight:500
+}
+.list .mono {
+  font-size:10px
+}
+.table-caption {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:17px 20px;
+  border-bottom:1px solid var(--line);
+  align-items:center
+}
+.table-caption h2 {
+  font-size:13px
+}
+.table-caption span {
+  font-size:10px;
+  color:#8b97a6
+}
+.filter-panel {
+  padding:21px 23px;
+  margin-bottom:21px
+}
+.filter-panel h2 {
+  font-size:12px;
+  margin-bottom:15px
+}
+.filter {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap
+}
+.filter input {
+  min-width:200px;
+  flex:1
+}
+.filter select {
+  min-width:130px;
+  font-size:11px
+}
+.filter input {
+  font-size:12px
+}
+.filter .search-field {
+  display:flex;
+  align-items:center;
+  position:relative;
+  flex:1;
+  min-width:220px
+}
+.search-field .icon {
+  position:absolute;
+  left:12px;
+  width:16px;
+  height:16px;
+  color:#9aa8b7
+}
+.search-field input {
+  padding-left:37px;
+  width:100%
+}
+.pager {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:14px;
+  padding:17px 22px;
+  border-top:1px solid var(--line)
+}
+.pg {
+  font-size:11px;
+  color:#8290a0
+}
+.source-site {
+  font-size:12px;
+  font-weight:500;
+  color:#314a65
+}
+.source-code {
+  font-size:10px;
+  color:#96a2af;
+  margin-top:4px
+}
+.source-notes {
+  max-width:340px;
+  margin-top:10px;
+  font-size:10px;
+  color:#8998a8
+}
+.source-notes summary {
+  color:#7d8da0
+}
+.source-error {
+  color:#af6a5c;
+  margin-top:8px;
+  overflow-wrap:anywhere;
+  max-width:300px
+}
+.source-actions {
+  display:flex;
+  gap:7px;
+  align-items:center
+}
+.source-actions select {
+  font-size:10px;
+  padding:6px;
+  min-height:32px
+}
+.source-link {
+  display:inline-flex;
+  gap:5px;
+  align-items:center;
+  font-size:10px;
+  margin-top:7px
+}
+.source-link .icon {
+  width:12px;
+  height:12px
+}
+.crumb {
+  margin-bottom:16px;
+  font-size:12px
+}
+.detail-head {
+  background:#fff;
+  border:1px solid var(--line);
+  border-top:3px solid #b35d55;
+  border-radius:6px;
+  padding:29px 33px
+}
+.detail-head h1 {
+  font:600 23px/1.7 "Noto Serif CJK SC","STSong","SimSun",serif;
+  letter-spacing:.5px;
+  max-width:1000px;
+  margin:12px 0 22px
+}
+.document-label {
+  font-size:10px;
+  letter-spacing:2px;
+  color:#a16a60
+}
+.meta-line {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 25px;
+  border-top:1px solid #edf0f4;
+  padding-top:18px
+}
+.meta-line .kv {
+  font-size:11px;
+  color:#7b8a9b
+}
+.meta-line b {
+  font-weight:500;
+  color:#4b6179
+}
+.cats {
+  margin-top:17px
+}
+.document-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 300px;
+  gap:23px;
+  align-items:start;
+  margin-top:22px
+}
+.document-body {
+  padding:27px 32px
+}
+.document-body h2 {
+  font-size:14px;
+  margin-bottom:22px;
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+.document-body h2 .icon {
+  width:16px;
+  color:#8093a7
+}
+pre.content {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  font-family:"Noto Serif CJK SC","STSong","SimSun",serif;
+  font-size:15px;
+  line-height:2.3;
+  color:#374c63;
+  max-height:800px;
+  overflow:auto;
+  margin:0
+}
+.document-aside {
+  display:grid;
+  gap:18px
+}
+.review {
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:23px
+}
+.review-title {
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:14px
+}
+.review-row {
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap
+}
+.review-row .btn {
+  font-size:11px
+}
+.review-categories {
+  margin:17px 0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px
+}
+.chk {
+  font-size:11px;
+  color:#697d92;
+  display:flex;
+  gap:6px;
+  align-items:center
+}
+.reason {
+  font-size:11px;
+  color:#75869a;
+  line-height:1.9;
+  margin-top:17px;
+  overflow-wrap:anywhere
+}
+.reason b {
+  display:block;
+  color:#51697f;
+  font-weight:500;
+  margin-bottom:5px
+}
+.review.done {
+  background:#f3f8f5;
+  border-color:#dce9e1
+}
+.detail-block {
+  padding:20px 23px
+}
+.detail-block h2 {
+  font-size:13px;
+  margin-bottom:14px
+}
+.detail-block p {
+  font-size:11px;
+  overflow-wrap:anywhere;
+  color:#76869a;
+  margin-bottom:10px
+}
+.attachment-table {
+  margin-top:22px
+}
+.attachment-table pre.content {
+  max-height:400px;
+  font-size:12px;
+  padding:14px;
+  background:#fafbfd;
+  border:1px solid var(--line);
+  border-radius:4px
+}
+.attachment-table .hint {
+  font-size:10px;
+  margin:8px 0;
+  padding:7px 10px
+}
+.settings-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr);
+  gap:24px;
+  align-items:start
+}
+.settings-form {
+  padding:26px 28px
+}
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:23px
+}
+.form-field {
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+.form-field.full {
+  grid-column:1/-1
+}
+.form-field label {
+  font-size:12px;
+  color:#536b82
+}
+.form-field input,.form-field select {
+  width:100%;
+  font-size:12px
+}
+.form-field small {
+  font-size:10px;
+  color:#93a0af
+}
+.form-actions {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:25px;
+  padding-top:23px;
+  border-top:1px solid var(--line)
+}
+.settings-aside {
+  padding:25px
+}
+.settings-aside h2 {
+  font-size:14px;
+  margin-bottom:17px
+}
+.settings-step {
+  display:flex;
+  gap:13px;
+  margin-top:20px
+}
+.settings-step>span {
+  font:500 12px "Segoe UI",sans-serif;
+  color:#9b845b;
+  padding-top:3px
+}
+.settings-step h3 {
+  font-size:12px;
+  margin-bottom:5px
+}
+.settings-step p {
+  font-size:11px;
+  color:#8492a3;
+  line-height:1.9
+}
+.config-status {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:17px 23px;
+  border-bottom:1px solid var(--line);
+  font-size:12px
+}
+.settings-check {
+  padding:20px 25px;
+  border-top:1px solid var(--line)
+}
+.settings-check p {
+  font-size:10px;
+  color:#91a0af;
+  margin-top:10px
+}
+.settings-check .btn {
+  width:100%
+}
+@media(min-width:1600px) {
+  main {
+    padding-top:34px
+  }
+  .hero {
+    min-height:240px
+  }
+  .hero h2 {
+    font-size:31px
+  }
+  .category-card h3 {
+    font-size:13px
+  }
+  .category-card p {
+    font-size:10px
+  }
+  .feed-content h3 {
+    font-size:13px
+  }
+}
+@media(max-width:1280px) {
+  .sidebar {
+    width:204px
+  }
+  .workspace {
+    margin-left:204px
+  }
+  .brand {
+    padding-left:22px;
+    gap:11px
+  }
+  .brand strong {
+    font-size:20px
+  }
+  .brand small {
+    font-size:9px
+  }
+  main {
+    padding:25px
+  }
+  .workspace-bar {
+    padding:0 25px
+  }
+  .category-card {
+    padding:16px 12px;
+    gap:9px
+  }
+  .category-card h3 span {
+    display:block;
+    margin:2px 0
+  }
+  .category-arrow {
+    display:none
+  }
+  .metric {
+    padding:17px
+  }
+  .dashboard-columns {
+    grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr)
+  }
+  .document-layout {
+    grid-template-columns:minmax(0,1fr) 280px
+  }
+  .form-grid {
+    grid-template-columns:1fr
+  }
+  .form-field.full {
+    grid-column:auto
+  }
+}
+@media(max-width:1020px) {
+  .sidebar {
+    width:185px
+  }
+  .workspace {
+    margin-left:185px
+  }
+  .nav-caption {
+    margin:0 21px 12px
+  }
+  .nav-caption span {
+    display:none
+  }
+  .brand strong {
+    font-size:19px;
+    letter-spacing:2px
+  }
+  .brand-mark {
+    width:27px;
+    gap:3px
+  }
+  .brand-mark i {
+    width:7px
+  }
+  .brand {
+    padding:29px 20px
+  }
+  .brand small {
+    font-size:8px;
+    letter-spacing:0
+  }
+  .dashboard-columns,.settings-layout {
+    grid-template-columns:1fr
+  }
+  .dashboard-aside {
+    grid-template-columns:1fr 1fr
+  }
+  .hero-art {
+    opacity:.65
+  }
+  .category-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  .category-card h3 span {
+    display:inline-block;
+    margin-left:10px
+  }
+  .metrics-grid {
+    gap:11px
+  }
+  .metric {
+    padding:15px 12px
+  }
+  .metric-sub {
+    font-size:9px
+  }
+  .metric-value {
+    font-size:29px
+  }
+  .document-layout {
+    grid-template-columns:1fr
+  }
+  .document-aside {
+    grid-template-columns:1fr 1fr
+  }
+  .sidebar-note {
+    margin-left:25px
+  }
+  .bar-meta time {
+    display:none
+  }
+  .overview-strip>p {
+    margin-left:0
+  }
+}
+@media(max-width:700px) {
+  .sidebar {
+    position:relative;
+    width:100%;
+    background:#16314e
+  }
+  .workspace {
+    margin-left:0
+  }
+  .brand {
+    padding:17px 20px
+  }
+  .brand strong {
+    font-size:19px
+  }
+  .brand small {
+    font-size:10px
+  }
+  .brand-mark {
+    height:30px
+  }
+  .brand-mark i:nth-child(2) {
+    height:30px
+  }
+  .brand-mark i:nth-child(3) {
+    height:25px
+  }
+  .nav-caption,.sidebar-note,.sidebar-foot {
+    display:none
+  }
+  .side-nav {
+    display:flex;
+    overflow-x:auto;
+    gap:3px;
+    padding:0 12px 10px
+  }
+  .nav-item {
+    flex:1;
+    min-width:68px;
+    flex-direction:column;
+    gap:5px;
+    padding:10px 7px;
+    margin-bottom:0;
+    font-size:10px
+  }
+  .nav-item .icon {
+    width:17px;
+    height:17px
+  }
+  .nav-indicator {
+    display:none
+  }
+  .nav-item.active:before {
+    left:calc(50% - 10px);
+    bottom:0;
+    width:20px;
+    height:2px;
+    border-radius:3px
+  }
+  .workspace-bar {
+    height:52px;
+    padding:0 19px
+  }
+  .breadcrumb {
+    font-size:10px;
+    gap:9px
+  }
+  main {
+    padding:21px 16px
+  }
+  .page-heading {
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:20px
+  }
+  .page-heading h1 {
+    font-size:23px
+  }
+  .page-heading p {
+    font-size:11px;
+    max-width:270px
+  }
+  .eyebrow {
+    font-size:8px
+  }
+  .heading-action .btn {
+    font-size:10px;
+    padding:8px 11px;
+    min-height:34px
+  }
+  .heading-action .icon {
+    display:none
+  }
+  .hero {
+    padding:24px;
+    min-height:231px
+  }
+  .hero h2 {
+    font-size:25px
+  }
+  .hero p {
+    font-size:10px;
+    max-width:225px
+  }
+  .hero-art {
+    width:80%;
+    right:-100px;
+    opacity:.35
+  }
+  .hero-art>span {
+    display:none
+  }
+  .hero-label {
+    font-size:9px
+  }
+  .metrics-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:11px;
+    margin:16px 0 23px
+  }
+  .metric {
+    padding:15px
+  }
+  .metric-top {
+    font-size:11px
+  }
+  .metric-value {
+    font-size:30px
+  }
+  .category-grid {
+    gap:10px
+  }
+  .category-card {
+    padding:15px 11px;
+    gap:8px
+  }
+  .category-icon {
+    padding:6px
+  }
+  .category-icon .icon {
+    width:17px;
+    height:17px
+  }
+  .category-card h3 {
+    font-size:11px
+  }
+  .category-card h3 span {
+    display:none
+  }
+  .category-card p {
+    font-size:8px
+  }
+  .section-heading h2 {
+    font-size:14px
+  }
+  .section-heading span {
+    font-size:9px
+  }
+  .dashboard-columns {
+    gap:16px
+  }
+  .dashboard-aside {
+    grid-template-columns:1fr
+  }
+  .panel-heading {
+    padding:16px
+  }
+  .policy-feed {
+    padding:0 16px
+  }
+  .feed-row {
+    gap:10px;
+    padding:16px 0
+  }
+  .document-icon {
+    display:none
+  }
+  .feed-content h3 {
+    font-size:11px
+  }
+  .feed-content p {
+    font-size:8px;
+    gap:6px
+  }
+  .feed-row .tag {
+    font-size:8px;
+    padding:2px 5px
+  }
+  .overview-strip {
+    gap:16px
+  }
+  .overview-strip>p {
+    font-size:9px
+  }
+  .foot {
+    padding:12px 17px 22px;
+    font-size:8px;
+    gap:14px
+  }
+  .filter-panel {
+    padding:18px 16px
+  }
+  .filter select {
+    flex:1;
+    min-width:calc(50% - 10px)
+  }
+  .filter .search-field {
+    min-width:100%
+  }
+  .table-scroll table {
+    min-width:760px
+  }
+  .table-caption {
+    padding:16px
+  }
+  .table-caption span {
+    font-size:9px
+  }
+  .document-layout {
+    gap:16px
+  }
+  .document-aside {
+    grid-template-columns:1fr
+  }
+  .detail-head {
+    padding:23px 20px
+  }
+  .detail-head h1 {
+    font-size:20px
+  }
+  .document-body {
+    padding:23px 20px
+  }
+  pre.content {
+    font-size:14px;
+    line-height:2.2
+  }
+  .meta-line {
+    gap:9px 15px
+  }
+  .settings-form {
+    padding:21px
+  }
+  .settings-layout {
+    gap:16px
+  }
+  .form-actions {
+    flex-wrap:wrap
+  }
+  .notice {
+    padding:14px
+  }
+  .notice p {
+    font-size:10px
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  * {
+    transition:none!important;
+    scroll-behavior:auto!important
+  }
+  .category-card:hover {
+    transform:none
+  }
+}
+/* Document and configuration finishing details. */
+.source-name {
+  display:block;
+  font-size:13px;
+  font-weight:550
+}
+.source-column {
+  font-size:11px;
+  color:var(--muted);
+  margin:3px 0
+}
+.source-url {
+  font-size:10px
+}
+.source-url .icon,.attachment-actions .icon,.trace-item .icon {
+  width:12px;
+  height:12px
+}
+.source-note {
+  font-size:10px;
+  margin-top:9px;
+  max-width:430px
+}
+.source-error {
+  font-size:11px;
+  color:#a2554b;
+  margin-top:8px;
+  overflow-wrap:anywhere
+}
+.source-actions {
+  display:flex;
+  gap:8px;
+  align-items:center
+}
+.source-actions select {
+  font-size:11px;
+  padding:7px;
+  min-height:34px
+}
+.source-table td:first-child {
+  width:40%
+}
+.below-panel {
+  margin-top:17px
+}
+.detail-toolbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  font-size:11px
+}
+.document-main {
+  display:grid;
+  gap:20px;
+  min-width:0;
+  align-content:start
+}
+.document-aside {
+  align-content:start
+}
+.review-body,.trace-body {
+  padding:20px
+}
+.review-primary {
+  display:flex;
+  gap:8px;
+  margin-top:20px
+}
+.review-primary .btn {
+  flex:1;
+  padding:9px 7px;
+  font-size:11px
+}
+.review-adjust {
+  border-top:1px solid var(--line);
+  padding-top:20px;
+  margin-top:20px
+}
+.review-adjust h3 {
+  font-size:12px;
+  margin-bottom:12px
+}
+.checkbox-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px 6px;
+  margin-bottom:17px
+}
+.chk {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px
+}
+.reason {
+  font-size:12px;
+  line-height:1.9;
+  margin-top:19px;
+  color:#65758a
+}
+.reason b {
+  display:block;
+  font-weight:550;
+  color:#344b64;
+  margin-bottom:5px
+}
+.reason p {
+  overflow-wrap:anywhere
+}
+.review-complete {
+  padding:12px;
+  background:#f2f6f4;
+  border-radius:5px;
+  font-size:11px;
+  color:#578271;
+  margin-top:18px
+}
+.review-complete .icon {
+  width:15px;
+  height:15px
+}
+.model-trace,.history-details {
+  font-size:11px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+  margin-top:20px
+}
+.trace-item {
+  font-size:11px;
+  padding:12px 0;
+  border-bottom:1px solid #eef1f5;
+  overflow-wrap:anywhere
+}
+.trace-item:first-child {
+  padding-top:0
+}
+.trace-item:last-child {
+  border:0
+}
+.trace-item small {
+  color:var(--muted)
+}
+.trace-item a {
+  font-size:10px
+}
+.attachment-list {
+  padding:0 24px
+}
+.attachment-item {
+  padding:20px 0;
+  border-bottom:1px solid var(--line)
+}
+.attachment-item:last-child {
+  border:0
+}
+.attachment-title {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:12px;
+  overflow-wrap:anywhere
+}
+.attachment-title .icon {
+  width:18px;
+  height:18px;
+  color:#708ca9
+}
+.attachment-title strong {
+  font-weight:500
+}
+.attachment-actions {
+  display:flex;
+  gap:18px;
+  font-size:11px;
+  margin:10px 0
+}
+.attachment-item details {
+  font-size:11px
+}
+.inline-empty {
+  padding:25px;
+  color:var(--muted);
+  font-size:12px
+}
+.settings-steps {
+  padding:23px
+}
+.settings-step {
+  display:flex;
+  gap:15px;
+  margin-bottom:24px
+}
+.settings-step:last-child {
+  margin-bottom:0
+}
+.settings-step>span {
+  color:#9c896a;
+  font-size:12px;
+  font-family:Arial,sans-serif;
+  padding-top:2px
+}
+.settings-step h3 {
+  font-size:12px;
+  margin-bottom:6px
+}
+.settings-step p {
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.9
+}
+.settings-check {
+  padding:23px
+}
+.settings-check form {
+  margin-top:20px
+}
+.settings-check .btn {
+  font-size:11px;
+  width:100%
+}
+.config-status {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px
+}
+.config-status .icon {
+  width:19px;
+  height:19px;
+  color:#6585a5
+}
+.form-field small {
+  font-size:10px;
+  color:var(--muted);
+  font-weight:400;
+  line-height:1.8
+}
+.form-field.full {
+  grid-column:1/-1
+}
+.run-table td,.run-table th {
+  white-space:nowrap
+}
+.run-table td:last-child {
+  white-space:normal;
+  min-width:180px
+}
+.run-table td:nth-child(2) {
+  max-width:190px;
+  overflow-wrap:anywhere;
+  white-space:normal
+}
+.filter-panel {
+  margin-bottom:21px
+}
+.table-caption {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px
+}
+.table-caption h2 {
+  font-size:14px
+}
+.table-caption span {
+  color:var(--muted);
+  font-size:10px
+}
+@media(max-width:700px) {
+  .detail-toolbar {
+    font-size:10px
+  }
+  .source-actions {
+    flex-direction:column;
+    align-items:stretch
+  }
+  .table-caption {
+    align-items:flex-start
+  }
+  .table-caption span {
+    max-width:58%;
+    text-align:right
+  }
+  .settings-steps {
+    padding:20px
+  }
+  .document-main {
+    gap:16px
+  }
+  .detail-head .meta-line {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start
+  }
+  .attachment-title {
+    flex-wrap:wrap
+  }
+  .document-label {
+    font-size:10px
+  }
+}
+.settings-aside {
+  padding:0;
+  display:grid;
+  gap:20px
+}
+.config-status {
+  padding:0;
+  border:0;
+  justify-content:flex-start
+}
+.settings-aside .panel-heading h2 {
+  margin:0
+}
+.settings-step {
+  margin-top:0
+}
+.meta-line>span {
+  font-size:11px;
+  color:#7b8a9b
+}
+</style></head><body><noscript>请启用 JavaScript 查看静态视觉预览。</noscript><script>
+const pages={"overview": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<a class=\"nav-item\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><\/a>\n<a class=\"nav-item\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><\/a>\n<a class=\"nav-item\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><\/a>\n<a class=\"nav-item\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>工作总览<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"page-heading\"><div><div class=\"eyebrow\">OVERVIEW / 工作空间<\/div><h1>工作总览<\/h1><p>汇集政策资料，掌握采集进展，有序开展投资政策研究。<\/p><\/div><div class=\"heading-action\"><a class=\"btn primary\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg> 开始采集<\/a><\/div><\/div>\n<section class=\"hero\">\n<div class=\"hero-copy\"><span class=\"hero-label\"><i><\/i> 投资政策研究 · 信息支撑<\/span><h2>汇聚政策信息<br/>服务投资研判<\/h2><p>从政策归集到分类复核，让每一份资料有据可查。<\/p><a href=\"#policies\">进入政策资料库 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a><\/div>\n<div aria-hidden=\"true\" class=\"hero-art\"><svg fill=\"none\" viewbox=\"0 0 570 250\"><defs><lineargradient id=\"hero-line\"><stop stop-color=\"#8eb6d6\" stop-opacity=\".13\"><\/stop><stop offset=\"1\" stop-color=\"#b3c6d7\" stop-opacity=\".55\"><\/stop><\/lineargradient><\/defs><g stroke=\"url(#hero-line)\" stroke-width=\"1\"><path d=\"M0 225 280 85l285 140M40 245 280 125l245 120M70 185v-64l55-28 55 28v72m-55-100v100M200 182V59l75-38 75 38v123M275 21v161M370 194V102l58-29 58 29v112M428 73v140M200 74l75 38 75-38M200 103l75 38 75-38M200 132l75 38 75-38M370 127l58 29 58-29M370 152l58 29 58-29M70 143l55 28 55-28\"><\/path><path d=\"m0 202 210-105m150 0 205 105M0 250l280-140L565 250M120 250l160-80 160 80\"><\/path><\/g><circle cx=\"275\" cy=\"21\" fill=\"#c6ab75\" r=\"4\"><\/circle><circle cx=\"428\" cy=\"73\" fill=\"#a7c4d8\" r=\"3\"><\/circle><path d=\"M360 47h104m-52-10v20\" opacity=\".3\" stroke=\"#a7c4d8\"><\/path><\/svg><span>汇集 · 理解 · 研判<\/span><\/div>\n<\/section>\n<div class=\"metrics-grid\">\n<div class=\"metric\"><div class=\"metric-top\"><span>政策记录<\/span><span class=\"metric-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><\/span><\/div><div class=\"metric-value\">4<span>份<\/span><\/div><div class=\"metric-sub\">当前版本 · 含待复核<\/div><\/div>\n<div class=\"metric attention\"><div class=\"metric-top\"><span>待人工复核<\/span><span class=\"metric-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><path d=\"M12 7v5l3 2\"><\/path>\n<\/svg><\/span><\/div><div class=\"metric-value\">4<span>份<\/span><\/div><div class=\"metric-sub\">分类与相关性待确认<\/div><\/div>\n<div class=\"metric\"><div class=\"metric-top\"><span>启用来源<\/span><span class=\"metric-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><\/span><\/div><div class=\"metric-value\">9<span>个<\/span><\/div><div class=\"metric-sub\">已配置来源共 10 个<\/div><\/div>\n<div class=\"metric\"><div class=\"metric-top\"><span>累计运行批次<\/span><span class=\"metric-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><\/span><\/div><div class=\"metric-value\">1<span>批<\/span><\/div><div class=\"metric-sub\">采集任务运行记录<\/div><\/div>\n<\/div>\n<div class=\"section-heading\"><h2>政策分类导航<\/h2><span>按政策作用查阅资料<\/span><\/div>\n<div class=\"category-grid\">\n<a class=\"category-card guide\" href=\"#policies\"><span class=\"category-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M5 22V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0\"><\/path>\n<\/svg><\/span><div><h3>引导类<span>往哪投<\/span><\/h3><p>发展规划 · 产业方向<\/p><\/div><svg aria-hidden=\"true\" class=\"icon category-arrow\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a>\n<a class=\"category-card access\" href=\"#policies\"><span class=\"category-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6z\"><\/path><path d=\"m8 12 3 3 5-6\"><\/path>\n<\/svg><\/span><div><h3>准入类<span>让不让投<\/span><\/h3><p>项目审批 · 准入条件<\/p><\/div><svg aria-hidden=\"true\" class=\"icon category-arrow\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a>\n<a class=\"category-card guarantee\" href=\"#policies\"><span class=\"category-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><\/span><div><h3>保障类<span>靠什么投<\/span><\/h3><p>土地资金 · 要素保障<\/p><\/div><svg aria-hidden=\"true\" class=\"icon category-arrow\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a>\n<a class=\"category-card incentive\" href=\"#policies\"><span class=\"category-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 20h18M5 16l5-6 4 3 6-8m-6 0h6v6\"><\/path>\n<\/svg><\/span><div><h3>激励约束类<span>投了怎样<\/span><\/h3><p>奖补支持 · 监管评价<\/p><\/div><svg aria-hidden=\"true\" class=\"icon category-arrow\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a>\n<\/div>\n<div class=\"dashboard-columns\">\n<section class=\"panel latest-panel\"><div class=\"panel-heading\"><h2>最近入库<\/h2><a class=\"text-link\" href=\"#policies\">全部资料 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a><\/div>\n<div class=\"policy-feed\"><a class=\"feed-row\" href=\"#policy\"><span class=\"document-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><\/span><div class=\"feed-content\"><h3>浙江省重大项目前期工作管理办法<\/h3><p><span>样例<\/span><span>浙发改投资〔2025〕102号<\/span><span>2026-09-09<\/span><\/p><\/div><span class=\"tag warn\">待复核<\/span><\/a><a class=\"feed-row\" href=\"#policy\"><span class=\"document-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><\/span><div class=\"feed-content\"><h3>浙江省战略性新兴产业投资基金管理办法<\/h3><p><span>样例<\/span><span>浙发改基金〔2026〕88号<\/span><span>2026-09-09<\/span><\/p><\/div><span class=\"tag warn\">待复核<\/span><\/a><a class=\"feed-row\" href=\"#policy\"><span class=\"document-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><\/span><div class=\"feed-content\"><h3>浙江省固定资产投资项目节能审查实施细则<\/h3><p><span>样例<\/span><span>浙发改能源〔2026〕55号<\/span><span>2026-09-09<\/span><\/p><\/div><span class=\"tag warn\">待复核<\/span><\/a><a class=\"feed-row\" href=\"#policy\"><span class=\"document-icon\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><\/span><div class=\"feed-content\"><h3>关于进一步做好基础设施领域不动产投资信托基金（REITs）试点项目申报工作的通知<\/h3><p><span>样例<\/span><span>发改投资〔2026〕312号<\/span><span>2026-09-09<\/span><\/p><\/div><span class=\"tag warn\">待复核<\/span><\/a><\/div>\n<\/section>\n<div class=\"dashboard-aside\"><section class=\"review-callout\"><div class=\"callout-top\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m5 12 4 4L19 6\"><\/path><circle cx=\"12\" cy=\"12\" r=\"10\"><\/circle>\n<\/svg><span>人工复核工作区<\/span><\/div><h3>让资料更准确<br/>让判断有依据<\/h3><p>核对政策原文、分类依据及附件完整性。<\/p><a class=\"btn\" href=\"#policies\">处理待复核 <span>4<\/span><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/a><\/section>\n<section class=\"panel\"><div class=\"panel-heading\"><h2>最近运行<\/h2><a class=\"text-link\" href=\"#runs\">查看全部<\/a><\/div><div class=\"run-feed\"><div class=\"run-item\"><span class=\"timeline-dot ok\"><\/span><div><span class=\"status-pill ok\"><i><\/i>已完成<\/span><p>样例演示<span>2026-09-09 16:42<\/span><\/p><\/div><\/div><\/div><\/section>\n<\/div><\/div>\n<div class=\"overview-strip\"><div><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 7V5h6l2 2h10v13H3z\"><\/path><path d=\"M3 10h18\"><\/path>\n<\/svg><span>累计采集记录<\/span><strong>6<\/strong><\/div><div><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><span>登记附件<\/span><strong>0<\/strong><\/div><p>已入库不等于已确认，请结合复核状态使用资料。<\/p><\/div>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n", "policies": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a class=\"nav-item\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><\/a>\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<a class=\"nav-item\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><\/a>\n<a class=\"nav-item\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><\/a>\n<a class=\"nav-item\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>政策资料库<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"page-heading\"><div><div class=\"eyebrow\">POLICY LIBRARY / 资料管理<\/div><h1>政策资料库<\/h1><p>按地区、类别和复核状态查找政策，保留每份文件的来源与判断依据。<\/p><\/div><\/div>\n<section class=\"panel filter-panel\"><form action=\"#\" class=\"filter\" method=\"get\" onsubmit=\"return false;\">\n<label class=\"search-field\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"><\/circle><path d=\"m16 16 5 5\"><\/path>\n<\/svg><input aria-label=\"政策关键词\" disabled=\"\" name=\"q\" placeholder=\"搜索政策标题、文号或正文关键词\" title=\"静态预览，请启动工作台体验此功能\" type=\"search\" value=\"\"/><\/label>\n<select aria-label=\"地区\" disabled=\"\" name=\"region\" title=\"静态预览，请启动工作台体验此功能\">\n<option value=\"\">全部地区<\/option>\n<option value=\"样例\">样例<\/option>\n<\/select>\n<select aria-label=\"政策分类\" disabled=\"\" name=\"category\" title=\"静态预览，请启动工作台体验此功能\">\n<option value=\"\">全部类别<\/option>\n<option value=\"引导类\">引导类<\/option>\n<option value=\"准入类\">准入类<\/option>\n<option value=\"保障类\">保障类<\/option>\n<option value=\"激励约束类\">激励约束类<\/option>\n<\/select>\n<select aria-label=\"复核状态\" disabled=\"\" name=\"review\" title=\"静态预览，请启动工作台体验此功能\">\n<option value=\"\">全部状态<\/option>\n<option value=\"pending\">待复核<\/option>\n<option value=\"confirmed_auto\">模型自动通过<\/option>\n<option value=\"confirmed\">人工确认<\/option>\n<option value=\"adjusted\">已调整<\/option>\n<option value=\"rejected\">已剔除<\/option>\n<\/select>\n<button class=\"btn primary\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">查询<\/button>\n<a class=\"btn\" href=\"#policies\">清空<\/a>\n<\/form><\/section>\n<section class=\"panel\">\n<div class=\"table-caption\"><h2>政策文件<\/h2><span>当前页 4 条 · 点击标题查看原文与复核依据<\/span><\/div>\n<div aria-label=\"政策列表，可横向滚动\" class=\"table-scroll\" role=\"region\" tabindex=\"0\"><table class=\"list wide\">\n<thead><tr><th>ID<\/th><th>标题<\/th><th>文号<\/th><th>类别<\/th><th>地区<\/th><th>日期<\/th><th>状态<\/th><\/tr><\/thead>\n<tbody>\n<tr>\n<td class=\"id\">#4<span class=\"dim\">v1<\/span><\/td>\n<td class=\"tt\"><a href=\"#policy\">浙江省重大项目前期工作管理办法<\/a><\/td>\n<td class=\"mono\">浙发改投资〔2025〕102号<\/td>\n<td>准入类,激励约束类<\/td>\n<td>样例<\/td>\n<td class=\"meta\">-<\/td>\n<td>\n<span class=\"tag warn\">待复核<\/span>\n<\/td>\n<\/tr>\n<tr>\n<td class=\"id\">#3<span class=\"dim\">v1<\/span><\/td>\n<td class=\"tt\"><a href=\"#policy\">浙江省战略性新兴产业投资基金管理办法<\/a><\/td>\n<td class=\"mono\">浙发改基金〔2026〕88号<\/td>\n<td>引导类,准入类,保障类,激励约束类<\/td>\n<td>样例<\/td>\n<td class=\"meta\">-<\/td>\n<td>\n<span class=\"tag warn\">待复核<\/span>\n<\/td>\n<\/tr>\n<tr>\n<td class=\"id\">#2<span class=\"dim\">v1<\/span><\/td>\n<td class=\"tt\"><a href=\"#policy\">浙江省固定资产投资项目节能审查实施细则<\/a><\/td>\n<td class=\"mono\">浙发改能源〔2026〕55号<\/td>\n<td>保障类,激励约束类<\/td>\n<td>样例<\/td>\n<td class=\"meta\">-<\/td>\n<td>\n<span class=\"tag warn\">待复核<\/span>\n<\/td>\n<\/tr>\n<tr>\n<td class=\"id\">#1<span class=\"dim\">v1<\/span><\/td>\n<td class=\"tt\"><a href=\"#policy\">关于进一步做好基础设施领域不动产投资信托基金（REITs）试点项目申报工作的通知<\/a><\/td>\n<td class=\"mono\">发改投资〔2026〕312号<\/td>\n<td>保障类,激励约束类,引导类<\/td>\n<td>样例<\/td>\n<td class=\"meta\">-<\/td>\n<td>\n<span class=\"tag warn\">待复核<\/span>\n<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<div class=\"pager\">\n<span class=\"pg\">第 1 页<\/span>\n<\/div>\n<\/section>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n", "policy": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a class=\"nav-item\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><\/a>\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<a class=\"nav-item\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><\/a>\n<a class=\"nav-item\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><\/a>\n<a class=\"nav-item\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>政策详情<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"detail-toolbar\"><a class=\"text-link\" href=\"#policies\">← 返回政策资料库<\/a><span class=\"dim mono\">档案 #1 · v1<\/span><\/div>\n<header class=\"detail-head\"><div class=\"document-label\">投资政策资料 · 样例<\/div><h1>关于进一步做好基础设施领域不动产投资信托基金（REITs）试点项目申报工作的通知<\/h1>\n<div class=\"meta-line\"><span>文号：<b>发改投资〔2026〕312号<\/b><\/span><span>发文机关：未登记<\/span><span>发布日期：未登记<\/span><span>来源：本地样例（合成数据）<\/span><\/div>\n<div class=\"cats\"><span class=\"chip\">保障类<\/span><span class=\"chip\">激励约束类<\/span><span class=\"chip\">引导类<\/span><span class=\"tag warn\">待复核<\/span><\/div><\/header>\n<div class=\"document-layout\"><div class=\"document-main\"><section class=\"panel\"><div class=\"panel-heading\"><h2>政策正文<\/h2><a class=\"text-link\" href=\"#policies\" rel=\"noopener\" target=\"_blank\">查看来源原文 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a><\/div><div class=\"document-body\"><pre class=\"content\">各省、自治区、直辖市及计划单列市、新疆生产建设兵团发展改革委：\n为贯彻落实党中央、国务院决策部署，进一步发挥基础设施领域不动产投资信托基金（REITs）对扩大有效投资的积极作用，引导社会资本参与基础设施项目建设，现就试点项目申报工作有关事项通知如下。\n一、重点支持交通、能源、市政、生态环保、仓储物流、园区基础设施、新型基础设施等领域项目。各地方发展改革委要结合本地区产业布局，做好项目储备和申报组织工作。\n二、申报项目应手续合规、权属清晰、运营稳定。项目投资规模、收益水平需符合相关要求，具体申报条件和材料清单按照《基础设施领域不动产投资信托基金（REITs）试点项目申报要求》执行。\n三、请各地于每季度末通过全国投资项目在线审批监管平台报送符合条件的项目清单，省级发展改革部门对申报材料进行初审把关。\n四、对纳入试点的项目，我委将会同有关部门在用地保障、资金支持等方面给予积极支持，并加强绩效考核和监督管理，对存在违规行为的项目实行退出机制。<\/pre><\/div><\/section>\n<section class=\"panel\"><div class=\"panel-heading\"><h2>附件与原件<\/h2><span class=\"dim sm\">0 项<\/span><\/div>\n<p class=\"inline-empty\">该记录未登记附件。<\/p><\/section>\n<\/div>\n<aside class=\"document-aside\"><section class=\"panel review-card\"><div class=\"panel-heading\"><h2>分类与复核<\/h2><\/div><div class=\"review-body\"><p class=\"hint\">结合原文确认是否属于投资政策，并核对分类结果。<\/p>\n<div class=\"reason\"><b>判断理由<\/b><p>规则命中：引导类:产业布局、引导社会资本；保障类:用地保障、资金支持、基金；激励约束类:绩效考核、监管、退出机制<\/p><\/div>\n<form action=\"#\" class=\"review-form\" method=\"post\" onsubmit=\"return false;\"><div class=\"review-primary\"><button class=\"btn primary\" disabled=\"\" name=\"action\" title=\"静态预览，请启动工作台体验此功能\" value=\"confirm\">确认采纳<\/button><button class=\"btn warn\" disabled=\"\" name=\"action\" title=\"静态预览，请启动工作台体验此功能\" value=\"reject\">剔除非政策<\/button><\/div><div class=\"review-adjust\"><h3>调整政策分类<\/h3><div class=\"checkbox-grid\"><label class=\"chk\"><input checked=\"\" disabled=\"\" name=\"categories\" title=\"静态预览，请启动工作台体验此功能\" type=\"checkbox\" value=\"guide\"/>引导类<\/label><label class=\"chk\"><input disabled=\"\" name=\"categories\" title=\"静态预览，请启动工作台体验此功能\" type=\"checkbox\" value=\"access\"/>准入类<\/label><label class=\"chk\"><input checked=\"\" disabled=\"\" name=\"categories\" title=\"静态预览，请启动工作台体验此功能\" type=\"checkbox\" value=\"guarantee\"/>保障类<\/label><label class=\"chk\"><input checked=\"\" disabled=\"\" name=\"categories\" title=\"静态预览，请启动工作台体验此功能\" type=\"checkbox\" value=\"incentive\"/>激励约束类<\/label><\/div><button class=\"btn\" disabled=\"\" name=\"action\" title=\"静态预览，请启动工作台体验此功能\" value=\"adjust\">保存分类调整<\/button><\/div><\/form>\n<p class=\"hint below-panel\">命中类别过多（≥3类混杂），需人工确认 <\/p><details class=\"model-trace\"><summary>查看分类方式<\/summary><p class=\"hint\">方式：rule<br/>模型：rule-v2<\/p><\/details><\/div><\/section>\n<section class=\"panel\"><div class=\"panel-heading\"><h2>来源与处理记录<\/h2><\/div><div class=\"trace-body\"><div class=\"trace-item\"><p>本地样例（合成数据）<\/p><a href=\"#policies\" rel=\"noopener\" target=\"_blank\">查看来源页面 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a><\/div><div class=\"trace-item\"><p>本地样例（合成数据）<\/p><a href=\"#policies\" rel=\"noopener\" target=\"_blank\">查看来源页面 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a><\/div><\/div><\/section><\/aside><\/div>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n", "sources": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a class=\"nav-item\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><\/a>\n<a class=\"nav-item\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><\/a>\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<a class=\"nav-item\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><\/a>\n<a class=\"nav-item\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>采集来源<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"page-heading\"><div><div class=\"eyebrow\">COLLECTION / 来源管理<\/div><h1>采集来源<\/h1><p>归集国家、浙江及外省政策文件，让政策信息持续更新。<\/p><\/div><div class=\"heading-action\"><a class=\"btn\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg> 查看运行记录<\/a><\/div><\/div>\n<div class=\"notice\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><div><h3>从政府官网，归集政策原文<\/h3><p>选择来源后启动采集，进度可在运行记录中查看。默认使用大模型分类；模型未配置或调用失败时，结果进入待复核。<\/p><\/div><\/div>\n<section class=\"panel\">\n<div class=\"table-caption\"><h2>政策来源目录<\/h2><span>10 个已登记来源 · 启用状态不代表采集成功<\/span><\/div>\n<div aria-label=\"采集来源列表，可横向滚动\" class=\"table-scroll\" role=\"region\" tabindex=\"0\"><table class=\"list wide source-table\">\n<thead><tr><th>站点与栏目<\/th><th>地区<\/th><th>接入状态<\/th><th>最近检查<\/th><th>采集操作<\/th><\/tr><\/thead>\n<tbody><tr>\n<td><strong class=\"source-name\">本地样例（合成数据）<\/strong><div class=\"source-column\">演示<\/div><a class=\"source-url\" href=\"#policies\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>通过 demo 命令单独运行，不参与定期官网采集。<\/p><p class=\"mono dim\">demo_local<\/p><\/details><\/td>\n<td>样例<\/td><td><span class=\"tag neutral\">未启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><span class=\"dim\">暂不可运行<\/span><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">国家发展改革委<\/strong><div class=\"source-column\">政策通知<\/div><a class=\"source-url\" href=\"https://www.ndrc.gov.cn/xxgk/zcfb/tz/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<\/td>\n<td>国家<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"国家发展改革委分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">国家发展改革委<\/strong><div class=\"source-column\">规范性文件<\/div><a class=\"source-url\" href=\"https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<\/td>\n<td>国家<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"国家发展改革委分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">中国政府网<\/strong><div class=\"source-column\">最新政策<\/div><a class=\"source-url\" href=\"https://www.gov.cn/zhengce/zuixin/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>已完成公开 JSON 列表发现、正文解析和规则模式入库验证；真实模型分类待验收。<\/p><p class=\"mono dim\">gov_latest<\/p><\/details><\/td>\n<td>国家<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"中国政府网分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">重庆市发展和改革委员会<\/strong><div class=\"source-column\">行政规范性文件<\/div><a class=\"source-url\" href=\"https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>已采集投资政策并入库，已收紧详情网址规则排除栏目导航；不含废止失效栏目。<\/p><p class=\"mono dim\">cq_normative<\/p><\/details><\/td>\n<td>重庆<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"重庆市发展和改革委员会分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">浙江省发展改革委<\/strong><div class=\"source-column\">行政规范性文件<\/div><a class=\"source-url\" href=\"https://fzggw.zj.gov.cn/col/col1229565788/index.html\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>已接通动态列表全量翻页（单元构建接口 paramJson pageNo/pageSize，空页自停，含新旧 art 路径），2026-09-09 真实源验证 387 条/27 页；接口参数随栏目页动态读取，不硬编码。详见 VALIDATION.md。<\/p><p class=\"mono dim\">zjfgw_gsgg<\/p><\/details><\/td>\n<td>浙江<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"浙江省发展改革委分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">江苏省发展改革委<\/strong><div class=\"source-column\">通知公告<\/div><a class=\"source-url\" href=\"https://fzggw.jiangsu.gov.cn/col/col284/index.html\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>2026-09-09 真实源验证：栏目列表(script 内嵌 recordset 记录)发现 + 详情 div.TRS_Editor 解析入库成功；CDATA 列表解析为 ListPageParser 通用能力。历史翻页待接入 dataproxy 接口。<\/p><p class=\"mono dim\">jsfgw_tzgg<\/p><\/details><\/td>\n<td>江苏<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"江苏省发展改革委分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">福建省发展和改革委员会<\/strong><div class=\"source-column\">行政规范性文件<\/div><a class=\"source-url\" href=\"https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>规范性文件库，按详情地址过滤栏目与下载按钮；附件不支持格式保留原件。<\/p><p class=\"mono dim\">fj_normative<\/p><\/details><\/td>\n<td>福建<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"福建省发展和改革委员会分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">陕西省发展和改革委员会<\/strong><div class=\"source-column\">行政规范性文件<\/div><a class=\"source-url\" href=\"https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>省发改委行政规范性文件栏目；按详情路径过滤其他信息公开导航。<\/p><p class=\"mono dim\">sx_normative<\/p><\/details><\/td>\n<td>陕西<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"陕西省发展和改革委员会分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><tr>\n<td><strong class=\"source-name\">湖南省发展和改革委员会<\/strong><div class=\"source-column\">地方性法规规章<\/div><a class=\"source-url\" href=\"https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/newxxgklist.html\" rel=\"noopener\" target=\"_blank\">查看政策栏目 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m9 15 6-6m-8 5-2 2a3 3 0 0 0 4 4l4-4a3 3 0 0 0 0-4m4-2 2-2a3 3 0 0 0-4-4l-4 4a3 3 0 0 0 0 4\"><\/path>\n<\/svg><\/a>\n<details class=\"source-note\"><summary>接入说明<\/summary><p>省发改委地方性法规规章栏目；省政府站外原文不纳入此来源。<\/p><p class=\"mono dim\">hn_local_rules<\/p><\/details><\/td>\n<td>湖南<\/td><td><span class=\"tag ok\">已启用<\/span><\/td>\n<td class=\"meta\">尚未检查<\/td>\n<td><form action=\"#\" class=\"source-actions\" method=\"post\" onsubmit=\"return false;\"><select aria-label=\"湖南省发展和改革委员会分类方式\" disabled=\"\" name=\"prefer\" title=\"静态预览，请启动工作台体验此功能\"><option value=\"llm\">大模型分类<\/option><option value=\"rule\">规则演示<\/option><\/select><button class=\"btn primary sm\" disabled=\"\" title=\"静态预览，请启动工作台体验此功能\" type=\"submit\">开始采集<\/button><\/form><\/td>\n<\/tr><\/tbody><\/table><\/div>\n<\/section>\n<p class=\"hint below-panel\">每次采集依次完成文件发现、下载解析、分类与去重入库。实际采集质量请结合运行记录和文件复核结果判断。<\/p>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n", "runs": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a class=\"nav-item\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><\/a>\n<a class=\"nav-item\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><\/a>\n<a class=\"nav-item\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><\/a>\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<a class=\"nav-item\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>运行记录<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"page-heading\"><div><div class=\"eyebrow\">OPERATIONS / 运行管理<\/div><h1>运行记录<\/h1><p>查看每次采集的处理结果，及时发现未完整归集和需要复核的材料。<\/p><\/div><\/div>\n<section class=\"panel\"><div class=\"table-caption\"><h2>采集批次<\/h2><span>展示最近批次 · 表格可横向滚动查看完整结果<\/span><\/div>\n<div aria-label=\"运行记录，可横向滚动\" class=\"table-scroll\" role=\"region\" tabindex=\"0\"><table class=\"list wide run-table\">\n<thead>\n<tr><th>状态<\/th><th>批次<\/th><th>来源<\/th><th>方式<\/th><th>开始<\/th><th>结束<\/th>\n<th>发现<\/th><th>入库<\/th><th>重复<\/th><th>失败<\/th><th>待复核<\/th><th>排除<\/th><th>需处理的问题<\/th><\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><span class=\"status-pill ok\"><i><\/i>已完成<\/span><\/td>\n<td class=\"mono\"><span title=\"demo-36f4fa9453f44396\">demo-36f4fa9453f44396<\/span><\/td>\n<td>demo_local<\/td>\n<td>demo<\/td>\n<td class=\"meta\">2026-09-09 16:42<\/td>\n<td class=\"meta\">2026-09-09 16:42<\/td>\n<td>6<\/td>\n<td>4<\/td>\n<td>1<\/td>\n<td>0<\/td>\n<td>4<\/td>\n<td>1<\/td>\n<td class=\"meta\">\n<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div><\/section>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n", "model": "\n<a class=\"skip-link\" href=\"#main-content\">跳至主要内容<\/a>\n<aside aria-label=\"主导航\" class=\"sidebar\">\n<a class=\"brand\" href=\"#overview\"><span aria-hidden=\"true\" class=\"brand-mark\"><i><\/i><i><\/i><i><\/i><\/span><span><strong>投资政策<\/strong><small>智能归集 · 研究工作台<\/small><\/span><\/a>\n<div class=\"nav-caption\">工作空间 <span>WORKSPACE<\/span><\/div>\n<nav class=\"side-nav\">\n<a class=\"nav-item\" href=\"#overview\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"3\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"3\" y=\"14\"><\/rect><rect height=\"7\" rx=\"1.5\" width=\"7\" x=\"14\" y=\"14\"><\/rect>\n<\/svg><span>工作总览<\/span><\/a>\n<a class=\"nav-item\" href=\"#policies\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M14 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8z\"><\/path><path d=\"M14 2v6h6M8 12h8M8 16h6\"><\/path>\n<\/svg><span>政策资料库<\/span><\/a>\n<a class=\"nav-item\" href=\"#sources\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<circle cx=\"12\" cy=\"12\" r=\"9\"><\/circle><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"><\/ellipse><path d=\"M3 12h18M5 7h14M5 17h14\"><\/path>\n<\/svg><span>采集来源<\/span><\/a>\n<a class=\"nav-item\" href=\"#runs\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M3 12h4l3-8 4 16 3-8h4\"><\/path>\n<\/svg><span>运行记录<\/span><\/a>\n<a aria-current=\"page\" class=\"nav-item active\" href=\"#model\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><span>模型配置<\/span><span class=\"nav-indicator\"><\/span><\/a>\n<\/nav>\n<div class=\"sidebar-note\"><span class=\"note-line\"><\/span><p>政策有源<br/>研判有据<\/p><small>让政策信息更好服务投资研究<\/small><\/div>\n<div class=\"sidebar-foot\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m12 3 10 5-10 5L2 8zM2 12l10 5 10-5M2 16l10 5 10-5\"><\/path>\n<\/svg><span>投资项目政策归集系统<small>研究验证版<\/small><\/span><\/div>\n<\/aside>\n<div class=\"workspace\">\n<header class=\"workspace-bar\"><div class=\"breadcrumb\">研究工作台<span>/<\/span><strong>模型配置<\/strong><\/div><div class=\"bar-meta\"><time id=\"today\"><\/time><span class=\"edition\">研究验证版<\/span><\/div><\/header>\n<main id=\"main-content\">\n<div class=\"preview-banner\">静态视觉预览 · 合成演示数据 · 筛选与提交请在实际系统中操作<\/div>\n<div class=\"page-heading\"><div><div class=\"eyebrow\">MODEL SERVICE / 智能支撑<\/div><h1>模型配置<\/h1><p>连接实际使用的大模型服务，为政策识别与分类提供支持。<\/p><\/div><\/div>\n<div class=\"settings-layout\"><section class=\"panel\"><div class=\"panel-heading\"><h2>服务连接配置<\/h2><span class=\"tag neutral\">密钥未配置<\/span><\/div>\n<form action=\"#\" class=\"settings-form\" method=\"post\" onsubmit=\"return false;\">\n<div class=\"form-grid\">\n<label class=\"form-field full\">服务类型<select disabled=\"\" name=\"provider\" title=\"静态预览，请启动工作台体验此功能\"><option selected=\"\" value=\"dashscope\">阿里云百炼<\/option><option value=\"custom\">其他兼容服务 / 本机模型<\/option><\/select><\/label>\n<label class=\"form-field full\">服务地址 <span class=\"dim\">Base URL<\/span><input disabled=\"\" name=\"base_url\" placeholder=\"填写兼容接口地址\" title=\"静态预览，请启动工作台体验此功能\" value=\"https://dashscope.aliyuncs.com/compatible-mode/v1\"/><small>百炼留空采用北京兼容地址；使用其他地域或业务空间时，填写对应地址。<\/small><\/label>\n<label class=\"form-field full\">模型名称<input disabled=\"\" name=\"model\" placeholder=\"例如 qwen-plus\" title=\"静态预览，请启动工作台体验此功能\" value=\"qwen-plus\"/><small>百炼留空时使用 qwen-plus，其他服务请填写实际部署的模型名。<\/small><\/label>\n<label class=\"form-field full\">访问密钥 <span class=\"dim\">API Key<\/span><input autocomplete=\"new-password\" disabled=\"\" name=\"api_key\" placeholder=\"输入新密钥；留空保留同地址旧密钥\" title=\"静态预览，请启动工作台体验此功能\" type=\"password\"/><small>密钥仅保存到本机，不在页面回显。更换服务地址时需重新填写。<\/small><\/label>\n<label class=\"form-field full\">密钥环境变量 <span class=\"dim\">选填<\/span><input disabled=\"\" name=\"api_key_env\" placeholder=\"留空采用对应服务的默认名称\" title=\"静态预览，请启动工作台体验此功能\"/><small>环境变量配置优先于本机配置。<\/small><\/label>\n<\/div><div class=\"form-actions\"><button class=\"btn primary\" disabled=\"\" name=\"action\" title=\"静态预览，请启动工作台体验此功能\" value=\"save\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"m5 12 4 4L19 6\"><\/path><circle cx=\"12\" cy=\"12\" r=\"10\"><\/circle>\n<\/svg> 保存配置<\/button><span class=\"hint\">保存后可进行连接检查<\/span><\/div><\/form><\/section>\n<aside class=\"settings-aside\"><section class=\"panel\"><div class=\"panel-heading\"><h2>接入步骤<\/h2><\/div><div class=\"settings-steps\">\n<div class=\"settings-step\"><span>01<\/span><div><h3>选择服务<\/h3><p>使用单位许可的云端服务或本机模型，确认服务地址与密钥地域一致。<\/p><\/div><\/div>\n<div class=\"settings-step\"><span>02<\/span><div><h3>填写并保存<\/h3><p>设置模型名称和密钥，保存本次配置。<\/p><\/div><\/div>\n<div class=\"settings-step\"><span>03<\/span><div><h3>验证连接<\/h3><p>确认接口可用后，前往采集来源启动任务。<\/p><\/div><\/div><\/div><\/section>\n<section class=\"panel settings-check\"><div class=\"config-status\"><svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<rect height=\"12\" rx=\"3\" width=\"12\" x=\"6\" y=\"6\"><\/rect><path d=\"M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4\"><\/path><path d=\"m10 13 2-3 2 3\"><\/path>\n<\/svg><h3>连接检查<\/h3><\/div><p class=\"hint\">已填写密钥不代表连接成功。检查会发送一条最小请求，产生少量模型调用费用。<\/p><form action=\"#\" method=\"post\" onsubmit=\"return false;\"><button class=\"btn\" disabled=\"\" name=\"action\" title=\"静态预览，请启动工作台体验此功能\" value=\"check\">检查已保存配置的连接 <svg aria-hidden=\"true\" class=\"icon\" fill=\"none\" height=\"20\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.65\" viewbox=\"0 0 24 24\" width=\"20\">\n<path d=\"M4 12h16m-6-6 6 6-6 6\"><\/path>\n<\/svg><\/button><\/form>\n<\/section><\/aside><\/div>\n<\/main>\n<footer class=\"foot\"><span>投资项目政策归集系统<\/span><span>资料可追溯<span class=\"footer-sep\">·<\/span>判断需复核<\/span><\/footer>\n<\/div>\n\n"};
+function show(){const key=location.hash.slice(1);if(key==='main-content'){document.getElementById('main-content')?.focus();return;}document.body.innerHTML=pages[key]||pages.overview;const date=document.getElementById('today');if(date)date.textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date());window.scrollTo(0,0);}
+window.addEventListener('hashchange',show);show();
+</script></body></html>

@@ -1,96 +1,19 @@
-{% extends "base.html" %}
-{% block title %}政策详情 - 政策文件归集系统{% endblock %}
+{% extends 'base.html' %}
+{% from '_ui.html' import icon %}
+{% set review_labels = {'pending':'待复核','confirmed':'人工确认','confirmed_auto':'模型通过 · 未人工复核','adjusted':'已调整','rejected':'已剔除'} %}
+{% block title %}政策详情 - 投资政策工作台{% endblock %}
 {% block content %}
-<p class="crumb"><a href="{{ url_for('policies') }}">← 政策库</a></p>
-<h1>#{{ p.id }} <span class="dim">v{{ p.version }}</span></h1>
-
-<div class="detail-head">
-  <h2>{{ p.title }}</h2>
-  <div class="meta-line">
-    <span class="tag {{ review_style }}">{{ {'pending':'待复核','confirmed':'人工确认','confirmed_auto':'模型自动通过（未人工复核）','adjusted':'已调整','rejected':'已剔除'}.get(p.review_status, p.review_status) }}</span>
-    {% if p.wenhao %}<span class="kv">文号：<b class="mono">{{ p.wenhao }}</b></span>{% endif %}
-    {% if p.issuing_authority %}<span class="kv">发文机关：{{ p.issuing_authority }}</span>{% endif %}
-    {% if p.region %}<span class="kv">地区：{{ p.region }}</span>{% endif %}
-    {% if p.site %}<span class="kv">来源：{{ p.site }}</span>{% endif %}
-    {% if p.page_date %}<span class="kv">发布日期：{{ p.page_date[:10] }}</span>{% endif %}
-    {% if p.doc_date %}<span class="kv">成文日期：{{ p.doc_date[:10] }}</span>{% endif %}
-    <span class="kv">模型：{{ p.model_version or 'rule' }}</span>
-  </div>
-  {% if p.category_names %}
-  <div class="cats">
-    {% for c in cats %}<span class="chip">{{ _cat_label(c) }}</span>{% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-{% if p.review_status == 'pending' or p.need_review %}
-<form class="review" method="post" action="{{ url_for('policy_review', pid=p.id) }}">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <div class="review-title">人工复核（待确认项：分类结果与"是否投资政策"需人工把关）</div>
-  <div class="review-row">
-    <button class="btn ok" name="action" value="confirm">确认采纳</button>
-    <button class="btn warn" name="action" value="reject">剔除（非政策）</button>
-    <span class="dim adj-label">调整为：</span>
-    {% for code, name in cat_codes.items() %}
-      <label class="chk"><input type="checkbox" name="categories" value="{{ code }}"
-        {% if code in cats %}checked{% endif %}> {{ name }}</label>
-    {% endfor %}
-    <button class="btn primary" name="action" value="adjust">调整分类</button>
-  </div>
-  {% if p.reason %}<div class="reason"><b>判断理由：</b>{{ p.reason }}</div>{% endif %}
-  {% if p.evidence %}<div class="reason"><b>证据：</b>{{ p.evidence }}</div>{% endif %}
-</form>
-{% else %}
-<div class="review done">
-  <span>处理状态：{{ p.review_status }}</span>
-  {% if p.reason %}<div class="reason"><b>判断理由：</b>{{ p.reason }}</div>{% endif %}
-</div>
-{% endif %}
-
-{% if p.page_url %}
-<p class="kv">原文：<a href="{{ p.page_url }}" target="_blank" rel="noopener">{{ p.page_url[:100] }}</a></p>
-{% endif %}
-
-<p class="hint">分类方式：{{ p.classification_method or '历史记录' }}。{{ p.reviewer_hint }} {{ p.fallback_reason }}</p>
-<h2>附件与原件</h2>
-{% if attachments %}
-<table class="list wide">
-  <thead><tr><th>名称</th><th>格式</th><th>解析状态</th><th>地址</th></tr></thead>
-  <tbody>
-  {% for a in attachments %}
-    <tr>
-      <td>{{ a.name }}{% if a.local_path %}<br><a href="{{ url_for('attachment_download',aid=a.id) }}">下载留存原件</a>{% endif %}
-{% if a.error %}<p class="hint">{{ a.error }}</p>{% endif %}
-{% if a.parsed_text %}<details><summary>解析文本</summary><pre class="content">{{ a.parsed_text }}</pre></details>{% endif %}</td>
-      <td class="mono">{{ a.fmt }}</td>
-      <td>{{ {'not_parsed':'未解析','ok':'已解析','failed':'失败'}.get(a.parse_status, a.parse_status) }}</td>
-      <td class="mono sm"><a href="{{ a.url }}" target="_blank" rel="noopener">{{ a.url[:80] }}</a></td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-{% else %}<p class="empty">该记录未登记附件。</p>{% endif %}
-
-<h2>来源记录</h2>
-{% for source in provenance %}<p>{{ source.site }} · <a href="{{ source.page_url }}" rel="noopener" target="_blank">{{ source.page_url }}</a></p>{% endfor %}
-{% if history %}<h2>人工复核记录</h2>{% for item in history %}<p>{{ item.created_at }} · {{ item.action }} · {{ item.note }}</p>{% endfor %}{% endif %}
-<h2>正文内容</h2>
-<pre class="content">{{ p.content }}</pre>
-
-{% if versions|length > 1 %}
-<h2>版本历史（{{ versions|length }}）</h2>
-<table class="list wide">
-  <thead><tr><th>版本</th><th>标题</th><th>日期</th><th>状态</th></tr></thead>
-  <tbody>
-  {% for v in versions %}
-    <tr>
-      <td>v{{ v.version }}</td>
-      <td><a href="{{ url_for('policy_detail', pid=v.id) }}">{{ v.title[:60] }}</a></td>
-      <td class="meta">{{ (v.created_at or '')[:16] }}</td>
-      <td>{{ v.review_status }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-{% endif %}
+<div class="detail-toolbar"><a class="text-link" href="{{ url_for('policies') }}">← 返回政策资料库</a><span class="dim mono">档案 #{{ p.id }} · v{{ p.version }}</span></div>
+<header class="detail-head"><div class="document-label">投资政策资料 · {{ p.region or '地区未登记' }}</div><h1>{{ p.title }}</h1>
+<div class="meta-line"><span>文号：<b>{{ p.wenhao or '未登记' }}</b></span><span>发文机关：{{ p.issuing_authority or '未登记' }}</span><span>发布日期：{{ (p.page_date or '')[:10] or '未登记' }}</span>{% if p.doc_date %}<span>成文日期：{{ p.doc_date[:10] }}</span>{% endif %}<span>来源：{{ p.site or '未登记' }}</span></div>
+<div class="cats">{% for c in cats %}<span class="chip">{{ _cat_label(c) }}</span>{% endfor %}<span class="tag {{ review_style }}">{{ review_labels.get(p.review_status, p.review_status) }}</span></div></header>
+<div class="document-layout"><div class="document-main"><section class="panel"><div class="panel-heading"><h2>政策正文</h2>{% if p.page_url %}<a class="text-link" href="{{ p.page_url }}" target="_blank" rel="noopener">查看来源原文 {{ icon('link') }}</a>{% endif %}</div><div class="document-body"><pre class="content">{{ p.content or '该记录暂无已解析正文，请查看来源原文及附件。' }}</pre></div></section>
+<section class="panel"><div class="panel-heading"><h2>附件与原件</h2><span class="dim sm">{{ attachments|length }} 项</span></div>
+{% if attachments %}<div class="attachment-list">{% for a in attachments %}<div class="attachment-item"><div class="attachment-title">{{ icon('file') }}<strong>{{ a.name }}</strong><span class="tag neutral">{{ a.fmt or '文件' }}</span></div><p class="hint">{{ {'not_parsed':'待解析','ok':'已解析','failed':'解析失败'}.get(a.parse_status, a.parse_status) }}</p><div class="attachment-actions">{% if a.local_path %}<a href="{{ url_for('attachment_download', aid=a.id) }}">下载留存原件</a>{% endif %}<a href="{{ a.url }}" target="_blank" rel="noopener">来源附件 {{ icon('link') }}</a></div>{% if a.error %}<p class="source-error">{{ a.error }}</p>{% endif %}{% if a.parsed_text %}<details><summary>查看解析文本</summary><pre class="content">{{ a.parsed_text }}</pre></details>{% endif %}</div>{% endfor %}</div>{% else %}<p class="inline-empty">该记录未登记附件。</p>{% endif %}</section>
+{% if versions|length > 1 %}<section class="panel"><div class="panel-heading"><h2>版本历史</h2><span class="dim">{{ versions|length }} 个版本</span></div><div class="table-scroll" tabindex="0" role="region" aria-label="历史版本"><table class="list"><thead><tr><th>版本</th><th>政策标题</th><th>日期</th><th>状态</th></tr></thead><tbody>{% for v in versions %}<tr><td>v{{ v.version }}</td><td><a href="{{ url_for('policy_detail', pid=v.id) }}">{{ v.title }}</a></td><td class="meta">{{ (v.created_at or '')[:16] }}</td><td>{{ review_labels.get(v.review_status, v.review_status) }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}</div>
+<aside class="document-aside"><section class="panel review-card"><div class="panel-heading"><h2>分类与复核</h2></div><div class="review-body"><p class="hint">结合原文确认是否属于投资政策，并核对分类结果。</p>
+{% if p.reason %}<div class="reason"><b>判断理由</b><p>{{ p.reason }}</p></div>{% endif %}{% if p.evidence %}<div class="reason"><b>依据摘录</b><p>{{ p.evidence }}</p></div>{% endif %}
+{% if p.review_status == 'pending' or p.need_review %}<form class="review-form" method="post" action="{{ url_for('policy_review', pid=p.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="review-primary"><button class="btn primary" name="action" value="confirm">确认采纳</button><button class="btn warn" name="action" value="reject">剔除非政策</button></div><div class="review-adjust"><h3>调整政策分类</h3><div class="checkbox-grid">{% for code, name in cat_codes.items() %}<label class="chk"><input type="checkbox" name="categories" value="{{ code }}" {% if code in cats %}checked{% endif %}>{{ name }}</label>{% endfor %}</div><button class="btn" name="action" value="adjust">保存分类调整</button></div></form>{% else %}<div class="review-complete">{{ icon('check') }} {{ review_labels.get(p.review_status, p.review_status) }}</div>{% endif %}
+{% if p.reviewer_hint or p.fallback_reason %}<p class="hint below-panel">{{ p.reviewer_hint }} {{ p.fallback_reason }}</p>{% endif %}<details class="model-trace"><summary>查看分类方式</summary><p class="hint">方式：{{ p.classification_method or '历史记录' }}<br>模型：{{ p.model_version or '规则分类' }}</p></details></div></section>
+<section class="panel"><div class="panel-heading"><h2>来源与处理记录</h2></div><div class="trace-body">{% for source in provenance %}<div class="trace-item"><p>{{ source.site }}</p><a href="{{ source.page_url }}" rel="noopener" target="_blank">查看来源页面 {{ icon('link') }}</a></div>{% else %}<p class="hint">暂无额外来源记录。</p>{% endfor %}{% if history %}<details class="history-details"><summary>查看处理记录（{{ history|length }}）</summary>{% for item in history %}<div class="trace-item"><small>{{ item.created_at }}</small><p>{{ {'confirm':'确认采纳','reject':'剔除','adjust':'调整分类','metadata_backfill':'元数据补全'}.get(item.action,item.action) }}</p>{% if item.note %}<p class="hint">{{ item.note }}</p>{% endif %}</div>{% endfor %}</details>{% endif %}</div></section></aside></div>
 {% endblock %}

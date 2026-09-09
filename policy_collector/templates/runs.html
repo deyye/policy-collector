@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block title %}运行日志 - 政策文件归集系统{% endblock %}
+{% from '_ui.html' import icon, page_head, empty, status %}
 {% block content %}
-<h1>运行日志</h1>
+{{ page_head('OPERATIONS / 运行管理', '运行记录', '查看每次采集的处理结果，及时发现未完整归集和需要复核的材料。') }}
 {% if running %}<div class="flash warn">有运行进行中，页面每 6 秒自动刷新…</div>{% endif %}
 
-<table class="list wide">
+<section class="panel"><div class="table-caption"><h2>采集批次</h2><span>展示最近批次 · 表格可横向滚动查看完整结果</span></div>
+{% if rows %}<div class="table-scroll" role="region" aria-label="运行记录，可横向滚动" tabindex="0"><table class="list wide run-table">
   <thead>
     <tr><th>状态</th><th>批次</th><th>来源</th><th>方式</th><th>开始</th><th>结束</th>
         <th>发现</th><th>入库</th><th>重复</th><th>失败</th><th>待复核</th><th>排除</th><th>需处理的问题</th></tr>
@@ -12,8 +14,8 @@
   <tbody>
   {% for r in rows %}
     <tr>
-      <td><span class="dot {{ r.status }}"></span> {{ r.status }}</td>
-      <td class="mono">{{ r.run_id }}</td>
+      <td>{{ status(r.status) }}</td>
+      <td class="mono"><span title="{{ r.run_id }}">{{ r.run_id }}</span></td>
       <td>{{ smap.get(r.source_id, r.source_id or '-') }}</td>
       <td>{{ r.kind }}</td>
       <td class="meta">{{ (r.started_at or '')[:16] }}</td>
@@ -34,7 +36,7 @@
     </tr>
   {% endfor %}
   </tbody>
-</table>
+</table></div>{% else %}{{ empty("暂无运行记录", "前往采集来源启动首个任务，处理进度与结果会显示在这里。", "activity") }}{% endif %}</section>
 {% endblock %}
 {% block script %}
 {% if running %}
