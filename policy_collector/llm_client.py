@@ -6,6 +6,16 @@ import time
 import requests
 from .config import LLMConfig
 
+
+def _strict_object(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise ValueError('模型 JSON 包含重复字段')
+        out[key] = value
+    return out
+
+
 class LLMClient:
     def __init__(self,cfg:LLMConfig):
         self.cfg=cfg
@@ -40,14 +50,17 @@ class LLMClient:
                         return None
                     result=r.json()
                 usage=result.get('usage') or {}
-                self.usage={'input_tokens':int(usage.get('prompt_tokens',0)),
-                            'output_tokens':int(usage.get('completion_tokens',0))}
+                self.usage['input_tokens'] += max(0, int(usage.get('prompt_tokens',0)))
+                self.usage['output_tokens'] += max(0, int(usage.get('completion_tokens',0)))
                 choice=result['choices'][0]
-                if choice.get('finish_reason') == 'length':
-                    self.last_error='模型输出被截断';return None
+                if choice.get('finish_reason') != 'stop':
+                    self.last_error='模型输出被截断' if choice.get('finish_reason') == 'length' else '模型未正常完成文本输出'
+                    return None
+                if choice['message'].get('refusal'):
+                    self.last_error='模型拒绝处理';return None
                 text=choice['message']['content'].strip()
                 text=re.sub(r'^```(?:json)?\s*|\s*```$','',text)
-                data=json.loads(text)
+                data=json.loads(text, object_pairs_hook=_strict_object)
                 if not isinstance(data,dict):
                     self.last_error='模型输出不是JSON对象';return None
                 return data

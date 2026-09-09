@@ -1,14 +1,14 @@
 # 浙江政策分类标注集 v1（zj_v1_20260909）
 
-P0-1「真实模型分类评测」的人工金标准样本集。共 **56 条**真实浙江省发改委政策，
+P0-1「真实模型分类评测」的 **AI 初标开发集，尚非人工验收金标准**。共 **56 条**真实浙江省发改委政策，
 从浙江隔离库（`zj_full_ingest_check.py` 双轮全量入库产物，387 条候选 / 323 条入库）分层抽取，
-逐条阅读正文后人工标注。
+原有标签为 AI 初标，未经业务终审；本次保留原判定，仅补来源网址、内容指纹和 `label_status=ai_draft`。
 
 ## 文件清单
 
 | 文件 | 内容 |
 |---|---|
-| `gold.jsonl` | **评测入口**。每行 `{id, relevant, categories, title, wenhao, hard, note}`，可直接喂给 `scripts/evaluate.py --gold` |
+| `gold.jsonl` | **评测入口**。每行含 `{id, relevant, categories, title, wenhao, hard, note, page_url, content_sha256, label_status}`，可直接喂给 `scripts/evaluate.py --gold` |
 | `review_workbook.md` | 标注工作簿：56 条全部字段对照表（含系统预测 vs 人工标注），人工复核用 |
 | `policies_snapshot.jsonl` | 每条样本的原文快照（标题/文号/URL/正文前 600 字），标注依据可追溯 |
 | `README.md` | 本说明 |
@@ -16,7 +16,7 @@ P0-1「真实模型分类评测」的人工金标准样本集。共 **56 条**�
 ## 数据来源
 
 - 采样库：浙江发改委「行政规范性文件」栏目全量入库隔离库（`POLICY_DATA_DIR=/tmp/pc_zj_full`，387 条候选 → 323 条入库，2026-09-09 双轮验证产物）。
-- 该库 policy `id` 即 `gold.jsonl` 的 `id`，评测时用 `evaluate.py --db <该库路径> --gold gold.jsonl`。
+- `id` 仅是原采样库的提示；评测按 `page_url + content_sha256` 绑定原版本，并核对标题/文号。重建库内容指纹不一致时会停止，不能只复用 ID。评测时用 `evaluate.py --db <该库路径> --gold gold.jsonl`。
 - 如需重建采样库：`python scripts/zj_full_ingest_check.py --data-dir <目录> --rounds 2 --limit 600`（约 10 分钟）。
 
 ## 分布设计
@@ -26,7 +26,7 @@ P0-1「真实模型分类评测」的人工金标准样本集。共 **56 条**�
 | 维度 | 数量 | 说明 |
 |---|---|---|
 | 相关（relevant=true） | 37 | 判定为投资相关政策 |
-| 非相关（relevant=false） | 19 | 系统多判 yes、人工判否（FP 探测样本） |
+| 非相关（relevant=false） | 19 | 系统多判 yes、AI 初标判否（待复核）（FP 探测样本） |
 | guide 引导类 | 12 | 含多标签样本 |
 | access 准入类 | 18 | 含多标签样本 |
 | guarantee 保障类 | 10 | 含多标签样本 |
@@ -55,7 +55,7 @@ P0-1「真实模型分类评测」的人工金标准样本集。共 **56 条**�
 
 ```bash
 # 评测（db 指向标注样本来源的隔离库）
-python scripts/evaluate.py --db /tmp/pc_zj_full/policy.db --gold gold/zj_v1_20260909/gold.jsonl
+python scripts/evaluate.py --db /tmp/pc_zj_full/policy.db --gold gold/zj_v1_20260909/gold.jsonl --allow-provisional
 ```
 
 输出 relevance 精确率/召回率、category micro 精确率/召回率、exact_match、pending/rule_fallback 占比。
@@ -65,4 +65,6 @@ python scripts/evaluate.py --db /tmp/pc_zj_full/policy.db --gold gold/zj_v1_2026
 本 v1 标注由 AI 按上述口径初标，**未经业务人员终审**。建议人工复核顺序：
 1. 先看 `review_workbook.md` 里 16 条 `★` 边界样本（最易有分歧）；
 2. 再快速扫非相关 19 条（若认为某条其实相关，改 relevant 并补 categories）；
-3. 修改 `gold.jsonl` 后重新评测即可。
+3. 对照完整正文及附件完成复核后，再逐条设置 `label_status=human_reviewed`，记录复核人、日期和依据。不要批量改状态来绕过终审。
+
+快照仅保留正文前 600 字，不能凭此确认附件条款或完整业务口径。招投标监管、政策清理、信用制度、价格支持等边界还需指导员核定；本版不把初标判断硬编码为生产排除规则。该集来源于已入库候选，缺少被排除样本，不适合宣称全流程召回率。后续应另留未用于改提示词的人工验收集。

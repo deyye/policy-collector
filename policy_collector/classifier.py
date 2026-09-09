@@ -137,19 +137,20 @@ class LLMClassifier:
 仅归集对一类项目普遍适用的政策、规划、目录、管理制度与申报要求。
 具体单个项目的批复、会议新闻、采购公告和政策解读通常不是本库政策正文，应判no；无法区分时判pending。
 输出格式：
-{{"is_investment_policy": "yes|no|pending",
+{"is_investment_policy": "yes|no|pending",
  "doc_type": "正式政策|申报通知|解读|征求意见稿|项目批复|其他",
  "category": ["guide"] 或 ["access","guarantee"] 等（多标签逗号数组；拿不准留空数组走复核）,
  "category_reason": "一句话说明为什么分到这些类，引用条款作用",
  "evidence": "正文中支持判断的关键原文片段（≤120字）",
  "need_review": true|false,
  "confidence": 0-1,
- "reviewer_hint": "需复核时的原因，无需复核填空"}}
+ "reviewer_hint": "需复核时的原因，无需复核填空"}
 边界注意：规定项目能耗准入条件→准入类；安排能耗指标保障→保障类。细则类文件多类混杂默认 need_review=true。"""
 
     def __init__(self, cfg: AppConfig, rules: dict[str, Any]):
         self.client = LLMClient(cfg.llm)
         self.rules = rules
+        self.usage = {'input_tokens': 0, 'output_tokens': 0}
         self.boundary_hints = "\n".join(
             f"- {b.get('title_hint','')}: {b.get('note','')}" for b in rules.get("boundary_cases", [])
         )
@@ -159,6 +160,7 @@ class LLMClassifier:
         return self.client.available
 
     def classify(self, doc: Document) -> Optional[Classification]:
+        self.usage = {'input_tokens': 0, 'output_tokens': 0}
         if not self.available:
             return None
         cfg = self.client.cfg
@@ -177,23 +179,28 @@ class LLMClassifier:
             data=self.client.chat_json(system,user)
             tokens_in += self.client.usage.get("input_tokens",0)
             tokens_out += self.client.usage.get("output_tokens",0)
+            self.usage = {'input_tokens': tokens_in, 'output_tokens': tokens_out}
             if data is None:
                 return None
-            results.append(self._validate(doc,data,evidence_source=header+chunk))
-        cats=list(dict.fromkeys(c for r in results for c in r.category.split(',') if c))
+            results.append(self._validate(doc,data,evidence_source=chunk))
+        cats=list(dict.fromkeys(c for r in results if r.is_investment_policy=='yes' for c in r.category.split(',') if c))
         relevance = 'yes' if any(r.is_investment_policy=='yes' for r in results) else (
             'no' if all(r.is_investment_policy=='no' for r in results) else 'pending')
         review=truncated or any(r.need_review for r in results) or relevance=='pending'
         if truncated and relevance=='no':relevance='pending'
         types=[r.doc_type for r in results if r.doc_type!='其他']
         hints='；'.join(dict.fromkeys(r.reviewer_hint for r in results if r.reviewer_hint))
+        if {'yes','no'} <= {r.is_investment_policy for r in results}:
+            review=True
+            hints+='；不同段落相关性判断不一致，需整篇复核'
         if truncated:hints+='；材料超过配置的分段上限，部分内容未分析'
         return Classification(is_investment_policy=relevance,category=','.join(cats),
             category_names=','.join(CATEGORY_CN[c] for c in cats),doc_type=types[0] if types else '其他',
             need_review=review,reason='；'.join(dict.fromkeys(r.reason for r in results)),
             evidence='\n'.join(dict.fromkeys(r.evidence for r in results if r.evidence)),
             model_version=cfg.effective_model,reviewer_hint=hints,method='llm',input_truncated=truncated,
-            input_tokens=tokens_in,output_tokens=tokens_out)
+            input_tokens=tokens_in,output_tokens=tokens_out,
+            confidence=min((r.confidence for r in results if r.confidence is not None),default=None))
 
     def _validate(self, doc: Document, data: dict, evidence_source=None) -> Classification:
         errors=[]
@@ -214,7 +221,8 @@ class LLMClassifier:
         if not isinstance(evidence,str) or not evidence.strip() or _norm(evidence) not in _norm(source):
             evidence='';errors.append('证据缺失或无法在原文定位')
         if inv=='yes' and not cats:errors.append('相关政策未分类')
-        if errors:inv='pending'
+        if inv=='no' and cats:errors.append('非相关文件不应输出投资类别')
+        if errors:inv='pending';cats=[]
         confidence=data.get('confidence')
         if isinstance(confidence,bool) or not isinstance(confidence,(int,float)) or not 0 <= confidence <= 1:
             confidence=None;flag=True
@@ -237,14 +245,28 @@ class Classifier:
         self.llm = LLMClassifier(cfg, cfg.classification)
 
     def classify(self, doc: Document, prefer: str = "llm") -> Classification:
+        out = self._classify(doc, prefer)
+        incomplete = doc.parse_error or any(a.get('parse_status', 'ok' if a.get('parsed_text') else 'missing') != 'ok'
+                                            for a in doc.attachments)
+        if incomplete:
+            out.need_review = True
+            out.reviewer_hint = '；'.join(x for x in (out.reviewer_hint, '正文或附件不完整，需补采/解析复核') if x)
+            if out.is_investment_policy == 'no':
+                out.is_investment_policy = 'pending'
+        return out
+
+    def _classify(self, doc: Document, prefer: str = "llm") -> Classification:
         if prefer == "rule":
             return self.rule.classify(doc)
+        self.llm.usage={'input_tokens':0,'output_tokens':0}
         if self.llm.available:
             out=self.llm.classify(doc)
             if out is not None:
                 return out
         out=self.rule.classify(doc)
         out.method='rule_fallback'
+        out.input_tokens=self.llm.usage.get('input_tokens',0)
+        out.output_tokens=self.llm.usage.get('output_tokens',0)
         out.fallback_reason=self.llm.client.last_error or '未配置可用的大模型接口'
         out.need_review=True
         # A model outage must not silently discard candidates by keyword heuristics.

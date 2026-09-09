@@ -111,7 +111,7 @@ def test_fallback_explicit_and_full_document_segments(cfg,monkeypatch):
     def respond(system,user):
         seen.append(user)
         return {'is_investment_policy':'yes','doc_type':'正式政策','category':['guide','access','guarantee','incentive'],
-                'category_reason':'测试多标签','evidence':'关于项目投资','need_review':False}
+                'category_reason':'测试多标签','evidence':user.split('<document>\n',1)[1][:4],'need_review':False}
     monkeypatch.setattr(c.client,'chat_json',respond)
     out=c.classify(Document(title='关于项目投资',content='正文'*900+'末尾条款',attachments=[{'name':'附件','parsed_text':'附件里的资金支持'}]))
     assert len(seen)>3 and any('末尾条款' in s for s in seen) and any('附件里的资金支持' in s for s in seen)

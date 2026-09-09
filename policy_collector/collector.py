@@ -74,6 +74,7 @@ class Collector:
         self.session = requests.Session()
         self.session.headers["User-Agent"] = cfg.fetch.user_agent
         self._last_request = 0.0
+        self.discovery_status = {}
 
     def close(self):
         self.session.close()
@@ -236,6 +237,7 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
     翻页：每页带 paramJson={"pageNo":N,"pageSize":15,"search":""}（与 unitbuild.js 的
     paramsMap 分支同构），空页自动停止；接口 JSON 原件逐页落盘留证。
     """
+    collector.discovery_status[src.name] = {'pages_fetched': 0, 'end_reached': False}
     spec = extract_unitbuild_spec(page_raw.decode("utf-8", "ignore"))
     if spec is None:
         raise ValueError("栏目页未发现 unitbuild 构建参数（结构变化或反爬页）")
@@ -254,6 +256,7 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
         if not result.ok:
             raise DiscoveryError(f"单元构建接口第{page_no}页请求失败: {result.error}", links)
         collector.save(src.name, api_url, result.content, "json")
+        collector.discovery_status[src.name]['pages_fetched'] += 1
         try:
             payload = json.loads(result.content.decode("utf-8", "ignore"))
         except json.JSONDecodeError as e:
@@ -270,6 +273,7 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
             seen.add(l.url)
         links.extend(fresh)
         if not page_links:      # 空页：翻页到底
+            collector.discovery_status[src.name]['end_reached'] = True
             break
         if not fresh:           # 重复页不等于已采完，提示翻页参数/接口需维护。
             raise DiscoveryError(f"第{page_no}页完全重复，未确认历史列表采完", links)

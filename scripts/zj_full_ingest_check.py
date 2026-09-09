@@ -1,200 +1,125 @@
 #!/usr/bin/env python3
-"""浙江 zjfgw_gsgg 全量入库 + 双轮连续性验证（隔离数据目录，不影响正式数据）。
+"""浙江全量发现、入库及双轮检查。默认新建隔离目录，绝不自动删除已有目录。
 
-对应 README「尚需完成的验收」第 2 条：浙江 387 条全量正文入库与双轮连续性运行。
-
-验证目标：
-  轮 1  全量翻页发现 -> 全部候选真实入库。统计：入库数 / 文号缺失率 /
-       附件下载成功率与解析覆盖 / 规则排除数 / 运行状态(ok|partial|failed)。
-  轮 2  同一数据目录再跑一轮，验证：
-        - 幂等：无新增入库(ingested≈0)，重复走 duplicate_skip(duplicates>0)；
-        - 失败补采：轮 1 failed 的候选若站点恢复，本轮应转 processed；
-        - 元数据补齐：metadata_backfill 留痕出现时说明空字段被补齐。
-
-用法：
-  python scripts/zj_full_ingest_check.py                 # 默认：全新隔离库 /tmp/pc_zj_full，两轮
-  python scripts/zj_full_ingest_check.py --rounds 1       # 只跑一轮（冒烟/复验）
-  python scripts/zj_full_ingest_check.py --limit 600      # 每轮最多处理的候选数（默认 600 > 387）
-  python scripts/zj_full_ingest_check.py --keep           # 复用已存在的隔离库续跑（不重建）
-
-产物：<data-dir>/report.json（结构化汇总）。数据与原件仅写入 <data-dir>，绝不触碰项目 data/。
+--data-dir 指定的目录须为空，已有检查库只能通过 --keep 续跑。
+验收分别展示发现到底、候选处理、材料完整性和稳定输入幂等情况。
 """
 from __future__ import annotations
-
 import argparse
 import json
 import os
 import sqlite3
 import sys
-import time
+import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-SOURCE = "zjfgw_gsgg"  # 浙江行政规范性文件（unitbuild 动态列表全量翻页）
-
-
-def db_stats(db_path: Path) -> dict:
-    """从隔离库统计入库质量维度（只读）。"""
-    con = sqlite3.connect(db_path)
-    con.row_factory = sqlite3.Row
-    out: dict = {}
-
-    row = con.execute(
-        "SELECT id FROM source_configs WHERE name=?", (SOURCE,)
-    ).fetchone()
-    src_id = row["id"] if row else None
-    out["source_found"] = src_id is not None
-
-    # 采集记录状态分布（含被规则排除/失败项，反映全量处理结果）
-    if src_id:
-        out["fetch_by_status"] = {
-            r["status"]: r["n"]
-            for r in con.execute(
-                "SELECT status, COUNT(*) n FROM fetch_records WHERE source_id=? GROUP BY status",
-                (src_id,),
-            )
-        }
-        out["fetch_total"] = sum(out["fetch_by_status"].values())
-
-    # 当前版本政策（剔除已 rejected 的历史/当前版本）
-    out["policy_current"] = con.execute(
-        """SELECT COUNT(*) FROM policies p
-           WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
-             AND review_status!='rejected'"""
-    ).fetchone()[0]
-    out["review_status"] = {
-        r["review_status"]: r["n"]
-        for r in con.execute(
-            """SELECT review_status, COUNT(*) n FROM policies p
-               WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
-               GROUP BY review_status"""
-        )
-    }
-    # 文号缺失率（只算当前版本）
-    cur = con.execute(
-        """SELECT COUNT(*) n,
-                  SUM(CASE WHEN wenhao='' OR wenhao IS NULL THEN 1 ELSE 0 END) no_wenhao
-           FROM policies p
-           WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
-             AND review_status!='rejected'"""
-    ).fetchone()
-    out["wenhao_missing"] = cur["no_wenhao"]
-    out["wenhao_missing_rate"] = round(cur["no_wenhao"] / cur["n"], 3) if cur["n"] else None
-
-    # 附件维度：格式分布 / 解析状态分布 / 失败原因 TOP
-    out["attachments"] = {"total": con.execute("SELECT COUNT(*) FROM attachments").fetchone()[0]}
-    out["attachments"]["by_fmt"] = {
-        r["fmt"] or "(未知)": r["n"]
-        for r in con.execute("SELECT fmt, COUNT(*) n FROM attachments GROUP BY fmt ORDER BY n DESC")
-    }
-    out["attachments"]["by_parse_status"] = {
-        r["parse_status"]: r["n"]
-        for r in con.execute("SELECT parse_status, COUNT(*) n FROM attachments GROUP BY parse_status ORDER BY n DESC")
-    }
-    top_err = con.execute(
-        """SELECT substr(COALESCE(error,'(空)'),1,60) e, COUNT(*) n FROM attachments
-           WHERE error!='' GROUP BY e ORDER BY n DESC LIMIT 5"""
-    ).fetchall()
-    out["attachments"]["top_errors"] = [dict(r) for r in top_err]
-
-    # 运行日志（每轮 summary）
-    out["runs"] = [
-        {"id": r["run_id"], "status": r["status"], "summary": json.loads(r["summary"] or "{}"),
-         "started_at": r["started_at"], "finished_at": r["finished_at"], "note": r["note"]}
-        for r in con.execute("SELECT * FROM run_logs ORDER BY id")
-    ]
-    con.close()
-    return out
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from policy_collector.evaluation import readonly_db
+SOURCE = 'zjfgw_gsgg'
 
 
-def snapshot(db_path: Path, label: str) -> None:
-    print(f"\n===== 快照[{label}] =====")
-    print(json.dumps(db_stats(db_path), ensure_ascii=False, indent=2))
-
-
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--data-dir", default="/tmp/pc_zj_full", help="隔离数据目录（默认 /tmp/pc_zj_full）")
-    ap.add_argument("--rounds", type=int, default=2, help="连续性运行轮数（默认 2）")
-    ap.add_argument("--limit", type=int, default=600, help="每轮最多处理候选数（默认 600>387）")
-    ap.add_argument("--keep", action="store_true", help="复用已有隔离库（默认重建以确保从零验证）")
-    args = ap.parse_args()
-
-    data_dir = Path(args.data_dir).expanduser().resolve()
-    db_path = data_dir / "policy.db"
-    # 安全护栏：拒绝指向项目正式数据目录
-    project_root = Path(__file__).resolve().parent.parent
-    if data_dir == (project_root / "data") or str(data_dir).startswith(str(project_root / "data")):
-        print(f"错误：隔离目录 {data_dir} 位于项目 data/ 之下，会污染正式数据。请换用 /tmp 或其它目录。", file=sys.stderr)
-        return 2
-    if not args.keep and db_path.exists():
-        import shutil
-        print(f"重建隔离目录 {data_dir}（--keep 可复用续跑）")
-        shutil.rmtree(data_dir, ignore_errors=True)
+def prepare_directory(data_dir, protected, keep=False):
+    data_dir = Path(data_dir).expanduser().resolve()
+    protected = Path(protected).expanduser().resolve()
+    if data_dir == protected or data_dir in protected.parents or protected in data_dir.parents:
+        raise ValueError('隔离目录不能位于正式数据目录内或包含正式数据目录')
+    if data_dir.exists() and any(data_dir.iterdir()):
+        if not keep or not (data_dir/'policy.db').is_file():
+            raise ValueError('隔离目录非空；请换新目录，已有检查库可显式 --keep，程序不会删除文件')
     data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir
 
-    # 关键：在 AppConfig.load() 之前设置数据目录环境变量
-    os.environ["POLICY_DATA_DIR"] = str(data_dir)
-    from policy_collector.config import AppConfig
-    from policy_collector.pipeline import Pipeline
 
-    cfg = AppConfig.load()
-    if SOURCE not in cfg.sources:
-        print(f"错误：来源 {SOURCE} 不在 config/sources.yaml", file=sys.stderr)
-        return 2
-    print(f"隔离数据目录 : {data_dir}")
-    print(f"数据库        : {db_path}")
-    print(f"来源          : {SOURCE}（max_pages={cfg.sources[SOURCE].max_pages}，prefer=rule 规则分类）")
-    print(f"轮数          : {args.rounds}，每轮 limit={args.limit}\n")
-
-    overall = {"source": SOURCE, "data_dir": str(data_dir), "rounds": [], "final": {}}
-    pipe = Pipeline(cfg)  # 自动建表（含 migrate 补列）
+def db_stats(db_path):
+    con = readonly_db(Path(db_path))
     try:
-        for i in range(1, args.rounds + 1):
-            t0 = time.monotonic()
-            print(f"\n########## 轮 {i}/{args.rounds} 开始 ##########", flush=True)
-            stats = pipe.run_source(SOURCE, prefer="rule", limit=args.limit)
-            elapsed = round(time.monotonic() - t0, 1)
-            d = stats.to_dict()
-            d["elapsed_seconds"] = elapsed
-            overall["rounds"].append({"round": i, **d})
-            print(f"轮 {i} 完成（{elapsed}s）: {json.dumps(d, ensure_ascii=False)}", flush=True)
-            snapshot(db_path, f"轮 {i} 之后")
-            # 每轮结束立即写一次 report.json，中断也能保留已跑轮次
-            overall["final"] = db_stats(db_path)
-            (data_dir / "report.json").write_text(
-                json.dumps(overall, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+        src = con.execute('SELECT * FROM source_configs WHERE name=?', (SOURCE,)).fetchone()
+        out = {'source_found': bool(src), 'fetch_total': 0, 'fetch_by_status': {},
+               'source_error': src['last_error'] if src else '来源不存在'}
+        if not src:
+            return out
+        out['fetch_by_status'] = {r['status']:r['n'] for r in con.execute(
+            'SELECT status,COUNT(*) n FROM fetch_records WHERE source_id=? GROUP BY status', (src['id'],))}
+        out['fetch_total'] = sum(out['fetch_by_status'].values())
+        rows = [dict(r) for r in con.execute('''SELECT p.* FROM policies p WHERE
+            p.version=(SELECT MAX(v.version) FROM policies v WHERE v.policy_key=p.policy_key)
+            AND p.review_status!='rejected' AND EXISTS
+            (SELECT 1 FROM policy_sources s WHERE s.policy_id=p.id AND s.source_id=?)''', (src['id'],))]
+        out['policy_current'] = len(rows)
+        out['wenhao_missing'] = sum(not r['wenhao'] for r in rows)
+        out['wenhao_missing_rate'] = out['wenhao_missing']/len(rows) if rows else None
+        attachments = [dict(a) for r in rows for a in con.execute('SELECT * FROM attachments WHERE policy_id=?',(r['id'],))]
+        out['attachments'] = {'total':len(attachments),
+            'downloaded':sum(bool(a['local_path']) for a in attachments),
+            'parsed':sum(a['parse_status']=='ok' for a in attachments),
+            'incomplete':sum(a['parse_status']!='ok' for a in attachments)}
+        out['runs'] = [{'id':r['run_id'],'status':r['status'],'summary':json.loads(r['summary'] or '{}'),'note':r['note']}
+            for r in con.execute('SELECT * FROM run_logs WHERE source_id=? ORDER BY id', (src['id'],))]
+        return out
     finally:
-        pipe.close()
-
-    # ---- 验收判定 ----
-    r1 = overall["rounds"][0]
-    f = overall["final"]
-    veredict = {}
-    ok = True
-    if args.rounds >= 1:
-        veredict["r1_processed"] = r1["ingested"] + r1["duplicates"] + r1["excluded"] + r1["failed"]
-        veredict["r1_no_mass_failure"] = (r1["failed"] / max(1, r1["ingested"] + r1["failed"])) < 0.5
-        ok &= veredict["r1_no_mass_failure"]
-    if args.rounds >= 2:
-        r2 = overall["rounds"][1]
-        veredict["r2_idempotent_no_new_ingest"] = r2["ingested"] == 0
-        veredict["r2_rescan_happened"] = r2["duplicates"] > 0
-        # 失败补采：轮 1 failed 数 > 轮 2 failed 数 或 轮2 failed 集中在附件
-        veredict["r2_failed_shrunk_or_stable"] = r2["failed"] <= r1["failed"]
-        ok &= all([veredict["r2_idempotent_no_new_ingest"], veredict["r2_rescan_happened"]])
-    veredict["overall_ok"] = ok
-    overall["veredict"] = veredict
-    (data_dir / "report.json").write_text(
-        json.dumps(overall, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    print("\n===== 验收判定 =====")
-    print(json.dumps(veredict, ensure_ascii=False, indent=2))
-    print(f"\n完整报告：{data_dir / 'report.json'}")
-    return 0 if ok else 1
+        con.close()
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+def build_verdict(rounds, final):
+    statuses = final.get('fetch_by_status', {})
+    unresolved = sum(n for status,n in statuses.items() if status not in ('processed','excluded'))
+    last = rounds[-1] if rounds else {}
+    r2 = rounds[1] if len(rounds) >= 2 else {}
+    verdict = {
+        'discovery_reached_end': bool(last.get('discovery',{}).get('end_reached')) and not final.get('source_error'),
+        'candidates_total':final.get('fetch_total',0), 'unresolved_candidates':unresolved,
+        'candidate_processing_complete':final.get('fetch_total',0)>0 and unresolved==0,
+        'material_complete':final.get('attachments',{}).get('incomplete',0)==0 and not last.get('documents_incomplete',0),
+        'last_run_ok':bool(final.get('runs')) and final['runs'][-1]['status']=='ok',
+        'two_rounds_completed':len(rounds)>=2,
+        'stable_input_idempotence_verified':bool(r2) and r2.get('ingested',0)==0 and r2.get('updated',0)==0 and r2.get('duplicates',0)>0,
+    }
+    verdict['overall_ok'] = all(verdict[k] for k in ('discovery_reached_end','candidate_processing_complete',
+        'material_complete','last_run_ok','two_rounds_completed','stable_input_idempotence_verified'))
+    return verdict
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--data-dir', help='新隔离目录；默认创建独立临时目录')
+    ap.add_argument('--rounds',type=int,default=2)
+    ap.add_argument('--limit',type=int,default=600)
+    ap.add_argument('--keep',action='store_true')
+    args=ap.parse_args(argv)
+    try:
+        if args.rounds<1 or args.limit<1:
+            raise ValueError('rounds 和 limit 必须为正整数')
+        from policy_collector.config import AppConfig, PROJECT_ROOT
+        from policy_collector.pipeline import Pipeline
+        protected=AppConfig.load().data_dir
+        candidate=Path(args.data_dir) if args.data_dir else Path(tempfile.mkdtemp(prefix='pc_zj_full_'))
+        data_dir=prepare_directory(candidate,protected,args.keep)
+        # 同时保护项目默认目录，避免环境变量改变后误用。
+        prepare_directory(data_dir,PROJECT_ROOT/'data',args.keep)
+        os.environ['POLICY_DATA_DIR']=str(data_dir)
+        cfg=AppConfig.load()
+        if SOURCE not in cfg.sources:
+            raise ValueError('来源未配置')
+        overall={'source':SOURCE,'data_dir':str(data_dir),'rounds':[],'final':{}}
+        pipe=Pipeline(cfg)
+        try:
+            for i in range(1,args.rounds+1):
+                stats=pipe.run_source(SOURCE,prefer='rule',limit=args.limit)
+                overall['rounds'].append({'round':i,**stats.to_dict(),
+                    'discovery':dict(pipe.collector.discovery_status.get(SOURCE,{}))})
+                overall['final']=db_stats(cfg.db_path)
+                overall['verdict']=build_verdict(overall['rounds'],overall['final'])
+                (data_dir/'report.json').write_text(json.dumps(overall,ensure_ascii=False,indent=2),encoding='utf-8')
+                print(json.dumps(overall['rounds'][-1],ensure_ascii=False),flush=True)
+        finally:
+            pipe.close()
+        print(json.dumps(overall['verdict'],ensure_ascii=False,indent=2))
+        print(f"报告：{data_dir/'report.json'}")
+        return 0 if overall['verdict']['overall_ok'] else 1
+    except (ValueError,OSError,sqlite3.Error) as e:
+        print(str(e),file=sys.stderr)
+        return 2
+
+
+if __name__=='__main__':
+    raise SystemExit(main())

@@ -1,171 +1,138 @@
-"""用真实大模型对标注集(gold)重分类，输出 规则 vs LLM 双基线评测对比。
+"""Compare fresh rule/LLM predictions on the same full documents and parsed attachments.
 
-背景：policies 表里的预测是 rule 模式入库的（classification_method='rule'）。
-本脚本从隔离库复制出评测副本，仅对 gold.jsonl 中的 id 用已配置 LLM 重分类
-并写回副本库，然后对同一份 gold 分别跑 evaluate（规则预测取自原库快照，
-LLM 预测取自副本），输出对比表与逐条差异。
-
-用法:
-    python scripts/eval_llm_compare.py \
-        --src-db /tmp/pc_zj_full/policy.db \
-        --gold gold/zj_v1_20260909/gold.jsonl \
-        --out-dir /tmp/pc_llm_eval
-
-只读原库；LLM 预测写副本库，不动任何正式数据。需先配置真实模型（configure-llm 或 .env）。
+The source database is opened read-only. SQLite backup captures WAL contents into a new
+snapshot. --dry-run validates labels, versions and material readiness without model calls.
+Unreviewed labels require --allow-provisional; results remain exploratory.
 """
+from __future__ import annotations
 import argparse
+import hashlib
 import json
-import shutil
 import sqlite3
 import sys
+import tempfile
+import time
+from dataclasses import asdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 from policy_collector.config import AppConfig
 from policy_collector.classifier import Classifier
-from policy_collector.models import Document
-
-CATEGORY_KEYS = ('guide', 'access', 'guarantee', 'incentive')
-
-
-def load_gold(path: Path) -> list[dict]:
-    return [json.loads(s) for s in path.read_text(encoding='utf-8').splitlines() if s.strip()]
+from policy_collector.models import Classification
+from policy_collector.evaluation import (load_gold, readonly_db, resolve_labels, document_from_row,
+    evaluate_predictions, evaluate_db, label_summary)
 
 
-def evaluate_db(con: sqlite3.Connection, labels: list[dict]) -> dict:
-    """与 scripts/evaluate.py 相同的指标口径（内联，避免 import CLI）。"""
-    tp = fp = fn = ct = cp = cn = exact = pending = fallback = 0
-    for gold in labels:
-        truth = set(gold['categories'])
-        row = con.execute('SELECT * FROM policies WHERE id=?', (gold['id'],)).fetchone()
-        if row is None:
-            raise ValueError(f"id 不存在: {gold['id']}")
-        yes = row['is_investment_policy'] == 'yes'
-        tp += yes and gold['relevant']
-        fp += yes and not gold['relevant']
-        fn += (not yes) and gold['relevant']
-        pending += row['is_investment_policy'] == 'pending'
-        fallback += row['classification_method'] == 'rule_fallback'
-        pred = set(filter(None, (row['category'] or '').split(','))) if yes else set()
-        ct += len(truth & pred)
-        cp += len(pred - truth)
-        cn += len(truth - pred)
-        exact += pred == truth and yes == gold['relevant'] and row['is_investment_policy'] != 'pending'
-
-    def div(a, b):
-        return round(a / b, 4) if b else None
-
-    return {
-        'labeled_records': len(labels),
-        'relevance_precision': div(tp, tp + fp),
-        'relevance_recall': div(tp, tp + fn),
-        'category_micro_precision': div(ct, ct + cp),
-        'category_micro_recall': div(ct, ct + cn),
-        'exact_match': div(exact, len(labels)),
-        'pending': pending,
-        'rule_fallback': fallback,
-    }
+def snapshot_database(src_con, copy_db):
+    source = Path(src_con.execute('PRAGMA database_list').fetchone()[2]).resolve()
+    copy_db = Path(copy_db).resolve()
+    if source == copy_db or copy_db.exists():
+        raise ValueError('评测副本必须是新文件，不能覆盖原库或已有结果')
+    copy_db.parent.mkdir(parents=True, exist_ok=True)
+    dest = sqlite3.connect(copy_db)
+    try:
+        src_con.backup(dest)
+    finally:
+        dest.close()
 
 
-def reclassify_with_llm(src_con: sqlite3.Connection, copy_db: Path, labels: list[dict],
-                        classifier: Classifier, out_dir: Path) -> dict:
-    """复制源库→对 gold id 用 LLM 重分类写回副本→记录逐条差异。"""
-    if copy_db.exists():
-        copy_db.unlink()
-    shutil.copy2(src_con_db_path, copy_db)
+def reclassify_with_llm(src_con, copy_db, labels, classifier, out_dir, *, dry_run=False):
+    snapshot_database(src_con, copy_db)
+    con = readonly_db(copy_db)
+    try:
+        resolved = resolve_labels(con, labels)  # 全部预检完成后才可调用模型
+        documents = [document_from_row(con, row) for _, row in resolved]
+        result_path = Path(out_dir) / 'predictions.jsonl'
+        readiness = [{'id': g['id'], 'database_id': row['id'], 'page_url': row['page_url'],
+            'content_sha256': row['content_sha256'],
+            'analysis_sha256': hashlib.sha256(doc.analysis_text.encode()).hexdigest(),
+            'body_chars': len(doc.content), 'analysis_chars': len(doc.analysis_text),
+            'attachments': len(doc.attachments),
+            'attachments_incomplete': sum(a.get('parse_status') != 'ok' for a in doc.attachments)}
+            for (g, row), doc in zip(resolved, documents)]
+        baseline = [asdict(classifier.classify(doc, prefer='rule')) for doc in documents]
+        report = {'labeled': len(labels), 'labels': label_summary(labels), 'material_readiness': readiness,
+            'stored_predictions': evaluate_predictions(labels, [row for _, row in resolved]),
+            'rule_baseline': evaluate_predictions(labels, baseline), 'dry_run': dry_run}
+        if dry_run:
+            report['evaluation_status'] = 'preflight_only'
+            return report
+        if not classifier.llm.available:
+            raise ValueError('未配置可用真实模型；请配置后检查连接，或先使用 --dry-run')
+        predictions = []
+        counters = {'llm_classified': 0, 'fallback': 0, 'failed': 0, 'not_attempted': 0,
+                    'input_tokens': 0, 'output_tokens': 0}
+        consecutive_failures = 0
+        with result_path.open('x', encoding='utf-8') as log:
+            for ((g, row), doc, rule, material) in zip(resolved, documents, baseline, readiness):
+                start = time.monotonic()
+                if consecutive_failures >= 3:
+                    cls = Classification(method='not_attempted', need_review=True, reason='连续三次服务失败，停止后续付费调用')
+                    counters['not_attempted'] += 1
+                else:
+                    try:
+                        cls = classifier.classify(doc, prefer='llm')
+                    except Exception as e:
+                        # 不输出可能含请求地址/密钥的异常正文；失败不能沿用原库旧预测。
+                        cls = Classification(method='error', need_review=True, reason=type(e).__name__)
+                    if cls.method == 'llm':
+                        counters['llm_classified'] += 1
+                        consecutive_failures = 0
+                    else:
+                        counters['fallback' if cls.method == 'rule_fallback' else 'failed'] += 1
+                        consecutive_failures += 1
+                prediction = asdict(cls)
+                predictions.append(prediction)
+                counters['input_tokens'] += cls.input_tokens
+                counters['output_tokens'] += cls.output_tokens
+                log.write(json.dumps({**material, 'rule': rule, 'llm': prediction,
+                    'elapsed_seconds': round(time.monotonic()-start, 3)}, ensure_ascii=False) + '\n')
+                log.flush()  # 中断仍保留已完成结果，副本数据库始终不改写预测
+        report['llm'] = evaluate_predictions(labels, predictions)
+        report['llm_reclassify'] = counters
+        report['run_complete'] = counters['llm_classified'] == len(labels)
+        reviewed = report['labels']['human_reviewed'] == len(labels)
+        report['evaluation_status'] = ('human_reviewed' if reviewed else 'exploratory') if report['run_complete'] else 'incomplete'
+        return report
+    finally:
+        con.close()
 
-    con = sqlite3.connect(copy_db)
-    con.row_factory = sqlite3.Row
-    diffs = []
-    ok = fail = 0
-    for g in labels:
-        row = con.execute('SELECT * FROM policies WHERE id=?', (g['id'],)).fetchone()
-        if row is None:
-            continue
-        doc = Document(
-            page_url=row['page_url'] or '',
-            title=row['title'] or '',
-            wenhao=row['wenhao'] or '',
-            issuing_authority=row['issuing_authority'] or '',
-            page_date=row['page_date'] or '',
-            doc_date=row['doc_date'] or '',
-            content=row['content'] or '',
-        )
-        old_pred = {'is_investment_policy': row['is_investment_policy'],
-                    'category': row['category'] or '', 'method': row['classification_method']}
-        try:
-            cls = classifier.classify(doc, prefer='llm')
-        except Exception as e:  # 网络/解析错误不中断，记录后继续
-            diffs.append({'id': g['id'], 'error': str(e)[:200]})
-            fail += 1
-            continue
-        with con:
-            con.execute('''UPDATE policies SET is_investment_policy=?, category=?, category_names=?,
-                           doc_type=?, need_review=?, reason=?, evidence=?, confidence=?,
-                           model_version=?, reviewer_hint=?, classification_method=?, fallback_reason=?,
-                           input_tokens=?, output_tokens=? WHERE id=?''',
-                        (cls.is_investment_policy, cls.category, cls.category_names, cls.doc_type,
-                         int(cls.need_review), cls.reason, cls.evidence, cls.confidence,
-                         cls.model_version, cls.reviewer_hint, cls.method, cls.fallback_reason,
-                         cls.input_tokens, cls.output_tokens, g['id']))
-        ok += 1
-        new_pred = {'is_investment_policy': cls.is_investment_policy, 'category': cls.category,
-                    'method': cls.method}
-        if new_pred != old_pred:
-            diffs.append({'id': g['id'],
-                          'gold_relevant': g['relevant'], 'gold_categories': g['categories'],
-                          'rule': old_pred, 'llm': new_pred,
-                          'llm_reason': (cls.reason or '')[:160]})
-    con.close()
-    (out_dir / 'reclassify_diffs.jsonl').write_text(
-        '\n'.join(json.dumps(d, ensure_ascii=False) for d in diffs), encoding='utf-8')
-    return {'llm_classified': ok, 'failed': fail, 'changed': sum(1 for d in diffs if 'error' not in d)}
 
-
-def main():
-    ap = argparse.ArgumentParser()
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--src-db', required=True)
     ap.add_argument('--gold', required=True)
-    ap.add_argument('--out-dir', default='/tmp/pc_llm_eval')
-    args = ap.parse_args()
-
-    global src_con_db_path
-    src_con_db_path = str(Path(args.src_db).resolve())
-
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    labels = load_gold(Path(args.gold))
-    cfg = AppConfig.load()
-    if not cfg.llm.enabled or not cfg.llm.api_key:
-        sys.exit('未配置真实模型（llm.enabled/api_key 缺失），先运行 configure-llm 或设置 .env')
-    classifier = Classifier(cfg)
-
-    # 原库(rule 预测)评测
-    src_con = sqlite3.connect(src_con_db_path)
-    src_con.row_factory = sqlite3.Row
-    rule_metrics = evaluate_db(src_con, labels)
-
-    # LLM 重分类副本评测
-    copy_db = out_dir / 'policy_llm.db'
-    llm_stat = reclassify_with_llm(src_con, copy_db, labels, classifier, out_dir)
-    llm_con = sqlite3.connect(copy_db)
-    llm_con.row_factory = sqlite3.Row
-    llm_metrics = evaluate_db(llm_con, labels)
-    llm_con.close()
-
-    report = {
-        'model': cfg.llm.effective_model,
-        'labeled': len(labels),
-        'rule_baseline': rule_metrics,
-        'llm': llm_metrics,
-        'llm_reclassify': llm_stat,
-    }
-    (out_dir / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding='utf-8')
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    src_con.close()
+    ap.add_argument('--out-dir', help='新结果目录，默认创建独立临时目录')
+    ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--allow-provisional', action='store_true')
+    args = ap.parse_args(argv)
+    try:
+        labels = load_gold(Path(args.gold))
+        if not args.dry_run and not args.allow_provisional and label_summary(labels)['human_reviewed'] != len(labels):
+            raise ValueError('标签未经全部人工终审；探索性比较请加 --allow-provisional')
+        cfg = AppConfig.load()
+        classifier = Classifier(cfg)
+        out_dir = Path(args.out_dir).expanduser().resolve() if args.out_dir else Path(tempfile.mkdtemp(prefix='pc_llm_eval_'))
+        if out_dir.exists() and any(out_dir.iterdir()):
+            raise ValueError('结果目录非空，请使用新目录；不会覆盖既有文件')
+        con = readonly_db(Path(args.src_db))
+        try:
+            out_dir.mkdir(parents=True, exist_ok=True)
+            report = reclassify_with_llm(con, out_dir/'policy_snapshot.db', labels, classifier, out_dir, dry_run=args.dry_run)
+        finally:
+            con.close()
+        report.update(model=cfg.llm.effective_model,
+            gold_sha256=hashlib.sha256(Path(args.gold).read_bytes()).hexdigest(),
+            rules_sha256=hashlib.sha256(json.dumps(cfg.classification, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
+            prompt_sha256=hashlib.sha256(classifier.llm.SYSTEM_PROMPT_TMPL.encode()).hexdigest(),
+            chunk_chars=cfg.llm.chunk_chars, max_chunks=cfg.llm.max_chunks)
+        (out_dir/'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if args.dry_run or report.get('run_complete') else 1
+    except (ValueError, OSError, sqlite3.Error) as e:
+        print(str(e), file=sys.stderr)
+        return 2
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
