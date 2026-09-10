@@ -11,8 +11,9 @@ P0-1「真实模型分类评测」的 **AI 初标开发集，尚非人工验收�
 | `gold.jsonl` | **评测入口**。每行含 `{id, relevant, categories, title, wenhao, hard, note, page_url, content_sha256, label_status}`，可直接喂给 `scripts/evaluate.py --gold` |
 | `review_workbook.md` | 标注工作簿：56 条全部字段对照表（含系统预测 vs 人工标注），人工复核用 |
 | `policies_snapshot.jsonl` | 每条样本的原文快照（标题/文号/URL/正文前 600 字），标注依据可追溯 |
-| `EVAL-REPORT.md` | **真实模型评测报告**（规则 vs DeepSeek，2026-09-10）：指标对比、混淆矩阵、错误分析、口径裁决建议 |
-| `llm_predictions.jsonl` | 56 条三方对照明细（人工 / 规则 / LLM 预测 + 类别差异 + 判定结果） |
+| `EVAL-REPORT.md` | **真实模型评测报告**（规则 vs DeepSeek，v0.5 严格口径，2026-09-10）：指标对比、混淆矩阵、错误分析、口径裁决建议 |
+| `llm_predictions.jsonl` | 56 条 v0.5 口径逐条输出（规则/LLM 判定与类别、理由、原文证据、材料完整性、token 用量） |
+| `eval_report_v0.5.json` | 本次评测的机器可读原始报告（`report.json` 留档），含各口径指标与逐条材料完整性清单 |
 | `README.md` | 本说明 |
 
 ## 数据来源
@@ -62,20 +63,27 @@ python scripts/evaluate.py --db /tmp/pc_zj_full/policy.db --gold gold/zj_v1_2026
 
 输出 relevance 精确率/召回率、category micro 精确率/召回率、exact_match、pending/rule_fallback 占比。
 
-## 评测结果（2026-09-10，DeepSeek v4-flash）
+## 评测结果（2026-09-10，DeepSeek v4-flash，v0.5 严格口径）
 
-已用本标注集完成首轮真实模型评测（56 条全量，0 失败/0 回退，耗时 9m16s）：
+已用本标注集完成真实模型评测（56 条全量，0 失败/0 回退/0 截断，耗时 10m49s，指纹绑定 56/56）：
 
 | 指标 | 规则 | DeepSeek | 变化 |
 |---|---|---|---|
-| relevance 精确率 | 0.619 | **0.865** | +0.246 |
-| relevance 召回率 | 0.703 | **0.865** | +0.162 |
-| category 微精确率 | 0.373 | **0.533** | +0.160 |
-| exact_match | 0.089 | **0.482** | ×5.4 |
+| relevance 精确率 | 0.619 | **0.906** | +0.287 |
+| relevance 召回率 | 0.703 | **0.784** | +0.081 |
+| relevance F1 | 0.658 | **0.841** | +0.182 |
+| category 微精确率 | 0.373 | **0.540** | +0.166 |
+| exact_match（整篇一致） | 0.089 | **0.375** | ×4.2 |
+| pending（未判定） | 14 | 17 | +3 |
 
-**结论**：LLM 相关性判断已达可用水平（替代规则做初筛）；但类别存在**过宽**倾向（22/56 条多标），
-根因是 `incentive`/`access` 的口径定义存在歧义（详见 `EVAL-REPORT.md` §4.3），需业务方裁决。
-完整分析、5 条口径分歧样本与修正路线见 **`EVAL-REPORT.md`**。
+> 本口径下 `pending` **严格计错**：gold 相关而预测 pending 计入漏判。旧口径（pending 不计入）曾得出
+> 精确率/召回率 0.865、exact_match 0.482，**不应再对外引用**；差异来源与逐项对照见 `EVAL-REPORT.md` §5。
+
+**结论**：LLM 相关性判断已达可用水平（可替代规则做初筛）。两个待修问题：
+① **17 条 pending 中有 10 条实际是 gold 非相关**——模型倾向排除却未输出 `no`，白白丢失正确的非相关判断；
+② **`incentive` 类别精确率仅 0.316**（13 个误标），根因仍是 `incentive`/`access` 的口径定义歧义，
+需业务方在"收窄模型"与"放宽金标准"之间裁决。
+完整分析、3 条误收/1 条漏判明细与修正路线见 **`EVAL-REPORT.md`**。
 
 ## 复核提示
 
