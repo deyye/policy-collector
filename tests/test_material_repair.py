@@ -111,6 +111,19 @@ def test_audit_excluded_reference_miss_and_frozen_material(pipe,tmp_path):
     with pytest.raises(ValueError,match='快照'):score_review(out/'sample.jsonl')
 
 
+def test_quality_page_renders_format_counts_not_counter_methods(pipe,monkeypatch):
+    """材料质量页按格式统计必须显示数字：Counter 的 total()/属性同名会让模板输出方法对象。"""
+    from policy_collector.webapp import create_app
+    monkeypatch.setattr(pipe.collector,'fetch',lambda u:FetchResult(content=word(),final_url=u))
+    pipe.ingest_url(pipe.cfg.sources['test'],'https://agency.gov.cn/policy/1.html',raw=html(),prefer='rule')
+    report=attachment_report(pipe.db)
+    assert isinstance(report['by_format']['docx'],dict)
+    assert report['by_format']['docx']['total']==1
+    body=create_app(pipe.cfg).test_client().get('/quality').get_data(as_text=True)
+    assert 'bound method' not in body
+    assert 'DOCX' in body and '<td>1</td>' in body
+
+
 def test_batch_blockers_prevent_model_calls(pipe,tmp_path):
     pipe.sync_sources();sid=pipe.db.get_source('test')['id']
     pipe.db.add_fetch(sid,'https://agency.gov.cn/policy/x.html',title='未下载')

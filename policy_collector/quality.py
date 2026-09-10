@@ -46,7 +46,7 @@ def attachment_report(db, source=''):
         'attachments':len(details),'download_ok':sum(r['download_ok'] for r in details),
         'parse_complete':sum(r['parse_complete'] for r in details),
         'affected_policies':len({r['policy_id'] for r in details if r['needs_attention']}),
-        'by_format':dict(sorted(formats.items(),key=lambda kv:-kv[1]['needs_attention'])), 'details':details}
+        'by_format':{k:dict(v) for k,v in sorted(formats.items(),key=lambda kv:-kv[1]['needs_attention'])}, 'details':details}
 
 
 def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', policy_id=None):
