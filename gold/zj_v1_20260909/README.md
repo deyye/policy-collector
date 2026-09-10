@@ -11,6 +11,8 @@ P0-1「真实模型分类评测」的 **AI 初标开发集，尚非人工验收�
 | `gold.jsonl` | **评测入口**。每行含 `{id, relevant, categories, title, wenhao, hard, note, page_url, content_sha256, label_status}`，可直接喂给 `scripts/evaluate.py --gold` |
 | `review_workbook.md` | 标注工作簿：56 条全部字段对照表（含系统预测 vs 人工标注），人工复核用 |
 | `policies_snapshot.jsonl` | 每条样本的原文快照（标题/文号/URL/正文前 600 字），标注依据可追溯 |
+| `EVAL-REPORT.md` | **真实模型评测报告**（规则 vs DeepSeek，2026-09-10）：指标对比、混淆矩阵、错误分析、口径裁决建议 |
+| `llm_predictions.jsonl` | 56 条三方对照明细（人工 / 规则 / LLM 预测 + 类别差异 + 判定结果） |
 | `README.md` | 本说明 |
 
 ## 数据来源
@@ -59,6 +61,21 @@ python scripts/evaluate.py --db /tmp/pc_zj_full/policy.db --gold gold/zj_v1_2026
 ```
 
 输出 relevance 精确率/召回率、category micro 精确率/召回率、exact_match、pending/rule_fallback 占比。
+
+## 评测结果（2026-09-10，DeepSeek v4-flash）
+
+已用本标注集完成首轮真实模型评测（56 条全量，0 失败/0 回退，耗时 9m16s）：
+
+| 指标 | 规则 | DeepSeek | 变化 |
+|---|---|---|---|
+| relevance 精确率 | 0.619 | **0.865** | +0.246 |
+| relevance 召回率 | 0.703 | **0.865** | +0.162 |
+| category 微精确率 | 0.373 | **0.533** | +0.160 |
+| exact_match | 0.089 | **0.482** | ×5.4 |
+
+**结论**：LLM 相关性判断已达可用水平（替代规则做初筛）；但类别存在**过宽**倾向（22/56 条多标），
+根因是 `incentive`/`access` 的口径定义存在歧义（详见 `EVAL-REPORT.md` §4.3），需业务方裁决。
+完整分析、5 条口径分歧样本与修正路线见 **`EVAL-REPORT.md`**。
 
 ## 复核提示
 
