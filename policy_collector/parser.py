@@ -8,7 +8,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from .models import Document
 
-ATTACH_EXT = re.compile(r"\.(pdf|docx?|wps|xlsx?|zip|rar|ofd)$", re.I)
+ATTACH_EXT = re.compile(r"\.(pdf|docx?|wps|xlsx?|zip|rar|ofd|txt)$", re.I)
 
 def date_value(text: str) -> str:
     m = re.search(r"((?:19|20)\d{2})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})", text or "")
@@ -64,22 +64,22 @@ class Parser:
 
     def parse(self, data: bytes, fmt: str, page_url: str = "", origin_path: str = "") -> Document:
         fmt = fmt.lower().lstrip(".")
-        if data.startswith(b"%PDF-"):
-            fmt = "pdf"
+        from .attachment_parsers import detect_format, PARSER_VERSION
+        fmt = detect_format(data, fmt)
         if fmt in ("html", "htm", "shtml"):
             return self._html(data, page_url, origin_path)
-        doc = Document(page_url=page_url, origin_path=origin_path)
+        doc = Document(page_url=page_url, origin_path=origin_path, parser_version=PARSER_VERSION, parse_method=fmt)
         try:
             if fmt == "pdf":
-                from pypdf import PdfReader
-                reader = PdfReader(io.BytesIO(data))
-                if len(reader.pages) > 500:
-                    doc.parse_error = "PDF超过500页，保留原件待处理"
-                    return doc
-                pages = [p.extract_text() or "" for p in reader.pages]
-                doc.content = "\n\n".join(f"[第{i+1}页]\n{t}" for i,t in enumerate(pages) if t.strip())
-                if any(not t.strip() for t in pages):
-                    doc.parse_error = "PDF包含无文本页，需OCR复核"
+                from .attachment_parsers import pdf_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = pdf_text(data)
+            elif fmt == 'ofd':
+                from .attachment_parsers import ofd_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = ofd_text(data)
+            elif fmt in ('doc','wps'):
+                from .attachment_parsers import legacy_to_pdf, pdf_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = pdf_text(legacy_to_pdf(data,fmt))
+                doc.parse_method = 'libreoffice+' + doc.parse_method
             elif fmt == "docx":
                 from docx import Document as WordDocument
                 from docx.oxml.ns import qn
@@ -89,13 +89,15 @@ class Parser:
                     if block.tag in (qn("w:p"), qn("w:tbl")):
                         blocks.append(" ".join(x.text for x in block.iter(qn("w:t")) if x.text))
                 doc.content = "\n".join(blocks).strip()
+                if d.element.xpath('.//w:drawing | .//w:pict'):
+                    doc.parse_error = 'Word含图片，文本已提取，图片中的条款需人工核对或OCR'
             elif fmt in ("txt",):
                 doc.content = data.decode("utf-8-sig")
             else:
                 doc.parse_error = f"暂不支持{fmt}正文解析，原件保留"
                 return doc
         except Exception as e:
-            doc.parse_error = f"{fmt}解析失败：{type(e).__name__}"
+            doc.parse_error = f"{fmt}解析失败：{type(e).__name__}" + (f"；{e}" if isinstance(e, ValueError) else "")
             return doc
         if not doc.content.strip():
             doc.parse_error = doc.parse_error or "正文为空，可能需要OCR"

@@ -36,6 +36,8 @@ class RunStats:
     rule_classified:int=0
     llm_fallback:int=0
     reclassified:int=0
+    reparsed:int=0
+    attachments_cached:int=0
     input_tokens:int=0
     output_tokens:int=0
     elapsed_seconds:float=0
@@ -117,7 +119,11 @@ class Pipeline:
                 stats.failed+=1
                 self.discovery_errors.append(f'{url}: {e}')
         for item in links:
-            if not self.collector.is_policy_url(item.url,source):continue
+            admitted=self.collector.is_policy_url(item.url,source)
+            with self.db.tx() as c:
+                c.execute("INSERT INTO discovery_observations(source_id,page_url,title,admitted,reason,observed_at) VALUES(?,?,?,?,?,?) ON CONFLICT(source_id,page_url) DO UPDATE SET title=excluded.title,admitted=excluded.admitted,reason=excluded.reason,observed_at=excluded.observed_at",
+                    (row['id'],item.url,item.title,int(admitted),'' if admitted else '来源URL范围过滤',now()))
+            if not admitted:continue
             if not self.db.get_fetch(row['id'],item.url):
                 self.db.add_fetch(row['id'],item.url,title=item.title)
                 stats.discovered+=1
@@ -128,11 +134,19 @@ class Pipeline:
                 c.execute('UPDATE source_configs SET last_success_at=? WHERE id=?',(now(),row['id']))
         return stats
 
-    def _attachments(self,source,doc,stats):
+    def _attachments(self,source,doc,stats,reuse_cached=False,local_only=False):
+        old=self.db.policy_for_url(doc.page_url)
+        cached={a['url']:a for a in self.db.list_attachments(old['id'])} if old else {}
         for att in doc.attachments:
             att.update(local_path='',sha256='',parsed_text='',parse_status='failed',error='')
             try:
-                if att['url'].startswith('file://'):
+                cache=cached.get(att['url'],{})
+                cached_path=Path(cache.get('local_path') or '/nonexistent-policy-cache')
+                if reuse_cached and cached_path.is_file() and hashlib.sha256(cached_path.read_bytes()).hexdigest()==cache.get('sha256'):
+                    raw=cached_path.read_bytes();content_type='';stats.attachments_cached+=1
+                elif local_only:
+                    raise ValueError('本地缺少校验通过的原件，需联网补采')
+                elif att['url'].startswith('file://'):
                     if not doc.page_url.startswith('file://'):raise ValueError('远程网页不能引用本地文件')
                     raw=self._local(att['url']).read_bytes()
                     content_type=''
@@ -140,7 +154,8 @@ class Pipeline:
                     result=self.collector.fetch(att['url'])
                     if not result.ok:raise ValueError(result.error)
                     raw=result.content;content_type=result.content_type
-                fmt=self._fmt(att['url'],raw,content_type)
+                from .attachment_parsers import detect_format, PARSER_VERSION
+                fmt=detect_format(raw,att.get('fmt') or self._fmt(att['url'],raw,content_type))
                 if fmt not in ('pdf','docx','doc','txt','xls','xlsx','zip','rar','ofd','wps'):
                     fmt=att.get('fmt') or fmt
                 if fmt != 'txt' and ('text/html' in content_type.lower() or raw.lstrip().lower().startswith((b'<!doctype html', b'<html'))):
@@ -154,14 +169,16 @@ class Pipeline:
                 att['sha256']=hashlib.sha256(raw).hexdigest()
                 stats.attachments_downloaded+=1
                 parsed=self.parser.parse(raw,fmt,page_url=att['url'],origin_path=att['local_path'])
+                att.update(parser_version=PARSER_VERSION,parse_method=parsed.parse_method,total_pages=parsed.total_pages,parsed_pages=parsed.parsed_pages)
                 att['parsed_text']=parsed.content
                 att['error']=parsed.parse_error
                 att['parse_status']='partial' if parsed.content and parsed.parse_error else (
-                    'ok' if parsed.content else 'unsupported' if fmt not in ('pdf','docx','txt') else 'needs_ocr')
+                    'ok' if parsed.content else 'unsupported' if fmt not in ('pdf','docx','txt','ofd','doc','wps') else 'needs_ocr')
                 if att['parse_status']!='ok':stats.attachments_unparsed+=1
             except Exception as e:
                 att['error']=str(e)[:500]
-                stats.attachments_failed+=1
+                if att.get('sha256'):stats.attachments_unparsed+=1
+                else:stats.attachments_failed+=1
 
     def ingest_url(self,source,url,raw=None,prefer='llm',reclassify=False):
         from .collector import allowed_url
@@ -171,7 +188,7 @@ class Pipeline:
             self.sync_sources()
             return self._ingest_url(source,url,raw,prefer,reclassify)
 
-    def _ingest_url(self,source,url,raw=None,prefer='llm',reclassify=False):
+    def _ingest_url(self,source,url,raw=None,prefer='llm',reclassify=False,reuse_cached=False,local_only=False):
         stats=RunStats()
         row=self.db.get_source(source.name)
         if not row:
@@ -195,15 +212,54 @@ class Pipeline:
                                  content_sha256=hashlib.sha256(raw).hexdigest())
             stats.downloaded+=1
             doc=self.parser.parse(raw,fmt,page_url=base,origin_path=origin)
-            doc.page_url=url;doc.source_name=source.name
+            doc.page_url=url;doc.source_name=source.name;doc.raw_bytes_sha256=hashlib.sha256(raw).hexdigest()
             if not doc.content.strip() and not doc.attachments:
                 raise ValueError(doc.parse_error or '正文解析为空')
             if not doc.title:doc.title=(existing or {}).get('title','') or '待核实标题'
-            self._attachments(source,doc,stats)
+            self._attachments(source,doc,stats,reuse_cached,local_only)
+            self.db.record_attachment_attempts(fid,doc.attachments)
+            self.db.update_fetch(fid,document_json=json.dumps(asdict(doc),ensure_ascii=False))
             stats.parsed+=1
             if doc.parse_error:
                 stats.documents_incomplete+=1
             old=self.db.policy_for_url(url)
+            if old:
+                previous=self.db.list_attachments(old['id'])
+                by_url={a['url']:a for a in previous}
+                raw_before=old.get('raw_page_sha256') or ((existing or {}).get('content_sha256') if ((existing or {}).get('policy_id')==old['id'] or (existing or {}).get('id')==old.get('source_fetch_id')) else '')
+                same_original=((raw_before==doc.raw_bytes_sha256 or old['content_sha256']==content_hash(doc)) and set(by_url)=={a['url'] for a in doc.attachments}
+                    and all(not by_url[a['url']].get('sha256') or not a.get('sha256') or by_url[a['url']]['sha256']==a['sha256'] for a in doc.attachments))
+                if same_original:
+                    # Keep previous good extraction if this attempt is poorer; attempts retain the new error.
+                    merged=[]
+                    for a in doc.attachments:
+                        prev=by_url[a['url']]
+                        if not a.get('sha256') or (prev.get('parse_status')=='ok' and a.get('parse_status')!='ok'):
+                            merged.append(prev)
+                        else: merged.append(a)
+                    if doc.parse_error and old['content'] and not old.get('parse_error'):
+                        doc.content=old['content'];doc.parse_error=old.get('parse_error','')
+                    doc.attachments=merged
+                    changed=(doc.content!=old['content'] or doc.parse_error!=old.get('parse_error','') or
+                        any(any(a.get(k,'')!=by_url[a['url']].get(k,'') for k in ('sha256','parsed_text','parse_status')) for a in merged))
+                    fields=dict(content=doc.content,content_sha256=content_hash(doc),
+                        analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),
+                        raw_page_sha256=doc.raw_bytes_sha256,parse_error=doc.parse_error)
+                    # Metadata backfill remains supported on same-source reparses.
+                    for key in ('wenhao','page_date','doc_date','issuing_authority'):
+                        if not old.get(key) and getattr(doc,key):fields[key]=getattr(doc,key)
+                    if (changed or reclassify) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
+                        cls=self.classifier.classify(doc,prefer);self._count_classification(cls,stats)
+                        rowfields=self._policy_row(source,doc,cls,fid)
+                        fields.update({k:v for k,v in rowfields.items() if k not in ('title','wenhao','page_date','doc_date','issuing_authority','region','site','page_url','source_fetch_id')})
+                        stats.reclassified+=1
+                        self.db.update_fetch(fid,classification_json=json.dumps(asdict(cls),ensure_ascii=False))
+                    self.db.refresh_analysis(old['id'],fields,merged,changed)
+                    if changed:stats.reparsed+=1
+                    elif not stats.reclassified:stats.duplicates+=1
+                    self.db.update_fetch(fid,status='failed' if stats.attachments_failed else 'processed',processed_at=now(),error='附件需补采' if stats.attachments_failed else '')
+                    stats.failed+=int(bool(stats.attachments_failed))
+                    return stats
             if old and stats.attachments_failed:
                 # Do not create a false revision simply because a previously available attachment failed today.
                 raise ValueError('附件下载失败，保留已有政策版本并等待补采')
@@ -286,6 +342,7 @@ class Pipeline:
             evidence=cls.evidence,confidence=cls.confidence,model_version=cls.model_version,
             review_status='pending' if cls.need_review else ('rejected' if cls.is_investment_policy=='no' else 'confirmed_auto'),
             content=doc.content,content_sha256=content_hash(doc),source_fetch_id=fid,reviewer_hint=cls.reviewer_hint,
+            raw_page_sha256=doc.raw_bytes_sha256,analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),parse_error=doc.parse_error,
             classification_method=cls.method,fallback_reason=cls.fallback_reason,input_truncated=int(cls.input_truncated),
             input_tokens=cls.input_tokens,output_tokens=cls.output_tokens)
 

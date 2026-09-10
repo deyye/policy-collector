@@ -109,12 +109,20 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             abort(404)
         versions = d.versions(p["policy_key"])
         attachments = d.list_attachments(pid)
+        from .quality import attachment_quality
+        for a in attachments:a.update(attachment_quality(a))
+        material_issues=[dict(r) for r in d._conn.execute("SELECT t.* FROM attachment_attempts t WHERE t.fetch_id IN (SELECT fetch_id FROM policy_sources WHERE policy_id=?) AND t.id=(SELECT MAX(t2.id) FROM attachment_attempts t2 WHERE t2.fetch_id=t.fetch_id AND t2.url=t.url) AND (t.download_status!='ok' OR t.parse_status!='ok')",(pid,))]
         cats = _policy_category_names(p)
         return render_template(
-            "policy.html", p=p, versions=versions, attachments=attachments, cats=cats,
+            "policy.html", p=p, versions=versions, attachments=attachments, cats=cats, material_issues=material_issues,
             provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid),
             cat_codes=CAT_CODES, _cat_label=_cat_label, review_style=_REVIEW_STYLE.get(p["review_status"], ""),
         )
+
+    @app.get('/quality')
+    def material_quality():
+        from .quality import attachment_report
+        return render_template('quality.html',report=attachment_report(db()))
 
     # ---------------- 人工复核 ----------------
     @app.route("/policies/<int:pid>/review", methods=["POST"])

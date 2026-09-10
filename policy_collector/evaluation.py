@@ -96,8 +96,7 @@ def document_from_row(con, row):
     fields = ('page_url', 'title', 'wenhao', 'issuing_authority', 'page_date', 'doc_date', 'content')
     doc = Document(**{k: row.get(k) or '' for k in fields})
     doc.attachments = [dict(a) for a in con.execute('SELECT * FROM attachments WHERE policy_id=? ORDER BY id', (row['id'],))]
-    if not doc.content.strip():
-        doc.parse_error = '数据库正文为空'
+    doc.parse_error = row.get('parse_error') or ('' if doc.content.strip() else '数据库正文为空')
     return doc
 
 

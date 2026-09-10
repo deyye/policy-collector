@@ -22,6 +22,7 @@ class LLMClient:
         self.base_url=(cfg.base_url or 'https://api.openai.com/v1').rstrip('/')
         self.last_error=''
         self.usage={'input_tokens':0,'output_tokens':0}
+        self.usage_reported=False
 
     @property
     def available(self):
@@ -30,6 +31,7 @@ class LLMClient:
     def chat_json(self,system,user,temperature=0.0):
         self.last_error=''
         self.usage={'input_tokens':0,'output_tokens':0}
+        self.usage_reported=False
         if not self.available:
             self.last_error='未配置可用的大模型接口'
             return None
@@ -50,6 +52,7 @@ class LLMClient:
                         return None
                     result=r.json()
                 usage=result.get('usage') or {}
+                self.usage_reported=all(type(usage.get(k)) is int and usage[k]>=0 for k in ('prompt_tokens','completion_tokens'))
                 self.usage['input_tokens'] += max(0, int(usage.get('prompt_tokens',0)))
                 self.usage['output_tokens'] += max(0, int(usage.get('completion_tokens',0)))
                 choice=result['choices'][0]

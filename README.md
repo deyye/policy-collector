@@ -1,5 +1,52 @@
 # 投资项目政策归集系统
 
+## v0.6：材料补齐与可核验的质量闭环
+
+基于 `efe3225` 的真实模型测试记录继续改进。新增**材料质量页、原件补采与重解析、人工结论保护、漏收分层抽样、小批量模型预检**。业务口径、原始 56 条标签和模型服务配置均保留；完整说明见 [v0.6 质量改进记录](docs/REVIEW-v0.6.md)，需指导员确认的内容见 [分类边界清单](docs/BOUNDARIES-v0.6.md)。
+
+真实测试结果仍属 AI 初标下的探索比较：56 条中 21 条附件不完整，43 条需复核；17 条 pending 涉及 11 条证据定位失败、8 条材料不全（重叠 2 条）。后续优先补材料、定位证据和确定业务口径，不直接靠强制二选一消除 pending。
+
+### 查看与补齐材料
+
+启动 Web 后打开“材料质量”（`/quality`），分别查看下载成功、程序判定完整解析、格式分布和每篇材料的缺口。详情页展示解析方式、页数和最新失败尝试。统计仅针对本库当前版本，不将历史验证库混加。
+
+```bash
+# 输出路径必须是新路径；可用 --source 限定来源
+python scripts/quality_tasks.py report --out data/quality-before.json
+# 先使用已下载原件验证；不发起附件下载。rule 仅用于离线流程验证
+python scripts/quality_tasks.py repair --local-only --prefer rule --limit 10 --out data/repair-local.json
+# 补下载缺失附件，并对非人工审核的变更材料按需重新分类
+python scripts/quality_tasks.py repair --prefer llm --limit 10 --out data/repair-online.json
+python scripts/quality_tasks.py report --out data/quality-after.json
+```
+
+修复通过已有采集互斥与事务执行；同一原件更新解析结果，真实附件字节变化仍追加版本。人工确认、调整、剔除不会被重分类覆盖；新增材料另标“需复核”。缺少网页原件时提示常规重采，缺失附件可补下载。`attachments_cached` 表示缓存复用，不能当作新网络下载量。
+
+文本 OFD 可直接提取；图形/模板型 OFD 仍提示人工核验，不承诺完整解析。旧 DOC/WPS 需安装 LibreOffice。扫描 PDF 可选用 Poppler、Tesseract 和对应语言包（中文须 `chi_sim`）；可通过 `POLICY_OCR_LANG` 与 `POLICY_OCR_MAX_PAGES` 控制语言和单文件 OCR 页数上限，默认 `chi_sim+eng`、20 页。OCR 成果保留人工核验提示，缺工具不会伪装解析成功。转换和 OCR 在本机执行。
+
+### 漏收抽样与小批量验证
+
+```bash
+# reference-list 是人工独立取得的官网详情链接，可省略；省略后不能验证列表漏发现
+python scripts/quality_tasks.py sample --limit 20 --reference-list data/reference.jsonl --out data/audit-v06
+# 业务人员填写 sample.jsonl 的标签、复核人和日期后再评分
+python scripts/quality_tasks.py score --labels data/audit-v06/sample.jsonl --out data/audit-score.json
+# 先检查材料、分组、标签、上下文上限和真实模型配置
+python scripts/validate_batch.py --sample-dir data/audit-v06 --out-dir data/batch-preflight --dry-run
+# 有完整材料和终审标签后，使用已配置的真实模型（会产生 API 用量）
+python scripts/validate_batch.py --sample-dir data/audit-v06 --out-dir data/batch-development --split development --limit 8
+```
+
+独立列表每行格式为 `{"page_url":"https://官网/详情页","title":"文件标题","source_name":"来源配置名","list_url":"官网列表页"}`。取样包含采集队列、已排除记录，以及本轮开始留存的列表过滤记录；列表适配器从未提取出的链接仍需独立名单发现。
+
+样本目录包含 `sample.jsonl`、完整材料 `corpus.jsonl` 和冻结清单 `manifest.json`。只填写 `relevant`（布尔值）、`categories`（四类代码列表）、`label_status=human_reviewed`、`reviewer`、`reviewed_at`、`note`；不要删样本或改材料、分组。无文号时按规范化标题保守分组，仍需在验收前人工检查转载/修订关系。
+
+`--sample-ids ID1 ID2` 可显式选择当前组的完整材料，结果只代表所选样本；不允许将开发样本临时改为验收。开发组可加 `--allow-provisional` 做无终审标签的探索调用，但不会输出验收准确率；`--split holdout` 必须全部业务终审。材料不完整或超长会阻断，避免以截断输入冒充完整材料。连续三次服务失败停止后续调用并保存已有结果。
+
+可选 `--input-rate`、`--output-rate` 为人民币每百万 token 单价；未知单价或未完整返回 usage 时费用为未知。报告包含错误类型、待复核比例、耗时和 token；未提供新价格时不猜测费用。本轮真实缓存验证是 4 个附件中完整解析由 1 个增至 2 个；未重跑浙江 387 条全量采集，未产生新的付费模型评测结果。
+
+## v0.5 历史说明
+
 v0.5 基于 `improve/policy-ingestion` 上的 `bbef2ab` 更新，保留 v0.4 的省份来源、模型配置和你的 56 条浙江样本。重点修复 **LLM 输入一致性、评测可信度和全量验证误报通过**。变更说明见 [v0.5 质量审查记录](docs/QUALITY-v0.5.md)。
 
 - 采集 → 正文及附件 → 分类 → 入库保持原流程，新增统一的材料完整性检查；直接调用分类器和评测脚本也遵循相同规则。

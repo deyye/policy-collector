@@ -174,12 +174,14 @@ class LLMClassifier:
         system += "\n业务口径：" + json.dumps(self.rules,ensure_ascii=False)
         results=[]
         tokens_in=tokens_out=0
+        usage_reported=True
         for index,chunk in enumerate(chunks[:cfg.max_chunks]):
             user=header+f"第{index+1}/{len(chunks)}段：\n<document>\n{chunk}\n</document>"
             data=self.client.chat_json(system,user)
             tokens_in += self.client.usage.get("input_tokens",0)
             tokens_out += self.client.usage.get("output_tokens",0)
             self.usage = {'input_tokens': tokens_in, 'output_tokens': tokens_out}
+            usage_reported = usage_reported and getattr(self.client,'usage_reported',False)
             if data is None:
                 return None
             results.append(self._validate(doc,data,evidence_source=chunk))
@@ -199,7 +201,7 @@ class LLMClassifier:
             need_review=review,reason='；'.join(dict.fromkeys(r.reason for r in results)),
             evidence='\n'.join(dict.fromkeys(r.evidence for r in results if r.evidence)),
             model_version=cfg.effective_model,reviewer_hint=hints,method='llm',input_truncated=truncated,
-            input_tokens=tokens_in,output_tokens=tokens_out,
+            input_tokens=tokens_in,output_tokens=tokens_out,usage_reported=usage_reported,
             confidence=min((r.confidence for r in results if r.confidence is not None),default=None))
 
     def _validate(self, doc: Document, data: dict, evidence_source=None) -> Classification:

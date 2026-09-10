@@ -31,6 +31,10 @@ class Document:
     raw_bytes_sha256: str = ""    # 原文件哈希（去重用）
     attachments: list = field(default_factory=list)
     parse_error: str = ""
+    parser_version: str = ""
+    parse_method: str = ""
+    total_pages: int = 0
+    parsed_pages: int = 0
 
     @property
     def analysis_text(self) -> str:
@@ -59,6 +63,7 @@ class Classification:
     input_truncated: bool = False
     input_tokens: int = 0
     output_tokens: int = 0
+    usage_reported: bool = False
 
 
 @dataclass

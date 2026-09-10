@@ -1,0 +1,125 @@
+[
+  {
+    "id": 3,
+    "title": "省发展改革委 省能源局关于优化工商业分时电价政策有关事项的通知",
+    "page_url": "https://fzggw.zj.gov.cn/col/col1229123351/art/2026/art_8282044c7b1b469c82f5fd9d2c27a41d.html",
+    "current_ai_draft": {
+      "relevant": false,
+      "categories": []
+    },
+    "question": "一般用电成本调整与投资项目价格支持如何区分？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 7,
+    "title": "省发展改革委 省能源局关于印发《浙江省新能源上网电价市场化改革实施方案》及配套细则的通知",
+    "page_url": "https://fzggw.zj.gov.cn/art/2025/11/4/art_1229123351_2578716.html",
+    "current_ai_draft": {
+      "relevant": true,
+      "categories": [
+        "incentive"
+      ]
+    },
+    "question": "新能源项目电价机制对项目收益形成的支持如何归类？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 10,
+    "title": "浙江省能源局关于印发《浙江省能源领域工程建设项目招投标监管指导意见（试行）》的通知",
+    "page_url": "https://fzggw.zj.gov.cn/art/2025/6/3/art_1229123351_2556123.html",
+    "current_ai_draft": {
+      "relevant": false,
+      "categories": []
+    },
+    "question": "工程建设项目招投标全过程监管是否属于激励约束类？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 13,
+    "title": "浙江省物价局、浙江省民政厅关于进一步规范公墓价格管理的通知",
+    "page_url": "https://fzggw.zj.gov.cn/art/2025/2/14/art_1229123351_2545057.html",
+    "current_ai_draft": {
+      "relevant": false,
+      "categories": []
+    },
+    "question": "一般公共服务价格管理，没有项目条款时是否排除？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 28,
+    "title": "省发展改革委 省建设厅 省交通运输厅 省水利厅 省地方金融监管局 浙江银保监局关于清理、减免、规范工程建设项目投标保证金 进一步优化提升招投标领域营商环境的通知",
+    "page_url": "https://fzggw.zj.gov.cn/art/2023/6/26/art_1229123351_2480886.html",
+    "current_ai_draft": {
+      "relevant": false,
+      "categories": []
+    },
+    "question": "投标保证金减免是否纳入投资项目政策，归保障、激励约束还是两者？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 86,
+    "title": "省发展改革委 省生态环境厅关于对钢铁行业实施超低排放差别化电价政策的通知",
+    "page_url": "https://fzggw.zj.gov.cn/art/2021/9/1/art_1229123351_2348251.html",
+    "current_ai_draft": {
+      "relevant": true,
+      "categories": [
+        "incentive"
+      ]
+    },
+    "question": "面向存量企业的环保差别电价是否纳入项目投资范围？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  },
+  {
+    "id": 240,
+    "title": "关于在行政管理事项中应用信用记录和信用报告的实施意见",
+    "page_url": "https://fzggw.zj.gov.cn/art/2014/3/18/art_1229123351_580859.html",
+    "current_ai_draft": {
+      "relevant": false,
+      "categories": []
+    },
+    "question": "综合信用制度须出现哪些项目适用条款才纳入？",
+    "decision": null,
+    "categories": [],
+    "clause_quote": "",
+    "clause_location": "",
+    "reviewer": "",
+    "reviewed_at": "",
+    "status": "awaiting_business_review"
+  }
+]

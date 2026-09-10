@@ -1,0 +1,121 @@
+"""Bounded local document parsers. OCR/conversion never sends documents to a service."""
+from __future__ import annotations
+import io
+import os
+import posixpath
+import shutil
+import subprocess
+import tempfile
+import zipfile
+from functools import lru_cache
+from pathlib import Path
+from lxml import etree
+
+PARSER_VERSION = 'attachments-v3'
+
+
+def detect_format(data, declared):
+    if data.startswith(b'%PDF-'): return 'pdf'
+    if data.startswith(b'PK'):
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                if 'word/document.xml' in z.namelist(): return 'docx'
+                if 'OFD.xml' in z.namelist(): return 'ofd'
+        except zipfile.BadZipFile: pass
+    return declared
+
+
+def pdf_text(data):
+    from pypdf import PdfReader
+    reader = PdfReader(io.BytesIO(data))
+    if not 0 < len(reader.pages) <= 500: raise ValueError('PDF页数为空或超过500页')
+    pages, issues, methods = [], [], set()
+    ocr_limit = max(0, min(100, int(os.getenv('POLICY_OCR_MAX_PAGES', '20'))))
+    attempted = 0
+    for number, page in enumerate(reader.pages, 1):
+        try: text = page.extract_text() or ''
+        except Exception: text = ''
+        if len(text.strip()) < 40:
+            if attempted < ocr_limit and shutil.which('pdftoppm') and shutil.which('tesseract'):
+                attempted += 1
+                try:
+                    ocr = ocr_pdf_page(data, number)
+                    if len(ocr.strip()) > len(text.strip()): text = ocr; methods.add('ocr')
+                except (OSError, subprocess.SubprocessError):
+                    issues.append(f'第{number}页OCR失败或缺少语言包')
+            if len(text.strip()) < 40: issues.append(f'第{number}页文本不足，需OCR/人工核对')
+        else: methods.add('text')
+        pages.append(text)
+    if 'ocr' in methods: issues.append('含OCR识别内容，需人工核对识别准确性')
+    return ('\n\n'.join(f'[第{i+1}页]\n{t}' for i,t in enumerate(pages) if t.strip()),
+            '；'.join(issues), len(pages), sum(len(t.strip()) >= 40 for t in pages), '+'.join(sorted(methods)) or 'pdf')
+
+
+@lru_cache(maxsize=1)
+def ocr_languages():
+    result=subprocess.run(['tesseract','--list-langs'],check=True,capture_output=True,timeout=10)
+    return set(result.stdout.decode('utf-8').splitlines()[1:])
+
+
+def ocr_pdf_page(data, number):
+    requested=os.getenv('POLICY_OCR_LANG','chi_sim+eng')
+    if not set(requested.split('+')).issubset(ocr_languages()):
+        raise OSError('OCR缺少指定语言包')
+    with tempfile.TemporaryDirectory(prefix='policy-ocr-') as directory:
+        root=Path(directory); source=root/'input.pdf';source.write_bytes(data)
+        subprocess.run(['pdftoppm','-f',str(number),'-l',str(number),'-singlefile','-scale-to','2400',
+                        '-png',str(source),str(root/'page')],check=True,capture_output=True,timeout=45)
+        result=subprocess.run(['tesseract',str(root/'page.png'),'stdout','-l',
+                               requested],check=True,capture_output=True,timeout=60)
+        return result.stdout.decode('utf-8').strip()
+
+
+def legacy_to_pdf(data, fmt):
+    binary=shutil.which('libreoffice') or shutil.which('soffice')
+    if not binary: raise ValueError('需安装LibreOffice以转换旧Word/WPS')
+    with tempfile.TemporaryDirectory(prefix='policy-office-') as directory:
+        root=Path(directory);source=root/('input.'+fmt);source.write_bytes(data)
+        profile=root/'profile';(profile/'user').mkdir(parents=True)
+        (profile/'user/registrymodifications.xcu').write_text('''<?xml version="1.0"?><oor:items xmlns:oor="http://openoffice.org/2001/registry"><item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="MacroSecurityLevel" oor:op="fuse"><value>3</value></prop></item><item oor:path="/org.openoffice.Office.Writer/Content/Update"><prop oor:name="Link" oor:op="fuse"><value>2</value></prop></item></oor:items>''')
+        subprocess.run([binary,'-env:UserInstallation='+profile.as_uri(),'--headless','--nologo','--nodefault',
+                        '--norestore','--convert-to','pdf','--outdir',str(root),str(source)],
+                       check=True,capture_output=True,timeout=90)
+        output=root/'input.pdf'
+        if not output.exists() or output.stat().st_size > 100*1024*1024: raise ValueError('Office转换未生成可用PDF')
+        return output.read_bytes()
+
+
+def ofd_text(data):
+    """Follow DocRoot/Pages order; do not mistake ZIP member order for page order."""
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        if len(z.infolist()) > 10000 or sum(i.file_size for i in z.infolist()) > 200*1024*1024:
+            raise ValueError('OFD解压规模超过限制')
+        def xml(name):
+            if name.startswith('/') or '..' in name.split('/'): raise ValueError('OFD内部路径无效')
+            if z.getinfo(name).file_size > 20*1024*1024: raise ValueError('OFD页面XML过大')
+            return etree.fromstring(z.read(name),etree.XMLParser(resolve_entities=False,no_network=True))
+        def path(base, ref):
+            value=posixpath.normpath(posixpath.join(posixpath.dirname(base),ref))
+            if value.startswith('../') or value.startswith('/'): raise ValueError('OFD内部引用越界')
+            return value
+        manifest=xml('OFD.xml'); roots=manifest.xpath('//*[local-name()="DocRoot"]/text()')
+        if not roots: raise ValueError('OFD缺少DocRoot')
+        texts=[];issues=[];complete=0
+        for docroot in roots:
+            document=xml(docroot)
+            # Shared templates can contain substantive text; flag rather than silently omit.
+            templates=bool(document.xpath('//*[local-name()="TemplatePage"]'))
+            pages=document.xpath('//*[local-name()="Pages"]/*[local-name()="Page"]')
+            if len(pages)>500: raise ValueError('OFD超过500页')
+            for p in pages:
+                page=xml(path(docroot,p.attrib['BaseLoc']))
+                fragments=page.xpath('//*[local-name()="TextCode"]/text()')
+                text='\n'.join(t for t in fragments if t.strip()); number=len(texts)+1
+                graphics=bool(page.xpath('//*[local-name()="ImageObject" or local-name()="CompositeObject" or local-name()="PathObject" or local-name()="Template"]'))
+                if not text.strip() or graphics or templates:
+                    issues.append(f'第{number}页含图形/模板或缺少文本，需渲染核对')
+                else: complete+=1
+                texts.append(text)
+        if not texts: raise ValueError('OFD未找到页面')
+        return ('\n\n'.join(f'[第{i+1}页]\n{t}' for i,t in enumerate(texts) if t.strip()),
+                '；'.join(issues),len(texts),complete,'ofd-text')

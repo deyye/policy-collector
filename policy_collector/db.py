@@ -264,7 +264,9 @@ class Database:
         if keyword:
             sql += " AND (title LIKE ? OR content LIKE ? OR wenhao LIKE ?)"
             args += [f"%{keyword}%"] * 3
-        if review_status:
+        if review_status == 'pending':
+            sql += " AND (review_status='pending' OR parse_requires_review=1)"
+        elif review_status:
             sql += " AND review_status=?"
             args.append(review_status)
         sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
@@ -316,12 +318,15 @@ class Database:
     def _migrate(self):
         additions = {
             "source_configs": {"last_success_at": "TEXT", "last_error": "TEXT DEFAULT ''"},
-            "fetch_records": {"last_checked_at": "TEXT", "policy_id": "INTEGER", "classification_json": "TEXT DEFAULT ''"},
+            "fetch_records": {"last_checked_at": "TEXT", "policy_id": "INTEGER", "classification_json": "TEXT DEFAULT ''", "document_json":"TEXT DEFAULT ''"},
             "policies": {"reviewer_hint": "TEXT DEFAULT ''", "classification_method": "TEXT DEFAULT ''",
                          "fallback_reason": "TEXT DEFAULT ''", "input_truncated": "INTEGER DEFAULT 0",
                          "input_tokens": "INTEGER DEFAULT 0", "output_tokens": "INTEGER DEFAULT 0",
-                         "related_policy_key": "TEXT DEFAULT ''"},
-            "attachments": {"error": "TEXT DEFAULT ''"},
+                         "related_policy_key": "TEXT DEFAULT ''", "raw_page_sha256":"TEXT DEFAULT ''",
+                         "analysis_sha256":"TEXT DEFAULT ''", "parse_error":"TEXT DEFAULT ''",
+                         "parse_requires_review":"INTEGER DEFAULT 0"},
+            "attachments": {"error": "TEXT DEFAULT ''", "parser_version":"TEXT DEFAULT ''",
+                "parse_method":"TEXT DEFAULT ''", "total_pages":"INTEGER DEFAULT 0", "parsed_pages":"INTEGER DEFAULT 0"},
         }
         for table, fields in additions.items():
             existing = {r[1] for r in self._conn.execute(f"PRAGMA table_info({table})")}
@@ -329,6 +334,13 @@ class Database:
                 if name not in existing:
                     self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {declaration}")
         self._conn.executescript("""
+            CREATE TABLE IF NOT EXISTS attachment_attempts (
+                id INTEGER PRIMARY KEY, fetch_id INTEGER, url TEXT, fmt TEXT, download_status TEXT,
+                parse_status TEXT, error TEXT, checked_at TEXT);
+            CREATE INDEX IF NOT EXISTS idx_attachment_attempts ON attachment_attempts(fetch_id,url,id);
+            CREATE TABLE IF NOT EXISTS discovery_observations (
+                id INTEGER PRIMARY KEY, source_id INTEGER, page_url TEXT, title TEXT,
+                admitted INTEGER, reason TEXT, observed_at TEXT, UNIQUE(source_id,page_url));
             CREATE TABLE IF NOT EXISTS policy_sources (
                 id INTEGER PRIMARY KEY, policy_id INTEGER NOT NULL, fetch_id INTEGER,
                 source_id INTEGER, page_url TEXT NOT NULL, last_seen_at TEXT,
@@ -353,9 +365,9 @@ class Database:
             c.execute(f"INSERT INTO policies ({','.join(cols)}) VALUES ({','.join('?' for _ in cols)})",[data[k] for k in cols])
             pid=c.lastrowid
             for a in attachments:
-                keys=('name','url','local_path','fmt','sha256','parse_status','parsed_text','error')
-                c.execute("INSERT INTO attachments(policy_id,"+','.join(keys)+") VALUES(?,?,?,?,?,?,?,?,?)",
-                          [pid]+[a.get(k,'') for k in keys])
+                keys=('name','url','local_path','fmt','sha256','parse_status','parsed_text','error','parser_version','parse_method','total_pages','parsed_pages')
+                c.execute("INSERT INTO attachments(policy_id,"+','.join(keys)+") VALUES("+','.join('?' for _ in range(len(keys)+1))+")",
+                          [pid]+[a.get(k,0 if k.endswith('pages') else '') for k in keys])
             c.execute("INSERT INTO policy_sources(policy_id,fetch_id,source_id,page_url,last_seen_at) VALUES(?,?,?,?,?)",
                       (pid,fid,sid,url,now()))
             c.execute("UPDATE fetch_records SET policy_id=? WHERE id=?",(pid,fid))
@@ -409,7 +421,7 @@ class Database:
         if action == "confirm" and not before["category"]:
             raise ValueError("未分类政策请先调整分类后采纳")
         fields={"review_status": {"confirm":"confirmed","adjust":"adjusted","reject":"rejected"}[action],
-                "need_review":0, "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
+                "need_review":0, "parse_requires_review":0, "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
         if action=="adjust":
             fields.update(category=",".join(cats),category_names=",".join(CATEGORY_CN[c] for c in cats))
         with self.tx() as c:
@@ -439,3 +451,38 @@ class Database:
                 "runs": one("SELECT COUNT(*) FROM run_logs"),
                 "attachments": one("SELECT COUNT(*) FROM attachments"),
             }
+
+    def record_attachment_attempts(self, fid, attachments):
+        with self.tx() as c:
+            for a in attachments:
+                c.execute("INSERT INTO attachment_attempts(fetch_id,url,fmt,download_status,parse_status,error,checked_at) VALUES(?,?,?,?,?,?,?)",
+                    (fid,a['url'],a.get('fmt',''), 'ok' if a.get('sha256') and a.get('local_path') else 'failed',
+                     a.get('parse_status',''),a.get('error',''),now()))
+
+    def refresh_analysis(self, pid, fields, attachments, changed):
+        """Same original, newer extraction. Human conclusions survive, with an explicit recheck flag."""
+        import hashlib
+        with self.tx() as c:
+            c.execute('BEGIN IMMEDIATE')
+            before=dict(c.execute('SELECT * FROM policies WHERE id=?',(pid,)).fetchone())
+            metadata={k:v for k,v in fields.items() if k in ('wenhao','page_date','doc_date','issuing_authority') and not before.get(k)}
+            if before['review_status'] in ('confirmed','adjusted','rejected'):
+                fields={k:v for k,v in fields.items() if k in ('content','content_sha256','analysis_sha256','parse_error','raw_page_sha256')}
+                fields.update(metadata)
+                if changed: fields.update(parse_requires_review=1,need_review=1)
+            fields['updated_at']=now()
+            c.execute('UPDATE policies SET '+','.join(k+'=?' for k in fields)+' WHERE id=?',(*fields.values(),pid))
+            if metadata:
+                c.execute('INSERT INTO review_events(policy_id,action,before_json,after_json,note,created_at) VALUES(?,?,?,?,?,?)',
+                    (pid,'metadata_backfill',json.dumps({k:before.get(k) for k in metadata},ensure_ascii=False),
+                     json.dumps(metadata,ensure_ascii=False),'同一来源重采补齐空字段',now()))
+            keys=('local_path','fmt','sha256','parse_status','parsed_text','error','parser_version','parse_method','total_pages','parsed_pages')
+            for a in attachments:
+                c.execute('UPDATE attachments SET '+','.join(k+'=?' for k in keys)+' WHERE policy_id=? AND url=?',
+                    (*[a.get(k,0 if k.endswith('pages') else '') for k in keys],pid,a['url']))
+            if changed:
+                oldtext=before.get('analysis_sha256') or hashlib.sha256(before['content'].encode()).hexdigest()
+                c.execute('INSERT INTO review_events(policy_id,action,before_json,after_json,note,created_at) VALUES(?,?,?,?,?,?)',
+                    (pid,'reparse',json.dumps({'analysis_sha256':oldtext,'review_status':before['review_status']}),
+                     json.dumps({'analysis_sha256':fields.get('analysis_sha256'),'human_decision_preserved':before['review_status'] in ('confirmed','adjusted','rejected')}),
+                     '原件未变，更新解析结果；原人工结论保留，新增材料请复核',now()))
