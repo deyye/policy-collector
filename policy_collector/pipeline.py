@@ -293,12 +293,11 @@ class Pipeline:
                 self.db.update_fetch(fid,status=status,processed_at=now(),error='附件需补采' if stats.attachments_failed else '')
                 return stats
             cls=self.classifier.classify(doc,prefer)
-            if doc.parse_error or stats.attachments_failed or any(a['parse_status'] != 'ok' for a in doc.attachments):
-                cls.need_review=True
-                cls.reviewer_hint+='；原文或附件不完整，需补采/解析复核'
-                if cls.is_investment_policy=='no':cls.is_investment_policy='pending'
+            # 材料完整性判断已由 Classifier.classify 统一处理（todo_type=material）。
+            # 此处只补一种情况：附件存在但尚未解析出正文，同属材料未齐。
             if doc.attachments and not any(a.get('parsed_text') for a in doc.attachments):
-                cls.need_review=True;cls.reviewer_hint+='；附件正文尚未解析'
+                cls.todo_type='material';cls.need_review=False
+                cls.reviewer_hint+='；附件正文尚未解析，待重解析'
                 if cls.is_investment_policy=='no':cls.is_investment_policy='pending'
             self._count_classification(cls,stats)
             self.db.update_fetch(fid,classification_json=json.dumps(asdict(cls),ensure_ascii=False))
@@ -334,13 +333,25 @@ class Pipeline:
         else:stats.rule_classified+=1
         stats.input_tokens+=cls.input_tokens;stats.output_tokens+=cls.output_tokens
 
+    @staticmethod
+    def _review_status(cls):
+        """人工审核状态。
+        待办类型为 material/system 时不计入业务待办队列，但结论尚未确定，故仍保持 pending。
+        """
+        if cls.need_review or cls.is_investment_policy=='pending':
+            return 'pending'
+        if cls.is_investment_policy=='no':
+            return 'rejected'
+        return 'confirmed_auto'
+
     def _policy_row(self,source,doc,cls,fid):
         return dict(title=doc.title,wenhao=doc.wenhao,issuing_authority=doc.issuing_authority,
             page_date=doc.page_date,doc_date=doc.doc_date,region=source.region,site=source.site,page_url=doc.page_url,
             doc_type=cls.doc_type,category=cls.category,category_names=cls.category_names,
-            is_investment_policy=cls.is_investment_policy,need_review=int(cls.need_review),reason=cls.reason,
+            is_investment_policy=cls.is_investment_policy,need_review=int(cls.need_review),
+            todo_type=cls.todo_type,reason=cls.reason,
             evidence=cls.evidence,confidence=cls.confidence,model_version=cls.model_version,
-            review_status='pending' if cls.need_review else ('rejected' if cls.is_investment_policy=='no' else 'confirmed_auto'),
+            review_status=self._review_status(cls),
             content=doc.content,content_sha256=content_hash(doc),source_fetch_id=fid,reviewer_hint=cls.reviewer_hint,
             raw_page_sha256=doc.raw_bytes_sha256,analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),parse_error=doc.parse_error,
             classification_method=cls.method,fallback_reason=cls.fallback_reason,input_truncated=int(cls.input_truncated),

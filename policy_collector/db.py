@@ -324,7 +324,8 @@ class Database:
                          "input_tokens": "INTEGER DEFAULT 0", "output_tokens": "INTEGER DEFAULT 0",
                          "related_policy_key": "TEXT DEFAULT ''", "raw_page_sha256":"TEXT DEFAULT ''",
                          "analysis_sha256":"TEXT DEFAULT ''", "parse_error":"TEXT DEFAULT ''",
-                         "parse_requires_review":"INTEGER DEFAULT 0"},
+                         "parse_requires_review":"INTEGER DEFAULT 0",
+                         "todo_type":"TEXT DEFAULT 'none'"},
             "attachments": {"error": "TEXT DEFAULT ''", "parser_version":"TEXT DEFAULT ''",
                 "parse_method":"TEXT DEFAULT ''", "total_pages":"INTEGER DEFAULT 0", "parsed_pages":"INTEGER DEFAULT 0"},
         }
