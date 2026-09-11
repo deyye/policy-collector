@@ -251,9 +251,14 @@ class Database:
             return dict(r) if r else None
 
     def query_policies(self, region: str = "", category: str = "", keyword: str = "",
-                       review_status: str = "", limit: int = 100, offset: int = 0) -> list[dict]:
+                       review_status: str = "", todo_type: str = "",
+                       limit: int = 100, offset: int = 0) -> list[dict]:
         sql, args = "SELECT * FROM policies p WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)", []
-        if not review_status:
+        if todo_type:
+            # 按待办类型筛选时不排除 rejected（各待办队列自成一体）
+            sql += " AND todo_type=?"
+            args.append(todo_type)
+        elif not review_status:
             sql += " AND review_status != 'rejected'"
         if region:
             sql += " AND region=?"
@@ -441,16 +446,28 @@ class Database:
             def one(sql: str, *a: Any) -> int:
                 return int(self._conn.execute(sql, a).fetchone()[0])
 
+            latest = "version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"
+
+            def todo(kind: str) -> int:
+                """按待办类型计数。todo_type 由判定环节自动推导，不含手工置位。"""
+                return one(f"SELECT COUNT(*) FROM policies p WHERE todo_type=? AND {latest}", kind)
+
             return {
                 "sources": one("SELECT COUNT(*) FROM source_configs"),
                 "sources_enabled": one("SELECT COUNT(*) FROM source_configs WHERE enabled=1"),
                 "policies": len(self.query_policies(limit=1000000)),
-                "pending_review": one("SELECT COUNT(*) FROM policies p WHERE need_review=1 AND version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"),
-                "confirmed": one("SELECT COUNT(*) FROM policies p WHERE review_status IN ('confirmed','adjusted') AND version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"),
-                "rejected": len(self.query_policies(review_status='rejected',limit=1000000)),
+                "pending_review": one("SELECT COUNT(*) FROM policies p WHERE need_review=1 AND " + latest),
+                "confirmed": one("SELECT COUNT(*) FROM policies p WHERE review_status IN ('confirmed','adjusted') AND " + latest),
+                "rejected": len(self.query_policies(review_status='rejected', limit=1000000)),
                 "fetches": one("SELECT COUNT(*) FROM fetch_records"),
                 "runs": one("SELECT COUNT(*) FROM run_logs"),
                 "attachments": one("SELECT COUNT(*) FROM attachments"),
+                # 待办三分法：机器自修的、要业务方看的、要运维处理的，分开计数
+                "todo_material": todo("material"),
+                "todo_review": todo("review"),
+                "todo_scope": todo("scope"),
+                "todo_system": todo("system"),
+                "auto_confirmed": one(f"SELECT COUNT(*) FROM policies p WHERE todo_type='none' AND review_status='confirmed_auto' AND {latest}"),
             }
 
     def record_attachment_attempts(self, fid, attachments):

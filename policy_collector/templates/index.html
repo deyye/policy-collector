@@ -8,8 +8,15 @@
 <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 570 250" fill="none"><defs><linearGradient id="hero-line"><stop stop-color="#8eb6d6" stop-opacity=".13"/><stop offset="1" stop-color="#b3c6d7" stop-opacity=".55"/></linearGradient></defs><g stroke="url(#hero-line)" stroke-width="1"><path d="M0 225 280 85l285 140M40 245 280 125l245 120M70 185v-64l55-28 55 28v72m-55-100v100M200 182V59l75-38 75 38v123M275 21v161M370 194V102l58-29 58 29v112M428 73v140M200 74l75 38 75-38M200 103l75 38 75-38M200 132l75 38 75-38M370 127l58 29 58-29M370 152l58 29 58-29M70 143l55 28 55-28"/><path d="m0 202 210-105m150 0 205 105M0 250l280-140L565 250M120 250l160-80 160 80"/></g><circle cx="275" cy="21" r="4" fill="#c6ab75"/><circle cx="428" cy="73" r="3" fill="#a7c4d8"/><path d="M360 47h104m-52-10v20" stroke="#a7c4d8" opacity=".3"/></svg><span>汇集 · 理解 · 研判</span></div>
 </section>
 <div class="metrics-grid">
-{% for value,label,glyph,sub in [(stats.policies,'政策记录','file','当前版本 · 含待复核'),(stats.pending_review,'待人工复核','clock','分类与相关性待确认'),(stats.sources_enabled,'启用来源','globe','已配置来源共 ' ~ stats.sources ~ ' 个'),(stats.runs,'累计运行批次','activity','采集任务运行记录')] %}
+{% for value,label,glyph,sub in [(stats.policies,'政策记录','file','当前版本 · 含待办'),(stats.todo_review + stats.todo_scope,'需你处理','clock','其余待办不占你的时间'),(stats.auto_confirmed,'自动确认','check','判定明确 · 无需人工'),(stats.sources_enabled,'启用来源','globe','已配置来源共 ' ~ stats.sources ~ ' 个')] %}
 <div class="metric {{ 'attention' if loop.index==2 else '' }}"><div class="metric-top"><span>{{ label }}</span><span class="metric-icon">{{ icon(glyph) }}</span></div><div class="metric-value">{{ value }}<span>{{ '个' if loop.index==3 else '批' if loop.index==4 else '份' }}</span></div><div class="metric-sub">{{ sub }}</div></div>
+{% endfor %}
+</div>
+<div class="section-heading"><h2>待办清单</h2><span>按「谁能解决」分开，不必都堆给人看</span></div>
+<div class="todo-grid">
+{% for code, desc in [('material','附件未下载或未解析，机器重试即可'),('review','结论待你确认：采纳 / 改判 / 剔除'),('scope','需要业务方拍板口径'),('system','模型或系统故障，需运维处理')] %}
+{% set n = {'material':stats.todo_material,'review':stats.todo_review,'scope':stats.todo_scope,'system':stats.todo_system}[code] %}
+<a class="todo-card {{ code }}" href="{{ url_for('policies', todo=code) }}"><div class="todo-head"><span class="todo-name">{{ todo_names[code] }}</span><span class="todo-owner">{{ todo_owners[code] }}</span></div><div class="todo-value">{{ n }}<span>条</span></div><p>{{ desc }}</p></a>
 {% endfor %}
 </div>
 <div class="section-heading"><h2>政策分类导航</h2><span>按政策作用查阅资料</span></div>

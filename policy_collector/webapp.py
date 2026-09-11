@@ -25,6 +25,21 @@ from .pipeline import Pipeline
 
 CAT_CODES = {"guide": "引导类", "access": "准入类", "guarantee": "保障类", "incentive": "激励约束类"}
 
+# 待办类型的中文名与责任归属。由判定环节自动推导，不手工置位。
+# 关键：material（材料缺件）与 system（模型故障）不计入业务待办——那是机器/运维的活。
+TODO_NAMES = {
+    "material": "待补材料",
+    "review": "待复核结论",
+    "scope": "待定口径",
+    "system": "待修故障",
+}
+TODO_OWNERS = {
+    "material": "机器自修",
+    "review": "业务查看",
+    "scope": "业务拍板",
+    "system": "运维处理",
+}
+
 # 串行化"运行采集"，避免同一时刻多线程重复抓取同一来源
 _RUN_LOCK = threading.Lock()
 _REVIEW_STYLE = {
@@ -80,7 +95,8 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         stats = d.dashboard()
         recent = d.query_policies(limit=8)
         runs = d.list_runs(limit=5)
-        return render_template("index.html", stats=stats, recent=recent, runs=runs)
+        return render_template("index.html", stats=stats, recent=recent, runs=runs,
+                               todo_names=TODO_NAMES, todo_owners=TODO_OWNERS)
 
     # ---------------- 政策库 ----------------
     @app.route("/policies")
@@ -89,16 +105,19 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         category = request.args.get("category", "").strip()
         region = request.args.get("region", "").strip()
         review = request.args.get("review", "").strip()
+        todo = request.args.get("todo", "").strip()
         page = max(request.args.get("page", 1, type=int), 1)
         per = 20
         d = db()
         rows = d.query_policies(region=region, category=category, keyword=q,
-                                review_status=review, limit=per, offset=(page - 1) * per)
+                                review_status=review, todo_type=todo,
+                                limit=per, offset=(page - 1) * per)
         has_more = len(rows) == per
         regions = sorted({r["region"] for r in d.query_policies(limit=2000) if r["region"]})
         return render_template(
-            "policies.html", rows=rows, q=q, category=category, region=region, review=review,
+            "policies.html", rows=rows, q=q, category=category, region=region, review=review, todo=todo,
             page=page, has_more=has_more, regions=regions, cat_codes=CAT_CODES, _cat_label=_cat_label,
+            todo_names=TODO_NAMES, todo_owners=TODO_OWNERS,
         )
 
     @app.route("/policies/<int:pid>")

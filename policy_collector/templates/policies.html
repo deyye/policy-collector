@@ -17,6 +17,12 @@
       <option value="{{ name }}" {% if name == category %}selected{% endif %}>{{ name }}</option>
     {% endfor %}
   </select>
+  <select aria-label="待办类型" name="todo">
+    <option value="">全部待办</option>
+    {% for code, name in todo_names.items() %}
+      <option value="{{ code }}" {% if code == todo %}selected{% endif %}>{{ name }} · {{ todo_owners[code] }}</option>
+    {% endfor %}
+  </select>
   <select aria-label="复核状态" name="review">
     <option value="">全部状态</option>
     <option value="pending" {% if review == 'pending' %}selected{% endif %}>待复核</option>
@@ -33,7 +39,7 @@
 <div class="table-caption"><h2>政策文件</h2><span>当前页 {{ rows|length }} 条 · 点击标题查看原文与复核依据</span></div>
 {% if rows %}
 <div class="table-scroll" role="region" aria-label="政策列表，可横向滚动" tabindex="0"><table class="list wide">
-  <thead><tr><th>ID</th><th>标题</th><th>文号</th><th>类别</th><th>地区</th><th>日期</th><th>状态</th></tr></thead>
+  <thead><tr><th>ID</th><th>标题</th><th>文号</th><th>类别</th><th>地区</th><th>日期</th><th>待办 / 状态</th></tr></thead>
   <tbody>
   {% for p in rows %}
     <tr>
@@ -44,7 +50,8 @@
       <td>{{ p.region or '-' }}</td>
       <td class="meta">{{ (p.page_date or '')[:10] or '-' }}</td>
       <td>
-        {% if p.review_status == 'pending' %}<span class="tag warn">待复核</span>
+        {% if p.todo_type in todo_names %}
+          <span class="tag {{ 'warn' if p.todo_type in ['review','scope'] else 'ok' }}">{{ todo_names[p.todo_type] }}</span><span class="dim">{{ todo_owners[p.todo_type] }}</span>
         {% elif p.review_status == 'rejected' %}<span class="tag bad">已剔除</span>
         {% else %}<span class="tag ok">{{ {'confirmed':'人工确认','confirmed_auto':'模型通过','adjusted':'已调整'}.get(p.review_status, p.review_status) }}</span>
         {% endif %}
@@ -54,9 +61,9 @@
   </tbody>
 </table></div>
 <div class="pager">
-  {% if page > 1 %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, page=page-1) }}">上一页</a>{% endif %}
+  {% if page > 1 %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, todo=todo, page=page-1) }}">上一页</a>{% endif %}
   <span class="pg">第 {{ page }} 页</span>
-  {% if has_more %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, page=page+1) }}">下一页</a>{% endif %}
+  {% if has_more %}<a class="btn" href="{{ url_for('policies', q=q, region=region, category=category, review=review, todo=todo, page=page+1) }}">下一页</a>{% endif %}
 </div>
 {% else %}
 {{ empty("未找到匹配的政策", "试着减少筛选条件，或前往采集来源归集新的政策文件。", "search") }}
