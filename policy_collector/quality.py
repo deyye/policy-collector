@@ -49,7 +49,8 @@ def attachment_report(db, source=''):
         'by_format':dict(sorted(formats.items(),key=lambda kv:-kv[1]['needs_attention'])), 'details':details}
 
 
-def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', policy_id=None):
+def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', policy_id=None,
+                     reclassify=False):
     from .pipeline import RunStats
     from .collector import allowed_url
     if limit<1:raise ValueError('limit必须大于0')
@@ -77,8 +78,22 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
             if not src or not allowed_url(row['page_url'],src) or not path.is_file():
                 total.failed+=1;outcomes.append({'policy_id':row['id'],'error':'来源不匹配或缺少网页原件，需常规重采'});continue
             # Repair reuses saved originals, downloading only missing attachments unless local_only.
+            #
+            # 重判（reclassify）的触发条件要精确，否则会破坏 repair 的幂等性
+            # （重复跑同一批不应反复重判、反复写 review_events）：
+            #
+            #   ① 材料确实变了 —— 由 pipeline 里的 `changed` 自动覆盖，不在此处传参。
+            #   ② 结论已过期 —— 条目还挂在待补材料队列（todo_type='material'），
+            #      但材料早已补齐（例如上一轮 repair 已把正文解析出来了，却没重判）。
+            #      这是本函数存在的意义：**材料变了结论必须跟着变**。
+            #      一旦重判成功，todo_type 就不再是 material，故天然幂等。
+            #
+            # 实测教训：14 条被选中、附件全部已解析出正文，却因未传该标志而全部落进
+            # duplicates 分支——结论永远停留在"待补材料"，队列就此堵死。
+            stale_verdict = (row.get('todo_type') == 'material')
             stats=pipe._ingest_url(src,row['page_url'],raw=path.read_bytes(),prefer=prefer,
-                                   reuse_cached=True,local_only=local_only)
+                                   reuse_cached=True,local_only=local_only,
+                                   reclassify=(reclassify or stale_verdict))
             total+=stats;outcomes.append({'policy_id':row['id'],**stats.to_dict()})
         total.elapsed_seconds=round(time.monotonic()-started,3)
         pipe.db.finish_run(run_id,total.to_dict(),status='partial' if total.has_errors else 'ok',

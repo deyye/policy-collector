@@ -248,7 +248,12 @@ class Pipeline:
                     # Metadata backfill remains supported on same-source reparses.
                     for key in ('wenhao','page_date','doc_date','issuing_authority'):
                         if not old.get(key) and getattr(doc,key):fields[key]=getattr(doc,key)
-                    if (changed or reclassify) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
+                    # 因 reclassify 而重判时，要求材料确实可用——否则是在对判不了的东西空转：
+                    # 材料仍不完整时会反复进入这里、反复调模型，且结论不会变。
+                    # （`changed` 走另一条路：材料内容真的变了就应重判，不受此限。）
+                    _material_ok = (not doc.parse_error and
+                                    all((a.get('parsed_text') or '').strip() for a in doc.attachments))
+                    if (changed or (reclassify and _material_ok)) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
                         cls=self.classifier.classify(doc,prefer);self._count_classification(cls,stats)
                         rowfields=self._policy_row(source,doc,cls,fid)
                         fields.update({k:v for k,v in rowfields.items() if k not in ('title','wenhao','page_date','doc_date','issuing_authority','region','site','page_url','source_fetch_id')})
@@ -279,13 +284,16 @@ class Pipeline:
                                 (decision.policy_id, 'metadata_backfill',
                                  json.dumps({k:current.get(k) for k in filled},ensure_ascii=False),
                                  json.dumps(filled,ensure_ascii=False), '同一来源重采补齐空字段：'+url, now()))
-                if reclassify and not doc.parse_error and all(a['parse_status']=='ok' for a in doc.attachments) and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
+                # 重新分类的前提是「正文已拿到」。parse_status='partial'（转换有损但已出文本）
+                # 也应允许重判——否则经 textutil 等回退方案解析出的内容永远进不了判定环节。
+                _all_parsed = all((a.get('parsed_text') or '').strip() for a in doc.attachments)
+                if reclassify and not doc.parse_error and _all_parsed and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
                     cls=self.classifier.classify(doc,prefer)
                     self._count_classification(cls,stats)
                     fields=self._policy_row(source,doc,cls,fid)
                     keys=('category','category_names','is_investment_policy','need_review','reason','evidence',
                           'model_version','review_status','reviewer_hint','classification_method','fallback_reason',
-                          'input_truncated','input_tokens','output_tokens','doc_type')
+                          'input_truncated','input_tokens','output_tokens','doc_type','todo_type')
                     self.db.update_policy(decision.policy_id,**{k:fields[k] for k in keys})
                     stats.reclassified+=1
                 else:stats.duplicates+=1
