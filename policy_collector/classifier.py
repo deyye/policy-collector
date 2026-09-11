@@ -429,9 +429,16 @@ class Classifier:
 
     def classify(self, doc: Document, prefer: str = "llm") -> Classification:
         out = self._classify(doc, prefer)
-        incomplete = doc.parse_error or any(
-            a.get('parse_status', 'ok' if a.get('parsed_text') else 'missing') != 'ok'
-            for a in doc.attachments)
+        # 只有「材料缺失」才挂待补材料。parse_status='partial' 表示正文已解析出来、
+        # 仅转换过程留有提示（例如 textutil 转换可能失真）——那属于「结论需人核对」
+        # （review），不是「材料没拿到」，不该占用待补材料队列。
+        _MISSING = ('failed', 'missing', 'not_parsed', 'needs_ocr', 'unsupported')
+
+        def _material_missing(a) -> bool:
+            status = a.get('parse_status', 'ok' if a.get('parsed_text') else 'missing')
+            return status in _MISSING or not (a.get('parsed_text') or '').strip()
+
+        incomplete = bool(doc.parse_error) or any(_material_missing(a) for a in doc.attachments)
         if incomplete:
             # 材料不完整属机器可自修事项：挂到「待补材料」，不占用业务待办队列。
             out.todo_type = 'material'

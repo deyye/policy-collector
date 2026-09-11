@@ -77,6 +77,10 @@ class Parser:
                 from .attachment_parsers import ofd_text
                 doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = ofd_text(data)
             elif fmt in ('doc','wps'):
+                # 旧版 Word/WPS：优先 LibreOffice；macOS 上回退自带 textutil（零安装）
+                from .attachment_parsers import legacy_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = legacy_text(data,fmt)
+            elif fmt in ('xls','ppt','pptx'):
                 from .attachment_parsers import legacy_to_pdf, pdf_text
                 doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = pdf_text(legacy_to_pdf(data,fmt))
                 doc.parse_method = 'libreoffice+' + doc.parse_method
@@ -91,6 +95,9 @@ class Parser:
                 doc.content = "\n".join(blocks).strip()
                 if d.element.xpath('.//w:drawing | .//w:pict'):
                     doc.parse_error = 'Word含图片，文本已提取，图片中的条款需人工核对或OCR'
+            elif fmt in ("xlsx",):
+                from .attachment_parsers import xlsx_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = xlsx_text(data)
             elif fmt in ("txt",):
                 doc.content = data.decode("utf-8-sig")
             else:
