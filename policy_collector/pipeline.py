@@ -83,10 +83,14 @@ class Pipeline:
     def discover(self,source,run_id=''):
         stats=RunStats();self.discovery_errors=[]
         row=self.db.get_source(source.name)
-        links=[];seen_pages=set()
+        links=[];seen_pages=set();seen_links=set();next_url=''
+        self.collector.discovery_status[source.name] = {
+            'pages_fetched': 0, 'end_reached': False, 'stop_reason': 'page_limit'}
         for page in range(1,source.max_pages+1):
-            url=source.feed_url if source.list_format=='gov_json' else list_page_url(source,page)
-            if url in seen_pages:break
+            url=source.feed_url if source.list_format=='gov_json' else (next_url or list_page_url(source,page))
+            if url in seen_pages:
+                self.collector.discovery_status[source.name]['stop_reason']='single_window'
+                break
             seen_pages.add(url)
             try:
                 if url.startswith('file://'):
@@ -106,6 +110,9 @@ class Pipeline:
                     from .collector import discover_zj_unit_links
                     found = discover_zj_unit_links(self.collector, source, raw, url,
                                                    max_pages=source.max_pages)
+                elif source.list_format == 'jpage':
+                    from .collector import discover_jpage_links
+                    found = discover_jpage_links(self.collector, source, raw, base, source.max_pages)
                 elif custom:
                     from bs4 import BeautifulSoup
                     found=custom(BeautifulSoup(raw,'lxml'),source)
@@ -113,11 +120,33 @@ class Pipeline:
                     found=ListPageParser(source).parse(raw,base_url=base)
                 if not found:
                     raise ValueError('未发现候选链接：请核实栏目、动态列表接口或选择器')
-                links.extend(found)
+                fresh = [item for item in found if item.url not in seen_links]
+                if not fresh:
+                    raise ValueError('列表页完全重复，未确认历史采完')
+                seen_links.update(item.url for item in fresh)
+                links.extend(fresh)
+                if source.list_format in ('zj_unit', 'jpage'):
+                    break
+                status = self.collector.discovery_status[source.name]
+                status['pages_fetched'] += 1
+                if source.list_format == 'gov_json':
+                    status['stop_reason'] = 'feed_window'
+                    break
+                if source.pagination == 'next_link':
+                    from .collector import next_page_link
+                    next_url = next_page_link(raw, base)
+                    if not next_url:
+                        status['stop_reason'] = 'no_next_link'
+                        break
+                elif source.pagination == 'single':
+                    status['stop_reason'] = 'single_window'
+                    break
             except Exception as e:
                 links.extend(getattr(e, 'links', []))
                 stats.failed+=1
                 self.discovery_errors.append(f'{url}: {e}')
+                self.collector.discovery_status[source.name]['stop_reason']='error'
+                break
         for item in links:
             admitted=self.collector.is_policy_url(item.url,source)
             with self.db.tx() as c:
@@ -364,6 +393,10 @@ class Pipeline:
                 if not retry_only:
                     total+=self.discover(src,run_id)
                     note='\n'.join(self.discovery_errors)
+                    discovery=self.collector.discovery_status.get(src.name,{})
+                    note += '\n采集范围：' + json.dumps(discovery,ensure_ascii=False)
+                    if not discovery.get('end_reached'):
+                        note += '；本次未确认历史列表全部采完'
                 # 新发现优先，其余按最近检查时间轮转；持续失败不能永远压住已采记录。
                 where=" AND status='failed'" if retry_only else ''
                 queue=self.db._conn.execute(f"""SELECT * FROM fetch_records WHERE source_id=? {where}

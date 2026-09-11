@@ -1,0 +1,351 @@
+{
+  "checked_at": "2026-09-11T09:52:51.184087+00:00",
+  "note": "官网首页与栏目候选探测；未接入不自动启用，仍须运行audit_sources验证列表、正文、附件和入库。",
+  "regions": [
+    {
+      "region": "北京市",
+      "home_url": "http://fgw.beijing.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.beijing.gov.cn/",
+      "home_sha256": "d92809f8a857b29604473a96f8c7834cbe8cf504060790095e78817ba66d3904",
+      "columns": [
+        {
+          "title": "政策文件",
+          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/"
+        }
+      ]
+    },
+    {
+      "region": "天津市",
+      "home_url": "http://fzgg.tj.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTP 403"
+    },
+    {
+      "region": "河北省",
+      "home_url": "http://hbdrc.hebei.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "山西省",
+      "home_url": "http://fgw.shanxi.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.shanxi.gov.cn/",
+      "home_sha256": "5bd43600c80f48eea0b48e4970733c9e288f38fdce188ecd9e10091e7bc4f29b",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.shanxi.gov.cn/tzgg/"
+        }
+      ]
+    },
+    {
+      "region": "内蒙古自治区",
+      "home_url": "http://fgw.nmg.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "辽宁省",
+      "home_url": "http://fgw.ln.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.ln.gov.cn/",
+      "home_sha256": "370abf6af6b10bda7b417101dbe8f17337204dd99a489e7a11db8ec018b5ff98",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.ln.gov.cn/fgw/index/tzgg/index.shtml"
+        }
+      ]
+    },
+    {
+      "region": "吉林省",
+      "home_url": "http://jldrc.jl.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "黑龙江省",
+      "home_url": "http://drc.hlj.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "上海市",
+      "home_url": "http://fgw.sh.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.sh.gov.cn/",
+      "home_sha256": "73bfcaf267e904b54d162132477a29a2286e038b96b5268fab370184ac365bb2",
+      "columns": [
+        {
+          "title": "政策文件",
+          "url": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html"
+        }
+      ]
+    },
+    {
+      "region": "江苏省",
+      "home_url": "http://fzggw.jiangsu.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTP 403"
+    },
+    {
+      "region": "浙江省",
+      "home_url": "http://fzggw.zj.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fzggw.zj.gov.cn/",
+      "home_sha256": "f7ab7ee954b594b90b09002b31f7793ff52d7deb76a63650943af6c741aea823",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fzggw.zj.gov.cn/col/col1599544/index.html"
+        },
+        {
+          "title": "政策文件",
+          "url": "https://fzggw.zj.gov.cn/col/col1599528/index.html"
+        }
+      ]
+    },
+    {
+      "region": "安徽省",
+      "home_url": "http://fzggw.ah.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTP 403"
+    },
+    {
+      "region": "福建省",
+      "home_url": "http://fgw.fujian.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "江西省",
+      "home_url": "http://drc.jiangxi.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "needs_adapter",
+      "final_url": "https://drc.jiangxi.gov.cn/",
+      "home_sha256": "e934a07bc59a27fc4e6420f3e21ec0c8933bc206abb0c7753602ec3dcceaf07c",
+      "columns": []
+    },
+    {
+      "region": "山东省",
+      "home_url": "http://fgw.shandong.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "河南省",
+      "home_url": "http://fgw.henan.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTP 403"
+    },
+    {
+      "region": "湖北省",
+      "home_url": "http://fgw.hubei.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "湖南省",
+      "home_url": "http://fgw.hunan.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "广东省",
+      "home_url": "http://drc.gd.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "广西壮族自治区",
+      "home_url": "http://fgw.gxzf.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "ReadTimeout"
+    },
+    {
+      "region": "海南省",
+      "home_url": "http://plan.hainan.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "重庆市",
+      "home_url": "http://fzggw.cq.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fzggw.cq.gov.cn/",
+      "home_sha256": "b5acf24458b0419d30c39607900ee2bdc4cf8d69daee0ffc31c7b5491be22304",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fzggw.cq.gov.cn/zwxx/tzgg/"
+        },
+        {
+          "title": "政策文件",
+          "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/"
+        }
+      ]
+    },
+    {
+      "region": "四川省",
+      "home_url": "http://fgw.sc.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.sc.gov.cn/",
+      "home_sha256": "aaea4a2a1310c38f6347bf2c7c01dc1d7ff659724d46f5cb521d042b14cef2a4",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml"
+        },
+        {
+          "title": "政策文件",
+          "url": "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml"
+        }
+      ]
+    },
+    {
+      "region": "贵州省",
+      "home_url": "http://fgw.guizhou.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fgw.guizhou.gov.cn/",
+      "home_sha256": "a2a722fe6bd1c28afd92d5e120cb9c087d8ec76a92e6b116a5912fd0f8711a2c",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/"
+        },
+        {
+          "title": "政策文件",
+          "url": "https://fgw.guizhou.gov.cn/zwgk/zcwj/"
+        }
+      ]
+    },
+    {
+      "region": "云南省",
+      "home_url": "https://yndrc.yn.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://yndrc.yn.gov.cn/",
+      "home_sha256": "21dcba22607a3bc983c82a4b765c13f939cef519dfe9027868ceb83d8a5ba27a",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/fadingzhudonggongkaineirong/tongzhigonggao/"
+        },
+        {
+          "title": "政策文件",
+          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/"
+        }
+      ]
+    },
+    {
+      "region": "西藏自治区",
+      "home_url": "http://drc.xizang.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://drc.xizang.gov.cn/",
+      "home_sha256": "7618ea4e9f221494ea10645116485d355d0f2b70b2499b9712ed26776dde13e9",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://drc.xizang.gov.cn/zwgk_1941/tz/"
+        },
+        {
+          "title": "规范性文件",
+          "url": "https://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/"
+        },
+        {
+          "title": "通知公告",
+          "url": "https://drc.xizang.gov.cn/zsyz/tzgd1/"
+        },
+        {
+          "title": "政策法规",
+          "url": "https://drc.xizang.gov.cn/zsyz/zc/"
+        }
+      ]
+    },
+    {
+      "region": "陕西省",
+      "home_url": "http://sndrc.shaanxi.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://sndrc.shaanxi.gov.cn/",
+      "home_sha256": "cb3c7cb9da33e6b66de14ab39360508ef0e523ec4f76b2d0a32cfd0ac5735da3",
+      "columns": [
+        {
+          "title": "规范性文件",
+          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gjfgwwj_1/gfxwj/"
+        },
+        {
+          "title": "行政规范性文件",
+          "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/"
+        }
+      ]
+    },
+    {
+      "region": "甘肃省",
+      "home_url": "http://fzgg.gansu.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "青海省",
+      "home_url": "http://fgw.qinghai.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "blocked",
+      "error": "HTTPError"
+    },
+    {
+      "region": "宁夏回族自治区",
+      "home_url": "http://fzggw.nx.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "columns_found",
+      "final_url": "https://fzggw.nx.gov.cn/",
+      "home_sha256": "8a7ec7e0d4592aeed0abf64ac3250a958dd6997f9998d30b1caeaa4f565d2c21",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fzggw.nx.gov.cn/tzgg/"
+        },
+        {
+          "title": "规范性文件",
+          "url": "https://fzggw.nx.gov.cn/zcgh/gfxwj1/"
+        }
+      ]
+    },
+    {
+      "region": "新疆维吾尔自治区",
+      "home_url": "http://xjdrc.xinjiang.gov.cn/",
+      "evidence_url": "https://www.ndrc.gov.cn/",
+      "status": "needs_adapter",
+      "final_url": "https://xjdrc.xinjiang.gov.cn/",
+      "home_sha256": "e5544f19aa40ca9a442c6bbc4fbbe3ab0dadaa2da5bf45b8eb79c6c17a6a2dbf",
+      "columns": []
+    }
+  ]
+}

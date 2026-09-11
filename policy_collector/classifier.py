@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -48,17 +49,19 @@ class RuleClassifier:
         if doc_type in ("项目批复", "解读"):
             return Classification(is_investment_policy="no", need_review=True,
                                   reason="单个项目批复或解读不作为普遍适用政策正文归集",
-                                  doc_type=doc_type, model_version="rule-v2")
+                                  doc_type=doc_type, model_version=self.rules.get("version", "rule-v3"))
 
-        # 3. 投资政策相关性
+        # Keywords only recall candidates. A provisional positive requires a
+        # project object and an operative action in the same original clause.
+        scope = self.rules.get("scope", {})
+        clauses = [c.strip() for c in re.split(r"[。；\n]", doc.analysis_text) if c.strip()]
+        scope_evidence = next((c for c in clauses
+            if any(_norm(k) in _norm(c) for k in scope.get("objects", []))
+            and any(_norm(k) in _norm(c) for k in scope.get("actions", []))), "")
         hits = [k for k in kw_inc if k in text]
-        if len(hits) >= 2:
+        if scope_evidence and doc_type in ("正式政策", "申报通知"):
             is_inv = "yes"
-        elif len(hits) == 1:
-            is_inv = "pending"
-        elif doc_type in ("正式政策", "征求意见稿", "申报通知"):
-            # 正式政策文件但正文未命中投资关键词（如印发通知正文短、内容在附件）：
-            # 不武断排除，判 pending 入库交人工复核
+        elif hits or scope_evidence or doc_type in ("正式政策", "征求意见稿", "申报通知"):
             is_inv = "pending"
         else:
             is_inv = "no"
@@ -96,13 +99,13 @@ class RuleClassifier:
             doc_type=doc_type,
             need_review=True,
             reason="规则命中：" + "；".join(evidence_hits) if evidence_hits else "未命中显著规则关键词",
-            evidence="",
-            model_version="rule-v2",
+            evidence=scope_evidence,
+            model_version=self.rules.get("version", "rule-v3"),
         )
         if hint:
             cls.reviewer_hint = hint
-        elif is_inv == "pending" and need_review:
-            cls.reviewer_hint = "正式文件未命中投资关键词或仅弱命中，请人工确认是否入库并归类"
+        elif is_inv == "pending":
+            cls.reviewer_hint = "尚未同时确认项目适用对象与实质措施，请核实正文、附件或业务边界"
         return cls
 
     def _doc_type(self, doc: Document, head: str) -> str:
@@ -145,7 +148,13 @@ class LLMClassifier:
  "need_review": true|false,
  "confidence": 0-1,
  "reviewer_hint": "需复核时的原因，无需复核填空"}
-边界注意：规定项目能耗准入条件→准入类；安排能耗指标保障→保障类。细则类文件多类混杂默认 need_review=true。"""
+边界注意：规定项目能耗准入条件→准入类；安排能耗指标保障→保障类。
+资金申报条件不等于项目建设准入；多标签本身不是错误，不能仅因标题含“实施细则”强制复核。
+相关性必须识别适用对象和实质措施；不能因出现“投资”“项目”两个词即判yes。
+综合文件仅少量项目条款、一般企业经营电价与投资改造关系不明时，判pending并说明待确认边界。
+征求意见稿必须复核，不得当作现行正式政策。
+当category非空时，还须输出category_evidence对象：每个类别键对应本段连续原文，例如
+"category_evidence":{"guarantee":"优先保障重大项目新增建设用地"}。不能用一条泛泛证据支持所有标签。"""
 
     def __init__(self, cfg: AppConfig, rules: dict[str, Any]):
         self.client = LLMClient(cfg.llm)
@@ -222,6 +231,18 @@ class LLMClassifier:
         source=evidence_source if evidence_source is not None else doc.analysis_text
         if not isinstance(evidence,str) or not evidence.strip() or _norm(evidence) not in _norm(source):
             evidence='';errors.append('证据缺失或无法在原文定位')
+        category_evidence = data.get('category_evidence', {})
+        category_hints = []
+        if inv == 'yes':
+            for cat in cats:
+                quote = category_evidence.get(cat) if isinstance(category_evidence, dict) else None
+                if not isinstance(quote, str) or not quote.strip() or _norm(quote) not in _norm(source):
+                    category_hints.append(f'{CATEGORY_CN[cat]}缺少可定位的独立证据')
+            if category_hints:
+                flag = True
+        if doc_type == '征求意见稿':
+            flag = True
+            category_hints.append('征求意见稿，须确认收录范围及效力状态')
         if inv=='yes' and not cats:errors.append('相关政策未分类')
         if inv=='no' and cats:errors.append('非相关文件不应输出投资类别')
         if errors:inv='pending';cats=[]
@@ -233,9 +254,9 @@ class LLMClassifier:
         hint=str(data.get('reviewer_hint',''))
         return Classification(is_investment_policy=inv,category=','.join(cats),
             category_names=','.join(CATEGORY_CN[c] for c in cats),doc_type=doc_type,
-            need_review=flag or bool(errors) or inv=='pending',reason=str(data.get('category_reason',''))[:1000],
+            need_review=flag or bool(errors) or inv=='pending',reason=(str(data.get('category_reason','')) + ('；分类证据：' + json.dumps(category_evidence, ensure_ascii=False) if isinstance(category_evidence, dict) and category_evidence and not category_hints else ''))[:2000],
             evidence=evidence,confidence=confidence,model_version=self.client.cfg.effective_model,method='llm',
-            reviewer_hint='；'.join([hint]+errors).strip('；'))
+            reviewer_hint='；'.join([hint]+errors+category_hints).strip('；'))
 
 
 class Classifier:

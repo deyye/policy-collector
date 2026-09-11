@@ -83,8 +83,9 @@ sources:
     include: ["art_284_"]       # 栏目码在文件名中(art_284_<id>.html)；art_314(解读)/art_28x(要闻) 自动排除
     detail_url_pattern: "/art/20[0-9]{2}/[0-9]+/[0-9]+/art_284_[0-9]+[.]html$"
     exclude: ["index"]
-    max_pages: 1                 # 首页以 script 内嵌 XML(recordset/CDATA)输出最新 30 条；翻页为 dataproxy.jsp(POST/XML/多单元)，暂未接入
-    note: "2026-09-09 真实源验证：栏目列表(script 内嵌 recordset 记录)发现 + 详情 div.TRS_Editor 解析入库成功；CDATA 列表解析为 ListPageParser 通用能力。历史翻页待接入 dataproxy 接口。"
+    max_pages: 10
+    list_format: jpage           # 跟随页面声明的同源 nextgroup 链接，不硬编码 unitid
+    note: "2026-09-09 真实源验证：栏目列表(script 内嵌 recordset 记录)发现 + 详情 div.TRS_Editor 解析入库成功；CDATA 列表解析为 ListPageParser 通用能力。已新增 nextgroup 分组翻页适配；2026-09-11在线两组发现138条；抽样详情解析待修复，未宣称历史全量。"
     link_selector: ""
 
   - name: fj_normative
@@ -119,6 +120,30 @@ sources:
     detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
     max_pages: 1
     note: "省发改委地方性法规规章栏目；省政府站外原文不纳入此来源。"
+
+  - name: jl_policies
+    site: 吉林省发展和改革委员会
+    region: 吉林
+    category: 吉林政策
+    enabled: true
+    list_url: "https://jldrc.jl.gov.cn/zcfg/jlzc/"
+    include: ["/zcfg/jlzc/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    pagination: trs
+    max_pages: 2
+    note: "来自官网导航的吉林政策栏目；配置采前2页，历史覆盖不等于全量。见 source-audit.json 的实测状态。"
+
+  - name: yn_policies
+    site: 云南省发展和改革委员会
+    region: 云南
+    category: 其他文件
+    enabled: true
+    list_url: "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/"
+    detail_url_pattern: "/html/20[0-9]{2}/[a-z_0-9]+/[0-9]+[.]html$"
+    link_selector: ""
+    pagination: next_link
+    max_pages: 20
+    note: "跟随官网Base64编码的下一页链接，解码HTML不执行脚本；栏目内转载保留官网URL。"
 
   - name: demo_local
     site: 本地样例（合成数据）

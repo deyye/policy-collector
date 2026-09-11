@@ -180,9 +180,9 @@ class SourceConfig:
     include: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
     max_pages: int = 3
-    pagination: str = "single"  # single / trs / template
+    pagination: str = "single"  # single / trs / template / next_link
     allowed_hosts: list[str] = field(default_factory=list)
     note: str = ""
-    list_format: str = "html"  # html / gov_json
+    list_format: str = "html"  # html / gov_json / zj_unit / jpage
     feed_url: str = ""
     detail_url_pattern: str = ""
