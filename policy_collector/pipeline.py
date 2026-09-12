@@ -253,6 +253,7 @@ class Pipeline:
                 stats.documents_incomplete+=1
             old=self.db.policy_for_url(url)
             if old:
+                reclassify = reclassify or self._needs_model_retry(old, prefer)
                 previous=self.db.list_attachments(old['id'])
                 by_url={a['url']:a for a in previous}
                 raw_before=old.get('raw_page_sha256') or ((existing or {}).get('content_sha256') if ((existing or {}).get('policy_id')==old['id'] or (existing or {}).get('id')==old.get('source_fetch_id')) else '')
@@ -278,7 +279,7 @@ class Pipeline:
                     for key in ('wenhao','page_date','doc_date','issuing_authority'):
                         if not old.get(key) and getattr(doc,key):fields[key]=getattr(doc,key)
                     if (changed or reclassify) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
-                        cls=self.classifier.classify(doc,prefer);self._count_classification(cls,stats)
+                        cls=self._classify_document(doc,prefer);self._count_classification(cls,stats)
                         rowfields=self._policy_row(source,doc,cls,fid)
                         fields.update({k:v for k,v in rowfields.items() if k not in ('title','wenhao','page_date','doc_date','issuing_authority','region','site','page_url','source_fetch_id')})
                         stats.reclassified+=1
@@ -308,20 +309,21 @@ class Pipeline:
                                 (decision.policy_id, 'metadata_backfill',
                                  json.dumps({k:current.get(k) for k in filled},ensure_ascii=False),
                                  json.dumps(filled,ensure_ascii=False), '同一来源重采补齐空字段：'+url, now()))
+                reclassify = reclassify or self._needs_model_retry(self.db.get_policy(decision.policy_id), prefer)
                 if reclassify and not doc.parse_error and all(a['parse_status']=='ok' for a in doc.attachments) and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
-                    cls=self.classifier.classify(doc,prefer)
+                    cls=self._classify_document(doc,prefer)
                     self._count_classification(cls,stats)
                     fields=self._policy_row(source,doc,cls,fid)
                     keys=('category','category_names','is_investment_policy','need_review','reason','evidence',
                           'model_version','review_status','reviewer_hint','classification_method','fallback_reason',
-                          'input_truncated','input_tokens','output_tokens','doc_type')
+                          'input_truncated','input_tokens','output_tokens','doc_type','parse_requires_review')
                     self.db.update_policy(decision.policy_id,**{k:fields[k] for k in keys})
                     stats.reclassified+=1
                 else:stats.duplicates+=1
                 status='failed' if stats.attachments_failed else 'processed'
                 self.db.update_fetch(fid,status=status,processed_at=now(),error='附件需补采' if stats.attachments_failed else '')
                 return stats
-            cls=self.classifier.classify(doc,prefer)
+            cls=self._classify_document(doc,prefer)
             if doc.parse_error or stats.attachments_failed or any(a['parse_status'] != 'ok' for a in doc.attachments):
                 cls.need_review=True
                 cls.reviewer_hint+='；原文或附件不完整，需补采/解析复核'
@@ -357,6 +359,19 @@ class Pipeline:
             self.db.update_fetch(fid,status='failed',error=str(e)[:1000])
         return stats
 
+    def _needs_model_retry(self, row, prefer):
+        # Normal scheduled rotation supplies the retry budget; no tight retry loop.
+        return (prefer == 'llm' and self.classifier.llm.available
+                and row.get('classification_method') == 'rule_fallback'
+                and row.get('review_status') not in ('confirmed', 'adjusted', 'rejected'))
+
+    def _classify_document(self, doc, prefer):
+        cls = self.classifier.classify(doc, prefer)
+        # A tentative negative belongs in the review queue, not the exclusion log.
+        if cls.is_investment_policy == 'no' and cls.need_review:
+            cls.is_investment_policy = 'pending'
+        return cls
+
     def _count_classification(self,cls,stats):
         if cls.method=='llm':stats.llm_classified+=1
         elif cls.method=='rule_fallback':stats.llm_fallback+=1
@@ -372,6 +387,7 @@ class Pipeline:
             review_status='pending' if cls.need_review else ('rejected' if cls.is_investment_policy=='no' else 'confirmed_auto'),
             content=doc.content,content_sha256=content_hash(doc),source_fetch_id=fid,reviewer_hint=cls.reviewer_hint,
             raw_page_sha256=doc.raw_bytes_sha256,analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),parse_error=doc.parse_error,
+            parse_requires_review=int(bool(doc.parse_error or any(a.get('parse_status') != 'ok' for a in doc.attachments))),
             classification_method=cls.method,fallback_reason=cls.fallback_reason,input_truncated=int(cls.input_truncated),
             input_tokens=cls.input_tokens,output_tokens=cls.output_tokens)
 
