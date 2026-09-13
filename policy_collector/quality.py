@@ -9,6 +9,7 @@ from pathlib import Path
 from .models import now
 from .attachment_parsers import PARSER_VERSION
 from .locking import ingestion_lock
+from .todo import is_stale_conclusion
 
 
 def attachment_quality(a):
@@ -16,6 +17,14 @@ def attachment_quality(a):
     downloaded=path.is_file() and bool(a.get('sha256'))
     if downloaded:
         downloaded=hashlib.sha256(path.read_bytes()).hexdigest()==a['sha256']
+    # 注意：这里要求 parse_status 恰好为 'ok'，**是刻意的**——`partial` 表示
+    # "正文已提取，但个别页是图形/模板或转换保真度存疑"（实测 OFD 报
+    # "第2页含图形/模板或缺少文本，需渲染核对"），这是真实的材料缺口，
+    # 详情页要照常提示"材料待核对"。
+    #
+    # 它与 todo.derive 的"材料待补"**不是一回事**：后者只认"有没有正文"，
+    # 因为那一格的责任方是机器（补采/重解析）。partial 这类缺口机器重试也修不掉
+    # （要靠渲染+OCR 能力），所以归"结论待确认"由人判断，不能记到机器账上。
     parsed=bool(a.get('parsed_text','').strip()) and a.get('parse_status')=='ok'
     return {'download_ok':downloaded,'parse_complete':downloaded and parsed,
             'parsed_pages':a.get('parsed_pages',0),'total_pages':a.get('total_pages',0)}
@@ -76,10 +85,20 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
             src=pipe.cfg.sources.get(row['source_name'])
             if not src or not allowed_url(row['page_url'],src) or not path.is_file():
                 total.failed+=1;outcomes.append({'policy_id':row['id'],'error':'来源不匹配或缺少网页原件，需常规重采'});continue
+            # 补材料的意义就是"材料变了 → 结论要跟着重判"。不重判的话，
+            # 补齐的正文永远进不了判定环节，条目会一直挂在"材料待补"里
+            # （实测 401 条里 221 条的待办原因是附件问题，全都卡在这里）。
+            #
+            # 只对**结论已过期**的条目重判，而不是一律重判：
+            # 过期 = 它现在还属于"材料待补"（见 todo.is_stale_conclusion）。
+            # 重判成功后它就不再属于 material，下次不会重复触发 → 天然幂等；
+            # 若一律重判，每次 repair 都会把所有条目再跑一遍模型。
+            stale = is_stale_conclusion(row, pipe.db.list_attachments(row['id']))
             # Repair reuses saved originals, downloading only missing attachments unless local_only.
             stats=pipe._ingest_url(src,row['page_url'],raw=path.read_bytes(),prefer=prefer,
-                                   reuse_cached=True,local_only=local_only)
-            total+=stats;outcomes.append({'policy_id':row['id'],**stats.to_dict()})
+                                   reuse_cached=True,local_only=local_only,reclassify=stale)
+            total+=stats;outcomes.append({'policy_id':row['id'],'reclassified' if stale else 'kept_verdict':stale,
+                                          **stats.to_dict()})
         total.elapsed_seconds=round(time.monotonic()-started,3)
         pipe.db.finish_run(run_id,total.to_dict(),status='partial' if total.has_errors else 'ok',
                            note='原件补采与重解析；'+('仅使用本地原件' if local_only else '允许补采缺失附件'))

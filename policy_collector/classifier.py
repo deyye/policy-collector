@@ -17,6 +17,7 @@ from typing import Any, Optional
 from .config import AppConfig
 from .llm_client import LLMClient
 from .models import Classification, Document
+from .todo import document_incomplete
 
 CATEGORY_CN = {"guide": "引导类", "access": "准入类", "guarantee": "保障类", "incentive": "激励约束类"}
 
@@ -77,19 +78,18 @@ class RuleClassifier:
                 score[key] = len(hits_in_doc)
                 evidence_hits.append(f"{conf.get('name', key)}:{'、'.join(hits_in_doc[:3])}")
         cat_keys = [k for k, _ in sorted(score.items(), key=lambda x: -x[1])]
-        need_review = False
+        # 结构边界只决定 hint 文案——让复核者知道"为什么拿不准"。
+        # 原实现在这里维护了一个 need_review 变量，但它在下面被写死 True 覆盖掉，
+        # 于是变成死变量、看起来像 bug（实则是刻意行为）。这里直接去掉它，避免误导。
         hint = ""
         # 边界样例命中
         for bc in self.rules.get("boundary_cases", []):
             if _norm(bc.get("title_hint", "")) in head:
-                need_review = True
                 hint = f"命中边界样例:{bc.get('title_hint','')}；{bc.get('note','')}"
                 break
         if len(cat_keys) >= 3:
-            need_review = True
             hint = "命中类别过多（≥3类混杂），需人工确认" if not hint else hint
         elif len(cat_keys) > 1 and score[cat_keys[0]] == score[cat_keys[1]]:
-            need_review = True
             hint = "多类命中无主类，需人工确认" if not hint else hint
 
         cls = Classification(
@@ -97,6 +97,15 @@ class RuleClassifier:
             category=",".join(cat_keys),
             category_names=",".join(CATEGORY_CN.get(k, k) for k in cat_keys),
             doc_type=doc_type,
+            # 规则模式**一律**转人工复核，这是刻意设计、不是疏漏：
+            # 规则只能召回候选，不能替代业务确认（配置里的 pending_boundaries 表达同一立场）。
+            # 所以"规则跑出来的库人工作量接近 100%"是这种做法的固有代价，
+            # 而不是待办清单没做好。真正能自动确认的是模型路径：模型给出 need_review=false、
+            # 置信度 ≥0.8、且证据能在原文定位时，才不进人工队列（见 LLMClassifier._validate）。
+            #
+            # ⚠️ 未决事项（留给业务方）：是否允许"规则判正且证据强"直接自动确认。
+            # 放开会大幅提升规则模式可用性，但等于把"机器建议"当成"业务确认"，
+            # 与上述立场相反——不在代码里单方面决定。
             need_review=True,
             reason="规则命中：" + "；".join(evidence_hits) if evidence_hits else "未命中显著规则关键词",
             evidence=scope_evidence,
@@ -269,8 +278,8 @@ class Classifier:
 
     def classify(self, doc: Document, prefer: str = "llm") -> Classification:
         out = self._classify(doc, prefer)
-        incomplete = doc.parse_error or any(a.get('parse_status', 'ok' if a.get('parsed_text') else 'missing') != 'ok'
-                                            for a in doc.attachments)
+        # 材料完整性的唯一判据在 todo.document_incomplete，全仓库共用（勿再手写一遍）
+        incomplete = document_incomplete(doc)
         if incomplete:
             out.need_review = True
             out.reviewer_hint = '；'.join(x for x in (out.reviewer_hint, '正文或附件不完整，需补采/解析复核') if x)

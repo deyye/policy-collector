@@ -22,8 +22,15 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from .config import AppConfig
 from .db import Database
 from .pipeline import Pipeline
+from .todo import MATERIAL, REVIEW, SYSTEM, TODO_META, TODO_ORDER
 
 CAT_CODES = {"guide": "引导类", "access": "准入类", "guarantee": "保障类", "incentive": "激励约束类"}
+
+
+def derive_todo(policy: dict, attachments: list) -> str:
+    """页面用：把待办类型附到行上（派生逻辑统一在 policy_collector/todo.py）。"""
+    from .todo import derive
+    return derive(policy, attachments)
 
 # 串行化"运行采集"，避免同一时刻多线程重复抓取同一来源
 _RUN_LOCK = threading.Lock()
@@ -81,7 +88,8 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         recent = d.query_policies(limit=8)
         runs = d.list_runs(limit=5)
         return render_template("index.html", stats=stats, recent=recent, runs=runs,
-                               regions=[r for r in d.region_overview() if r["region"] != "样例"])
+                               regions=[r for r in d.region_overview() if r["region"] != "样例"],
+                               todos=d.todo_overview())
 
     # ---------------- 按省份浏览 ----------------
     @app.route("/provinces")
@@ -110,17 +118,39 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         category = request.args.get("category", "").strip()
         region = request.args.get("region", "").strip()
         review = request.args.get("review", "").strip()
+        todo = request.args.get("todo", "").strip()
         page = max(request.args.get("page", 1, type=int), 1)
         per = 20
         d = db()
         rows = d.query_policies(region=region, category=category, keyword=q,
-                                review_status=review, limit=per, offset=(page - 1) * per)
+                                review_status=review, todo=todo, limit=per, offset=(page - 1) * per)
         has_more = len(rows) == per
         regions = sorted({r["region"] for r in d.query_policies(limit=2000) if r["region"]})
+        # 把待办类型附到每行，列表里就能直接看出"这条该谁处理"
+        for r in rows:
+            r["todo"] = derive_todo(r, d.list_attachments(r["id"]))
         return render_template(
-            "policies.html", rows=rows, q=q, category=category, region=region, review=review,
+            "policies.html", rows=rows, q=q, category=category, region=region, review=review, todo=todo,
             page=page, has_more=has_more, regions=regions, cat_codes=CAT_CODES, _cat_label=_cat_label,
+            todo_meta=TODO_META, todo_order=TODO_ORDER,
         )
+
+    @app.route("/todos")
+    def todos():
+        """待办清单：按"谁能解决"分三格，而不是给一个混装的"待复核 N 条"。
+
+        实际待办数取决于分类模式：规则模式下一律转人工（规则只能召回候选），
+        所以用规则模式跑出来的库，这一页会几乎全是"结论待确认"——那不是清单没做好，
+        而是"拿规则当生产判别器"的固有代价。模型模式才可能自动确认。
+        """
+        d = db()
+        overview = d.todo_overview()
+        lists = {key: d.query_policies(todo=key, limit=6) for key in TODO_ORDER}
+        for key, rows in lists.items():
+            for r in rows:
+                r["todo"] = key
+        return render_template("todos.html", todos=overview, lists=lists,
+                               todo_meta=TODO_META, todo_order=TODO_ORDER)
 
     @app.route("/policies/<int:pid>")
     def policy_detail(pid: int):

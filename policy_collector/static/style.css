@@ -2202,3 +2202,38 @@ pre.content {
 .region-hint { margin:0; padding-left:1.3em }
 .region-hint li { margin-bottom:6px; font-size:13px }
 @media (max-width:760px) { .province-grid, .province-grid-wide { grid-template-columns:1fr 1fr } }
+
+
+/* ── 待办清单（2026-09-14）──────────────────────────────────
+   把混装的"待复核 N 条"拆成三格：机器自修 / 运维处理 / 业务判断。
+   需要人处理的那格用暖色强调，机器与运维两格保持中性——一眼看出哪些是自己的活。 */
+.todo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(232px,1fr)); gap:14px; margin-bottom:14px }
+.todo-card { display:block; background:#fff; border:1px solid var(--line); border-left:3px solid var(--line);
+  border-radius:var(--radius); padding:15px 16px; color:var(--ink); box-shadow:var(--shadow);
+  transition:border-color .2s,transform .2s }
+.todo-card:hover { border-color:#bbc9d7; transform:translateY(-2px) }
+.todo-card.material { border-left-color:#8a6a3d }
+.todo-card.system   { border-left-color:#7c8494 }
+.todo-card.review   { border-left-color:var(--red); background:#fffdfc }
+.todo-top { display:flex; align-items:baseline; justify-content:space-between; gap:8px }
+.todo-name { font-size:15px; font-weight:600 }
+.todo-owner { font-size:11px; color:var(--muted); background:#f0f4f8; border-radius:3px; padding:1px 7px; white-space:nowrap }
+.todo-card.review .todo-owner { background:#faeeed; color:#a8605a }
+.todo-value { font-size:26px; font-weight:600; color:var(--navy); line-height:1.25; margin:6px 0 2px;
+  font-variant-numeric:tabular-nums }
+.todo-value small { font-size:11px; font-weight:400; color:var(--muted); margin-left:3px }
+.todo-note { font-size:12px; color:var(--muted); line-height:1.55 }
+.todo-sample { font-size:11px; color:#8a97a6; border-top:1px solid var(--line); margin-top:9px; padding-top:8px }
+.todo-sample-none { font-style:italic }
+.todo-summary { font-size:12px; color:var(--muted); margin:0 0 26px }
+.todo-panel { border-top:3px solid var(--line) }
+.todo-panel.material { border-top-color:#8a6a3d }
+.todo-panel.system   { border-top-color:#7c8494 }
+.todo-panel.review   { border-top-color:var(--red) }
+.todo-owner-inline { font-size:12px; font-weight:400; color:var(--muted); margin-left:6px }
+.todo-chip { display:inline-block; font-size:10px; line-height:1.8; padding:2px 8px; border-radius:3px;
+  white-space:nowrap; background:#edf2f8; color:#587898 }
+.todo-chip.material { background:#faf6ec; color:#8a6a3d }
+.todo-chip.system   { background:#f1f3f6; color:#67707e }
+.todo-chip.review   { background:#faeeed; color:#a8605a }
+.feed-why { color:#9b7a41 }

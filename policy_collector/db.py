@@ -251,7 +251,8 @@ class Database:
             return dict(r) if r else None
 
     def query_policies(self, region: str = "", category: str = "", keyword: str = "",
-                       review_status: str = "", limit: int = 100, offset: int = 0) -> list[dict]:
+                       review_status: str = "", todo: str = "", limit: int = 100,
+                       offset: int = 0) -> list[dict]:
         sql, args = "SELECT p.* FROM policies p WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)", []
         if not review_status:
             sql += " AND review_status != 'rejected'"
@@ -269,6 +270,12 @@ class Database:
         elif review_status:
             sql += " AND review_status=?"
             args.append(review_status)
+        if todo:
+            # 待办类型是派生的（见 policy_collector/todo.py），不是表里的列。
+            # 用同一份 CASE 表达式过滤，保证与统计口径完全一致。
+            from .todo import sql_case
+            sql += f" AND {sql_case()} = ?"
+            args.append(todo)
         sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
         args += [limit, offset]
         with self._conn:
@@ -541,6 +548,48 @@ class Database:
                 """
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def todo_overview(self) -> dict:
+        """各待办类型的条目数（派生，不改表结构）。
+
+        这是"待办清单"的数据源：把混装的 need_review 拆成
+        材料待补（机器自修）/ 系统待修（运维）/ 结论待确认（业务），
+        让首页回答"现在该谁做什么"，而不是给一个没有行动指向的总数。
+        """
+        from .todo import NONE, REVIEW, SYSTEM, MATERIAL, TODO_META, TODO_ORDER, sql_case
+        case = sql_case()
+        with self._conn:
+            counted = {r["todo"]: int(r["n"]) for r in self._conn.execute(
+                f"""SELECT {case} AS todo, COUNT(*) AS n
+                    FROM policies p
+                    WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                      AND p.review_status != 'rejected'
+                    GROUP BY todo"""
+            )}
+        # 单条样本：让人点进去之前先看到"典型长什么样"
+        samples = {}
+        for key in TODO_ORDER:
+            row = self._conn.execute(
+                f"""SELECT p.id, p.title FROM policies p
+                    WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                      AND p.review_status != 'rejected' AND {case} = ?
+                    ORDER BY p.id DESC LIMIT 1""", (key,)).fetchone()
+            samples[key] = dict(row) if row else None
+        cells = []
+        for key in TODO_ORDER:
+            name, owner, note = TODO_META[key]
+            cells.append({"key": key, "name": name, "owner": owner, "note": note,
+                          "count": counted.get(key, 0), "sample": samples.get(key)})
+        return {
+            "cells": cells,
+            "counts": counted,
+            "total": sum(counted.values()),
+            # "需你处理"只算真正要人判断的：机器和运维的活不该算到人头上
+            "human": counted.get(REVIEW, 0),
+            "machine": counted.get(MATERIAL, 0),
+            "system": counted.get(SYSTEM, 0),
+            "clear": counted.get(NONE, 0),
+        }
 
     def record_attachment_attempts(self, fid, attachments):
         with self.tx() as c:

@@ -9,6 +9,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
 from .classifier import Classifier
+from .todo import document_incomplete
 from .collector import Collector,ListPageParser,list_page_url
 from .config import AppConfig,SourceConfig,PROJECT_ROOT
 from .db import Database
@@ -356,7 +357,8 @@ class Pipeline:
                 self.db.update_fetch(fid,status=status,processed_at=now(),error='附件需补采' if stats.attachments_failed else '')
                 return stats
             cls=self._classify_document(doc,prefer)
-            if doc.parse_error or stats.attachments_failed or any(a['parse_status'] != 'ok' for a in doc.attachments):
+            # 材料完整性判据统一在 todo.document_incomplete（勿再手写 parse_status != 'ok'）
+            if document_incomplete(doc) or stats.attachments_failed:
                 cls.need_review=True
                 cls.reviewer_hint+='；原文或附件不完整，需补采/解析复核'
                 if cls.is_investment_policy=='no':cls.is_investment_policy='pending'
@@ -423,7 +425,7 @@ class Pipeline:
             review_status='pending' if cls.need_review else ('rejected' if cls.is_investment_policy=='no' else 'confirmed_auto'),
             content=doc.content,content_sha256=content_hash(doc),source_fetch_id=fid,reviewer_hint=cls.reviewer_hint,
             raw_page_sha256=doc.raw_bytes_sha256,analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),parse_error=doc.parse_error,
-            parse_requires_review=int(bool(doc.parse_error or any(a.get('parse_status') != 'ok' for a in doc.attachments))),
+            parse_requires_review=int(document_incomplete(doc)),
             classification_method=cls.method,fallback_reason=cls.fallback_reason,input_truncated=int(cls.input_truncated),
             input_tokens=cls.input_tokens,output_tokens=cls.output_tokens)
 
