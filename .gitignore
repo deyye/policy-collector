@@ -19,3 +19,4 @@ export_policies.csv
 
 # macOS
 .DS_Store
+.tf*/

@@ -385,6 +385,18 @@ sources:
     max_pages: 1
     note: "栏目页实测 17 篇，形态 /fgw_xxx/20260828/hash.html；详情不在栏目路径下，故 include 留空。正文容器 .Article_content 已补（此前整页文本仅供复核）。"
 
+  - name: sd_xxgk
+    site: 山东省发展和改革委员会
+    region: 山东
+    category: 政府信息公开
+    enabled: true
+    list_url: "http://fgw.shandong.gov.cn/col/col91074/index.html"
+    detail_url_pattern: "/art/20[0-9]{2}/[0-9]{1,2}/[0-9]{1,2}/art_[0-9]+_[0-9]+[.]html$"
+    exclude: ["index"]
+    pagination: single
+    max_pages: 1
+    note: "首页导航全是处室页（法规处/投资处…），政策在政府信息公开栏目下。实测 index_N.html 为 404、?page=N 返回与首页完全相同的字节（死参数），翻页由脚本控制，故 single 只取首页 50 条。该栏目的详情落在 /art/ 下（不在栏目路径内），属聚合型，但抽查标题均为山东省发改委自身文件，不涉及中央转载。"
+
   # ── 2026-09-14 补充：两家曾被误判为"列表 JS 渲染"的站 ──────────────────
   # 二者实际都能静态采集，误判原因都是**链接不在 href 里**：
   #   · 天津：<a onclick="isDownLoad(this,'URL')">，<a> 根本没有 href
