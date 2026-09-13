@@ -23,7 +23,7 @@ from urllib.parse import urljoin, urlsplit
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bs4 import BeautifulSoup
 
-from policy_collector.collector import Collector
+from policy_collector.collector import Collector, anchor_target
 from policy_collector.config import AppConfig
 
 # 栏目名候选：宽松匹配（只要沾边就纳入候选，最终由结构评分决定）
@@ -51,6 +51,9 @@ ARTICLE_PATTERNS = (
     # 上海 /fgw_jggl/20260828/hash.html：注意 20260828 是 **8** 位，
     # 写成 20\d{8}（10 位）会一条也匹配不上——日期段正则必须拿真实样本验过。
     re.compile(r"/20\d{6}/[0-9a-f]{8,}\.s?html?$", re.I),
+    # 2026-09-14 实测补充：辽宁 /fgw/zc/zxzc/2026090912183160373/index.shtml
+    # （长数字串目录 + index.shtml）。此前认不出，辽宁被误判为"列表 JS 渲染"。
+    re.compile(r"/\d{10,}/index\.s?html?$", re.I),
 )
 DATE_RE = re.compile(r"20\d{2}[-/年.]\d{1,2}[-/月.]\d{1,2}")
 # 栏目页可能是"跳转桩"：整页只有一行 location.href 指向真正的栏目。
@@ -108,11 +111,19 @@ def candidate_columns(html: str, base: str) -> list[dict]:
 
 
 def score_list_page(html: str, base: str) -> dict:
-    """判断一个页面是不是"政策列表页"：统计其中的文章型同源链接。"""
+    """判断一个页面是不是"政策列表页"：统计其中的文章型同源链接。
+
+    取链接必须走 anchor_target（href 优先、回退 onclick）：部分 CMS 不给 <a> 写 href，
+    链接在 onclick 里（实测天津）。只按 href 统计会得到"零文章链接"，
+    进而把这类页面误判成"列表由 JS 渲染"——实测天津就是这样被误判的。
+    """
     soup = BeautifulSoup(html, "lxml")
     articles, dated = set(), 0
-    for a in soup.find_all("a", href=True):
-        url = urljoin(base, (a.get("href") or "").strip())
+    for a in soup.find_all("a"):
+        raw = anchor_target(a)
+        if not raw:
+            continue
+        url = urljoin(base, raw)
         if urlsplit(url).scheme not in ("http", "https") or not same_host(url, base):
             continue
         if not looks_like_article(url):

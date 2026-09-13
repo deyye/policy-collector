@@ -171,36 +171,6 @@ def test_batch_run_is_not_killed_by_stale_run_cleanup(tmp_path, monkeypatch):
         pipe.close()
 
 
-def test_audit_flags_national_repost_and_ignores_date_dirs():
-    """验收脚本的归属检查：聚合栏目下的中央转载要能被抓出来，年月目录不能误报。
-
-    背景：福建 /zwgk/fgzd/ 是聚合页，前 15 条全在 gjfgwwj（国家发改委文件转载）子目录下，
-    收进来会把中央文件的 region 错记成福建——而机制检查（列表/正文/附件/入库）全过。
-    这条检查把"归属错记"从只能人工发现，变成脚本能判。
-    """
-    from scripts.audit_sources import sub_column_distribution, NATIONAL_REPOST
-    # 常规 TRS 站：栏目下第一段是年月，不是子栏目 —— 不能误报
-    normal = ['https://x.gov.cn/zcfb/ghxwj/202604/t20260430_1.html',
-              'https://x.gov.cn/zcfb/ghxwj/202601/t20260109_2.html',
-              'https://x.gov.cn/zcfb/ghxwj/2026/t20260109_3.html']
-    assert sub_column_distribution(normal, 'https://x.gov.cn/zcfb/ghxwj/') == {}
-    # 聚合页：并列多个子栏目，其中一个是中央转载
-    mixed = ['https://x.gov.cn/zwgk/fgzd/gjfgwwj/202609/t1.htm',
-             'https://x.gov.cn/zwgk/fgzd/gjfgwwj/202608/t2.htm',
-             'https://x.gov.cn/zwgk/fgzd/sfgwgfxwj/202609/t3.htm']
-    dist = sub_column_distribution(mixed, 'https://x.gov.cn/zwgk/fgzd/')
-    assert dist == {'gjfgwwj': 2, 'sfgwgfxwj': 1}
-    assert [k for k in dist if NATIONAL_REPOST.search(k)] == ['gjfgwwj']
-
-
-def test_audit_sub_column_distribution_marks_out_of_column_links():
-    """详情跳到栏目路径之外的也要标出来（跨栏目/跨站混杂的另一种形态）。"""
-    from scripts.audit_sources import sub_column_distribution
-    urls = ['https://x.gov.cn/other/section/t1.html',
-            'https://x.gov.cn/zwgk/fgzd/sub/t2.htm']
-    dist = sub_column_distribution(urls, 'https://x.gov.cn/zwgk/fgzd/')
-    assert dist == {'(栏目路径之外)': 1, 'sub': 1}
-
 
 def test_audit_flags_national_repost_and_ignores_date_dirs():
     """验收脚本的归属检查：聚合栏目下的中央转载要能被抓出来，年月目录不能误报。
@@ -225,12 +195,22 @@ def test_audit_flags_national_repost_and_ignores_date_dirs():
 
 
 def test_audit_sub_column_distribution_marks_out_of_column_links():
-    """详情跳到栏目路径之外的也要标出来（跨栏目/跨站混杂的另一种形态）。"""
+    """详情跳到栏目路径之外的也要标出来（跨栏目/跨站混杂的另一种形态）。
+
+    同时锁住一件事：**纯数字段不是子栏目**。除年月外，还有"长数字串即文章 ID"
+    的站（辽宁 /fgw/zc/zxzc/2026090912183160373/index.shtml）——只排除年月形态的话，
+    辽宁 36 条详情会被拆成 36 个"子栏目"，把聚合栏目检测变成噪音。
+    检查一旦开始误报，真问题也会连带被忽略，所以这条必须钉住。
+    """
     from scripts.audit_sources import sub_column_distribution
     urls = ['https://x.gov.cn/other/section/t1.html',
             'https://x.gov.cn/zwgk/fgzd/sub/t2.htm']
     dist = sub_column_distribution(urls, 'https://x.gov.cn/zwgk/fgzd/')
     assert dist == {'(栏目路径之外)': 1, 'sub': 1}
+    # 辽宁形态：长数字串是文章 ID，不是子栏目 → 不产生任何子栏目
+    ln = ['https://fgw.ln.gov.cn/fgw/zc/zxzc/2026090912183160373/index.shtml',
+          'https://fgw.ln.gov.cn/fgw/zc/zxzc/2024123113391120820/index.shtml']
+    assert sub_column_distribution(ln, 'https://fgw.ln.gov.cn/fgw/zc/zxzc/index.shtml') == {}
 
 
 def test_discover_follows_js_redirect_stub():
@@ -251,19 +231,50 @@ def test_discover_follows_js_redirect_stub():
     assert js_redirect_target('<a onclick="location.href=\'javascript:;\'">x</a>', 'http://x.gov.cn/') == ''
 
 
-def test_discover_follows_js_redirect_stub():
-    """栏目页可能是"跳转桩"（整页只有一行 location.href），必须跟一次。
+def test_links_in_onclick_are_collected_not_only_href():
+    """链接写在 onclick 里（<a> 无 href）时，列表提取必须能看到。
 
-    实测山东 /col/col91475/index.html 全文仅 1823 字节、零链接，是占位页；
-    不跟跳会得出"这个栏目是空的"这种错误结论（并把可用省份记为需适配）。
+    实测天津 fzgg.tj.gov.cn：
+        <a onclick="isDownLoad(this,'https://…/t20260911_7372816.html')" title="…">
+    只按 href 提取会得到"60KB 页面零文章链接"，从而把该站误判为"列表由 JS 渲染"、
+    归入最贵的一档（需要逆向数据接口）——实际上它完全是静态可采的。
     """
-    from scripts.discover_provinces import js_redirect_target
-    stub = '<html><body><SCRIPT> location.href="/col/col91477/index.html";</SCRIPT></body></html>'
-    assert js_redirect_target(stub, 'http://fgw.shandong.gov.cn/col/col91475/index.html') \
-        == 'http://fgw.shandong.gov.cn/col/col91477/index.html'
-    # 相对地址按 base 解析
-    assert js_redirect_target('<script>location.href="list2.html"</script>',
-                              'http://x.gov.cn/a/b/index.html') == 'http://x.gov.cn/a/b/list2.html'
-    # 无跳转 / 伪跳转 都不能误判
-    assert js_redirect_target('<html>正常列表页</html>', 'http://x.gov.cn/') == ''
-    assert js_redirect_target('<a onclick="location.href=\'javascript:;\'">x</a>', 'http://x.gov.cn/') == ''
+    from policy_collector.collector import url_from_onclick, ListPageParser
+    assert url_from_onclick(
+        "isDownLoad(this,'https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html')"
+    ) == 'https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html'
+    assert url_from_onclick("window.open('/a/b/12345.html')") == '/a/b/12345.html'
+    # 不能把普通参数当成链接
+    assert url_from_onclick('void(0)') == ''
+    assert url_from_onclick("jumpTo(this,'7','1')") == ''
+
+    src = SourceConfig(name='t', site='甲', region='甲', enabled=True,
+                       list_url='https://fzgg.tj.gov.cn/xxfb/tzggx/',
+                       include=['/xxfb/tzggx/'],
+                       detail_url_pattern=r'/xxfb/tzggx/\d{6}/t\d{8}_\d+\.html?$')
+    page = ('<ul><li><a onclick="isDownLoad(this,'
+            "'https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html')"
+            '" title="天津市发展改革委关于调整我市成品油价格的公告">公告</a></li></ul>')
+    links = ListPageParser(src).parse(page, base_url=src.list_url)
+    assert [x.url for x in links] == ['https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html']
+    assert links[0].title.startswith('天津市发展改革委')
+
+
+def test_next_page_link_reads_onclick_and_title():
+    """翻页链接也可能只在 onclick 里 + 用 title 标"下一页"。
+
+    实测辽宁慧点 CMS：
+        <a title="下一页" onclick="queryArticleByCondition(this,'/fgw/zc/zxzc/be842d3c-2.shtml')">
+    只认 href 或只认文本会取不到，next_link 模式在该站直接失效
+    （实测表现为"只采到第一页"，而页面明明写着 totalpage="7"）。
+    """
+    from policy_collector.collector import next_page_link
+    html = ('<div class="pageDiv_7_7">'
+            '<a style="cursor:pointer" title="下一页" '
+            "onclick=\"queryArticleByCondition(this,'/fgw/zc/zxzc/be842d3c-2.shtml')\">下一页</a>"
+            '</div>')
+    got = next_page_link(html.encode('utf-8'), 'https://fgw.ln.gov.cn/fgw/zc/zxzc/index.shtml')
+    assert got == 'https://fgw.ln.gov.cn/fgw/zc/zxzc/be842d3c-2.shtml'
+    # 跨域不跟（防被引到站外）
+    cross = '<a title="下一页" onclick="go(this,\'https://evil.example.com/x-2.shtml\')">下一页</a>'
+    assert not next_page_link(cross.encode('utf-8'), 'https://fgw.ln.gov.cn/a/index.shtml')

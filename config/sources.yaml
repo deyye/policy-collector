@@ -385,6 +385,36 @@ sources:
     max_pages: 1
     note: "栏目页实测 17 篇，形态 /fgw_xxx/20260828/hash.html；详情不在栏目路径下，故 include 留空。正文容器 .Article_content 已补（此前整页文本仅供复核）。"
 
+  # ── 2026-09-14 补充：两家曾被误判为"列表 JS 渲染"的站 ──────────────────
+  # 二者实际都能静态采集，误判原因都是**链接不在 href 里**：
+  #   · 天津：<a onclick="isDownLoad(this,'URL')">，<a> 根本没有 href
+  #   · 辽宁：列表 href 正常，但该形态（/长数字串/index.shtml）识别器不认
+  - name: tj_tzgg
+    site: 天津市发展和改革委员会
+    region: 天津
+    category: 通知公告
+    enabled: true
+    list_url: "https://fzgg.tj.gov.cn/xxfb/tzggx/"
+    include: ["/xxfb/tzggx/"]
+    detail_url_pattern: "/xxfb/tzggx/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html?$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: trs
+    max_pages: 3
+    note: "详情链接在 <a> 的 onclick 里（无 href），靠 collector.anchor_target 提取；实测首页与 index_1/index_2.html 各 17 条。列表还顺带在 .hidDom 内保留了正文摘要。"
+
+  - name: ln_zxzc
+    site: 辽宁省发展和改革委员会
+    region: 辽宁
+    category: 最新政策
+    enabled: true
+    list_url: "https://fgw.ln.gov.cn/fgw/zc/zxzc/index.shtml"
+    include: ["/fgw/zc/zxzc/"]
+    detail_url_pattern: "/fgw/zc/zxzc/[0-9]{10,}/index[.]s?html?$"
+    exclude: [".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "详情形态为 /长数字串/index.shtml（此前识别器不认，被误判为需 JS 渲染）。翻页是慧点的静态分页，但\"下一页\"链接同样只在 onclick 里，故 next_link 必须走 anchor_target。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例

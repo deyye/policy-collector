@@ -38,6 +38,37 @@ def normalized_url(url: str) -> str:
     return urllib.parse.urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path, p.query, ""))
 
 
+def url_from_onclick(value: str) -> str:
+    """从 onclick 属性里提取 URL。
+
+    部分政府站 CMS 不给 <a> 写 href，把链接放进 onclick。实测天津：
+        <a onclick="isDownLoad(this,'https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html')">
+    这类页面的列表**是静态存在的**，但按 href 提取会得到"零文章链接"，
+    从而被误判成"列表由 JS 渲染"（需要另写数据接口）——实测天津、以及同类的
+    苏迪/托普系 CMS 都能被这个函数直接救回来。
+
+    只认看起来像链接的引号串（含路径分隔，或以 html/jsp/php/do 结尾），
+    避免把 `void(0)`、`this`、`true` 之类的参数当成链接。
+    """
+    if not value:
+        return ""
+    for quoted in re.findall(r"""['"]([^'"]+)['"]""", value):
+        s = quoted.strip()
+        if not s or s.startswith(("#", "javascript:", "mailto:", "void")):
+            continue
+        if re.search(r"(?:^https?://|/|\.s?html?$|\.jsp$|\.aspx?$|\.do$|\.php$)", s, re.I):
+            return s
+    return ""
+
+
+def anchor_target(a) -> str:
+    """取一个 <a> 的跳转目标：优先 href，href 缺失或是 javascript: 伪链接时回退 onclick。"""
+    raw = (a.get("href") or "").strip()
+    if not raw or raw.startswith(("#", "javascript:", "mailto:")):
+        raw = url_from_onclick(a.get("onclick") or "")
+    return raw
+
+
 def allowed_url(url: str, src: SourceConfig) -> bool:
     p = urllib.parse.urlsplit(url)
     origin = urllib.parse.urlsplit(src.list_url)
@@ -149,8 +180,8 @@ class ListPageParser:
             anchors += frag.select(selector) if selector else frag.find_all("a")
         links, seen = [], set()
         for a in anchors:
-            href = (a.get("href") or "").strip()
-            if not href or href.startswith(("#", "javascript:", "mailto:")):
+            href = anchor_target(a)
+            if not href:
                 continue
             href = normalized_url(urllib.parse.urljoin(base_url or self.src.list_url, href))
             if href in seen or not self._match(href):
@@ -218,8 +249,8 @@ def unit_list_links(list_html: str, src: SourceConfig, base_url: str = "") -> li
     soup = BeautifulSoup(list_html, "lxml")
     links, seen = [], set()
     for a in soup.find_all("a"):
-        href = (a.get("href") or "").strip()
-        if not href or href.startswith(("#", "javascript:", "mailto:")):
+        href = anchor_target(a)
+        if not href:
             continue
         href = normalized_url(urllib.parse.urljoin(base_url or src.list_url, href))
         if href in seen or not allowed_url(href, src):
@@ -293,11 +324,16 @@ def next_page_link(raw: bytes, page_url: str) -> str:
             pager.replace_with(BeautifulSoup(fragment, 'lxml'))
         except (ValueError, UnicodeError):
             pass
-    for a in soup.find_all('a', href=True):
-        if 'next' not in a.get('rel', []) and a.get_text(strip=True) not in ('下一页', '下页', '下一頁', 'Next', 'next', '>'):
+    for a in soup.find_all('a'):
+        label = a.get_text(strip=True)
+        title = (a.get('title') or '').strip()
+        if ('next' not in a.get('rel', []) and label not in ('下一页', '下页', '下一頁', 'Next', 'next', '>')
+                and title not in ('下一页', '下页', '下一頁', 'Next', 'next')):
             continue
-        href = a['href'].strip()
-        if not href or href.startswith(('#', 'javascript:')):
+        # 链接可能在 onclick 里而不在 href（实测辽宁慧点 CMS 的"下一页"就是这样：
+        # `<a title="下一页" onclick="queryArticleByCondition(this,'…-2.shtml')">`）。
+        href = anchor_target(a)
+        if not href:
             continue
         url = normalized_url(urllib.parse.urljoin(page_url, href))
         p, origin = urllib.parse.urlsplit(url), urllib.parse.urlsplit(page_url)

@@ -28,6 +28,13 @@ NATIONAL_REPOST = re.compile(r'gjfgw|gjwj|gwywj|guowuyuan|zgzy|zygwy|zhengcewenj
 # 年月类路径段（TRS 常见的 /栏目/202601/t20260109_123.html）不是子栏目，
 # 统计时必须排除，否则每个常规来源都会被误报成"聚合栏目"。
 _DATE_SEG = re.compile(r'^(?:19|20)\d{2}(?:\d{2})?(?:\d{2})?$|^\d{1,2}$')
+# 子栏目名应当是有语义的字母词。**纯数字段一律不算子栏目**：
+#   · /栏目/202601/t20260109_1.html        —— 年月（TRS）
+#   · /栏目/2026090912183160373/index.shtml —— 文章 ID（辽宁慧点）
+# 若只排除年月形态，辽宁那类"长数字串即文章 ID"的站会被误报成"聚合栏目"
+# （实测：辽宁 36 条详情被拆成 36 个"子栏目"）。聚合栏目检测依赖这个判据，
+# 误报会让人开始怀疑检查本身——那时候真问题也就一起被忽略了。
+_NUMERIC_SEG = re.compile(r'^\d+$')
 
 
 def sub_column_distribution(urls, list_url):
@@ -48,8 +55,8 @@ def sub_column_distribution(urls, list_url):
         else:
             rest = p[len(base):].strip('/')
             seg = rest.split('/')[0] if '/' in rest else ''
-            if not seg or _DATE_SEG.match(seg):
-                continue                      # 栏目根或年月段，不算子栏目
+            if not seg or _NUMERIC_SEG.match(seg):
+                continue          # 栏目根、年月段或文章 ID 段，都不算子栏目
             key = seg
         counts[key] = counts.get(key, 0) + 1
     return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
