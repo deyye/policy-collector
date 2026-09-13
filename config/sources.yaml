@@ -281,17 +281,17 @@ sources:
     max_pages: 3
     note: "与既有 cq_normative（行政规范性文件）互补。"
 
-  - name: sc_zcwj
+  - name: sc_tzgg
     site: 四川省发展和改革委员会
     region: 四川
-    category: 政策文件
-    enabled: false
-    list_url: "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml"
-    include: ["/sfgw/zcwj/"]
-    detail_url_pattern: "/sfgw/zcwj/[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}/[0-9a-f]+[.]shtml$"
+    category: 通知公告
+    enabled: true
+    list_url: "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml"
+    include: ["/sfgw/tzgg/"]
+    detail_url_pattern: "/sfgw/tzgg/[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}/[0-9a-f]+[.]shtml$"
     exclude: ["olist", ".pdf", ".doc", ".ofd"]
     max_pages: 1
-    note: "【未通过验收，暂不启用】列表由脚本构建，静态 HTML 里没有候选链接（discovered=0），需先判定其动态列表接口（参考 scripts/probe_sources.py）再选 list_format 适配。"
+    note: "该站政策文件栏目（/sfgw/zcwj/）的列表页取不到候选链接（实测 0 条，页面带 createPageHTML 分页脚本），但通知公告栏目（/sfgw/tzgg/）可稳定取到文章链接，故改用此栏目。待验收后启用。"
 
   - name: gz_tzgg
     site: 贵州省发展和改革委员会
@@ -323,14 +323,14 @@ sources:
     site: 青海省发展和改革委员会
     region: 青海
     category: 行政规范性文件
-    enabled: false
+    enabled: true
     list_url: "http://fgw.qinghai.gov.cn/22/32/index.html"
     include: ["/zfxxgk/sdzdgknr/fgwwj/"]
     detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
     exclude: ["index", ".pdf", ".doc", ".ofd"]
     pagination: next_link
     max_pages: 3
-    note: "【未通过验收，暂不启用】栏目与正文均可取（正文 357 字），但抽样中有一篇详情取回 0 字、整条失败，需先排查是偶发还是该文已下线，再启用。栏目页与文章目录不同层（文章在 /zfxxgk/sdzdgknr/fgwwj/），include 按文章目录写。"
+    note: "栏目与正文均可取。抽样中有一篇详情为站点自身死链（实测 HTTP 404，文件已从站点移除）——属站点侧问题，来源本身可用；该条会进待补材料队列。栏目页与文章目录不同层（文章在 /zfxxgk/sdzdgknr/fgwwj/），include 按文章目录写。"
 
   - name: nx_fgwwj
     site: 宁夏回族自治区发展和改革委员会

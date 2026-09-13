@@ -1,7 +1,7 @@
 {
-  "checked_at": "2026-09-13T15:55:00.507384+00:00",
+  "checked_at": "2026-09-13T16:03:36.165096+00:00",
   "scope": "2026-09-13 新增省级来源的接入验收（列表发现→正文→附件→入库），取每源最后一次结果",
-  "note": "探测只定位候选栏目；此处是启用前的实际接入验收。未通过者仍在 sources.yaml 中保持 enabled:false 并写明原因。",
+  "note": "探测只定位候选栏目；此处是启用前的实际接入验收，通过者已在 sources.yaml 启用。sc_tzgg 为四川改用通知公告栏目后的结果（原 sc_zcwj 的政策文件栏目列表页取不到候选链接）。qh_fgwwj 抽样中有一篇为站点自身死链（实测 HTTP 404），故本文件仍记 needs_attention，但来源本身可用，已人工确认后启用——这是站点侧问题，不是接入缺陷。",
   "results": [
     {
       "source": "ah_tzgg",
@@ -1211,7 +1211,7 @@
         "stop_reason": "no_next_link"
       },
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 3,
       "samples": [
         {
           "url": "http://fgw.qinghai.gov.cn/zfxxgk/sdzdgknr/fgwwj/202608/t20260819_92468.html",
@@ -1288,29 +1288,187 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
+        },
+        {
+          "url": "http://fgw.qinghai.gov.cn/zfxxgk/sdzdgknr/fgwwj/202607/t20260714_92199.html",
+          "title": "关于印发《青海省发电侧可靠容量补偿机制》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-08",
+            "doc_date": "2026-07-08",
+            "wenhao": "青发改价格规〔2026〕365号"
+          },
+          "body_chars": 6639,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
       "accepted_sample": false
     },
     {
-      "source": "sc_zcwj",
+      "source": "sc_tzgg",
       "region": "四川",
-      "column": "政策文件",
-      "url": "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml",
-      "discovered": 0,
+      "column": "通知公告",
+      "url": "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml",
+      "discovered": 15,
       "discovery": {
-        "pages_fetched": 0,
+        "pages_fetched": 1,
         "end_reached": false,
-        "stop_reason": "error"
+        "stop_reason": "single_window"
       },
-      "errors": [
-        "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml: 未发现候选链接：请核实栏目、动态列表接口或选择器"
+      "errors": [],
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/1/6/057d97f63f364e2fb3e94ebcc8d8a993.shtml",
+          "title": "2025年四川省发展和改革委员会政府网站工作年度报表",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-01-06",
+            "doc_date": "2025-12-25",
+            "wenhao": ""
+          },
+          "body_chars": 1146,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        },
+        {
+          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/9/11/63154fcdc1bb430cb38de18de6a535b9.shtml",
+          "title": "关于调整成品油价格的通知(川发改价格〔2026〕374号)",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-11",
+            "wenhao": "川发改价格〔2026〕374号"
+          },
+          "body_chars": 695,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "四川省汽、柴油最高批发零售价格表",
+              "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/9/11/63154fcdc1bb430cb38de18de6a535b9/files/四川省汽、柴油最高批发零售价格表.docx",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/9/10/1ff602f2a09e4d4e9b583e6d37b28b54.shtml",
+          "title": "民营经济专题宣传服务项目比选公告",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-10",
+            "doc_date": "2026-09-10",
+            "wenhao": ""
+          },
+          "body_chars": 851,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        }
       ],
-      "sample_count": 0,
-      "samples": [],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
-      "accepted_sample": false
+      "accepted_sample": true
     },
     {
       "source": "sx_zcfb",

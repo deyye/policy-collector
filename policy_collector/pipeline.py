@@ -530,6 +530,12 @@ class Pipeline:
                     item.update({'status': 'failed', 'error': f'{type(exc).__name__}: {exc}'})
                     aggregate.failed += 1
                 results.append(item)
+                # 汇总要**边跑边写**：只在结束时写的话，批次页在整个运行期间都显示
+                # "新增 0 / 更新 0"，用户盯着页面看不出正在出成果——这正是批量采集
+                # 最需要直观的地方。（run_source 里也是每份文件写一次 summary。）
+                with self.db.tx() as c:
+                    c.execute('UPDATE run_logs SET summary=? WHERE run_id=?',
+                              (json.dumps(aggregate.to_dict()), run_id))
                 self.db.run_progress(run_id, completed=index + 1, results=results,
                                      message=f'{src.site} 已处理（{index + 1}/{len(names)}）')
                 if pause_seconds and index < len(names) - 1:

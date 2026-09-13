@@ -217,7 +217,7 @@ python -m policy_collector.cli export --format csv --out data/policies.csv
 
 默认查询、导出仅含当前版本并排除已剔除项；待复核项仍包含在候选库中。正式使用前可分别按 `--review confirmed`、`--review adjusted` 导出人工通过项。JSON/CSV 均含正文、附件和来源信息，CSV 对公式起始字符进行转义。
 
-PDF 文本和 DOCX（含表格）可以解析；扫描 PDF 标记需 OCR。OFD、WPS、旧 DOC、XLS/XLSX、压缩包等当前保留原件、标记尚未解析；不把它们当成完整阅读。默认每文件最大 20MB，PDF 最多 500 页，可根据运行环境审慎调整。附件解析缺失时进入待复核并标记部分完成；HTTP 200 返回的 HTML 错误页也不会当作附件下载成功。
+PDF 文本和 DOCX（含表格）可以解析；**XLSX 与旧版 DOC/WPS 亦可解析（2026-09-13 新增）**——XLSX 走 `zipfile`+`lxml` 直读共享字符串，旧 DOC/WPS 优先 LibreOffice、macOS 上回退系统自带 `textutil`（`.wps` 实为 OLE 复合文档，须按 `.doc` 落盘后交给 textutil）。扫描 PDF 标记需 OCR；XLS/PPT 仍需 LibreOffice。默认每文件最大 20MB，PDF 最多 500 页，可根据运行环境审慎调整。附件解析缺失时进入待复核并标记部分完成；HTTP 200 返回的 HTML 错误页也不会当作附件下载成功。
 
 ## 6. 测试、效果评价与交付边界
 
@@ -226,7 +226,14 @@ pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-回归测试 **47 项**全部通过。覆盖全文及附件输入、JSON 验证、年度文号区别、转载、版本变化、失败刷新、旧库迁移、事务回滚、定时来源筛选、网页复核和来源过滤，以及浙江 unitbuild 参数提取/元数据表/全量翻页、江苏 recordset 列表与 TRS_Editor 详情、Web 表单令牌等。浙江与江苏均有离线快照样本（`samples/zj/`、`samples/jiangsu/`）不依赖网络。模拟模型只能验证接口与流程，不能验证模型理解能力。
+**注意（2026-09-13 实测）**：pytest 需要一个**工作区内可写的临时目录**，且**不要复用同一个目录**——
+复用会因上一次运行残留的 `pytest-of-*` 触发大量 fixture 报错（表现为"几十个 ERROR"而不是测试失败）：
+
+```bash
+D="$(mktemp -d "$PWD/.tmptest.XXXXXX")" && TMPDIR="$D" python -m pytest -q && rm -rf "$D"
+```
+
+回归测试 **91 项**全部通过。覆盖全文及附件输入、JSON 验证、年度文号区别、转载、版本变化、失败刷新、旧库迁移、事务回滚、定时来源筛选、网页复核和来源过滤，以及浙江 unitbuild 参数提取/元数据表/全量翻页、江苏 recordset 列表与 TRS_Editor 详情、批量采集的单源失败隔离、Web 表单令牌等。浙江与江苏均有离线快照样本（`samples/zj/`、`samples/jiangsu/`）不依赖网络。模拟模型只能验证接口与流程，不能验证模型理解能力。
 
 站点探测与接入流程（扩展新省份）：
 
@@ -337,11 +344,21 @@ Agent采用有界的“观察材料 → 选择动作 → 执行 → 校验”流
 修好后：`blocked` 由 **17 → 3**（只剩内蒙古代理 502、湖北/甘肃 HTTP 412 反爬），
 找到可接入栏目的省份由 12 → **19**。结论记入 `docs/province-discovery.json`。
 
-### 接入结果：启用来源 11 → 25，覆盖省份 9 → 20
+### 接入结果：启用来源 11 → 27，覆盖省份 9 → 22
 
 新增 16 个省级栏目，经 `scripts/audit_sources.py`（列表发现 → 正文 → 附件 → 入库）逐个验收，
-**14 个通过并启用**，2 个保持停用并在 `sources.yaml` 写明原因（四川列表由脚本构建、青海抽样有一篇详情取回 0 字）。
-验收证据见 `docs/province-source-audit.json`。
+**15 个通过并启用**。验收证据见 `docs/province-source-audit.json`。
+
+两个需要单独说明的来源：
+
+- **四川**：原选的政策文件栏目（`/sfgw/zcwj/`）列表页取不到候选链接（实测 0 条，页面带
+  `createPageHTML` 分页脚本），但同站通知公告栏目（`/sfgw/tzgg/`）可稳定取到文章链接
+  → 改用后者（`sc_tzgg`）后通过验收。
+- **青海**：抽样中有一篇详情是**站点自身的死链**（实测 HTTP 404，文件已从站点移除），
+  验收脚本因此仍记 `needs_attention`；但栏目发现与正文解析均正常（另两篇 357 / 6639 字），
+  **人工确认后启用**，并在配置里写明。
+  这是站点侧问题、不是接入缺陷——因站点自己的死链就把可用来源判为"未接通"，
+  等于把对方的失败记到自己账上，和本节开头那个探测缺陷是同一类错误。
 
 过程中修掉两类"把可用材料当成缺失"的判据缺陷：
 
