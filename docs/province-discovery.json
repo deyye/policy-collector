@@ -1,97 +1,428 @@
 {
-  "checked_at": "2026-09-11T09:52:51.184087+00:00",
-  "note": "官网首页与栏目候选探测；未接入不自动启用，仍须运行audit_sources验证列表、正文、附件和入库。",
+  "checked_at": "2026-09-13T15:55:30.380062+00:00",
+  "probe": "保持原始协议、超时25s、重试1次、超时并发4；按结构（文章型链接数）判栏目，非栏目名白名单",
+  "status_summary": {
+    "connected_candidate": 19,
+    "needs_adapter": 9,
+    "blocked": 3
+  },
+  "note": "探测只用于定位候选栏目，不代表已接入；启用前须跑 audit_sources.py 验证列表/正文/附件/入库。",
   "regions": [
     {
       "region": "北京市",
       "home_url": "http://fgw.beijing.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "connected_candidate",
       "final_url": "https://fgw.beijing.gov.cn/",
       "home_sha256": "d92809f8a857b29604473a96f8c7834cbe8cf504060790095e78817ba66d3904",
       "columns": [
         {
           "title": "政策文件",
-          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/"
+          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/",
+          "article_links": 15,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "建议意见",
+          "url": "https://fgw.beijing.gov.cn/hudong/xinxiang/fgw/sindex/xx-fgw.html",
+          "article_links": 0,
+          "dates_on_page": 12,
+          "has_next": true
+        },
+        {
+          "title": "关于2026“北京绿色发展榜样人物”评选结果公示的公告",
+          "url": "https://fgw.beijing.gov.cn/gzdt/tztg/202608/t20260827_4839254.htm",
+          "article_links": 0,
+          "dates_on_page": 4,
+          "has_next": false
+        },
+        {
+          "title": "规划计划",
+          "url": "https://fgw.beijing.gov.cn/fgwzwgk/ghjh/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/",
+      "best_article_links": 15
     },
     {
       "region": "天津市",
       "home_url": "http://fzgg.tj.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTP 403"
+      "status": "needs_adapter",
+      "final_url": "https://fzgg.tj.gov.cn/",
+      "home_sha256": "6df537fed04159dee75c348b8779fff937a00396bb176619841628795d83d049",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/",
+          "article_links": 0,
+          "dates_on_page": 47,
+          "has_next": false
+        },
+        {
+          "title": "重要政策举措及实施效果",
+          "url": "https://fzgg.tj.gov.cn/sy_47324/sylb/202209/t20220923_5995448.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "天津市发展改革委关于调整我市成品油价格的公告",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "天津市发展改革委关于调整我市成品油价格的公告",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/202608/t20260828_7361503.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "天津市发展改革委关于调整我市成品油价格的公告",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/202608/t20260814_7353051.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "天津市发展改革委关于调整我市成品油价格的公告",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/202607/t20260731_7345550.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://fzgg.tj.gov.cn/xxfb/tzggx/",
+      "best_article_links": 0
     },
     {
       "region": "河北省",
       "home_url": "http://hbdrc.hebei.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTPError"
+      "status": "connected_candidate",
+      "final_url": "https://hbdrc.hebei.gov.cn:443/",
+      "home_sha256": "35de810098bff6a09a1bbd64abe0034b0c66fe5d727627ede461a10edc835050",
+      "columns": [
+        {
+          "title": "政策法规",
+          "url": "https://hbdrc.hebei.gov.cn:443/jhlm/jhzcfg/",
+          "article_links": 18,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "规划计划",
+          "url": "https://hbdrc.hebei.gov.cn:443/jhlm/jhghjh/",
+          "article_links": 18,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "公告公示",
+          "url": "https://hbdrc.hebei.gov.cn:443/jhlm/jhgggs/",
+          "article_links": 18,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "关于公布2026年第二批省重点民间投资项目清单的公告",
+          "url": "https://hbdrc.hebei.gov.cn:443/gggs_980/202609/t20260909_139115.html",
+          "article_links": 3,
+          "dates_on_page": 3,
+          "has_next": false
+        },
+        {
+          "title": "河北2026年首笔新型政策性金融工具成功落地",
+          "url": "https://hbdrc.hebei.gov.cn:443/gzdt/202609/t20260910_139144.html",
+          "article_links": 3,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "关于调整成品油价格的公告（2026年第17号）",
+          "url": "https://hbdrc.hebei.gov.cn:443/gggs_980/202609/t20260911_139247.html",
+          "article_links": 3,
+          "dates_on_page": 2,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://hbdrc.hebei.gov.cn:443/jhlm/jhzcfg/",
+      "best_article_links": 18
     },
     {
       "region": "山西省",
       "home_url": "http://fgw.shanxi.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
-      "final_url": "https://fgw.shanxi.gov.cn/",
+      "status": "connected_candidate",
+      "final_url": "http://fgw.shanxi.gov.cn/",
       "home_sha256": "5bd43600c80f48eea0b48e4970733c9e288f38fdce188ecd9e10091e7bc4f29b",
       "columns": [
         {
-          "title": "通知公告",
-          "url": "https://fgw.shanxi.gov.cn/tzgg/"
+          "title": "规划计划",
+          "url": "http://fgw.shanxi.gov.cn/zcfb/gjjh/",
+          "article_links": 20,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "国家发改委政策",
+          "url": "http://fgw.shanxi.gov.cn/zcfb/gjfgzc/",
+          "article_links": 5,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "《可再生能源发展“十五五”规划》答记者问",
+          "url": "http://fgw.shanxi.gov.cn/zcfb/zcjd/202607/t20260724_10183891.shtml",
+          "article_links": 5,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "关于调整我省成品油零售价格的公告",
+          "url": "http://fgw.shanxi.gov.cn/tzgg/202609/t20260911_10218734.shtml",
+          "article_links": 5,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "【商品价格】 关于调整我省成品油零售价格的公告",
+          "url": "http://fgw.shanxi.gov.cn/fggz/wngz/spjg/202609/t20260911_10218734.shtml",
+          "article_links": 5,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "山西省2026年首笔新型政策性金融工具成功投放",
+          "url": "http://fgw.shanxi.gov.cn/wndt/202609/t20260907_10215883.shtml",
+          "article_links": 5,
+          "dates_on_page": 1,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "http://fgw.shanxi.gov.cn/zcfb/gjjh/",
+      "best_article_links": 20
     },
     {
       "region": "内蒙古自治区",
       "home_url": "http://fgw.nmg.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "https://fgw.nmg.gov.cn/",
+      "home_sha256": "e4ef0879bd9f5e2653ad33acbd0c08e5adbf2f0983e243ec404a2a030a9c4e69",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/",
+          "article_links": 17,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "满洲里产业协作园区系列宣传推介活动竞争性磋商公告",
+          "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/202608/t20260831_2947177.html",
+          "article_links": 2,
+          "dates_on_page": 14,
+          "has_next": false
+        },
+        {
+          "title": "满洲里产业协作园区系列宣传推介活动成交结果公告",
+          "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/202609/t20260911_2952817.html",
+          "article_links": 2,
+          "dates_on_page": 5,
+          "has_next": false
+        },
+        {
+          "title": "8月3日，信用政策助力民营企业发展宣介会在呼和浩特召开",
+          "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tpxw/202608/t20260804_2937128.html",
+          "article_links": 2,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "部门文件",
+          "url": "https://fgw.nmg.gov.cn/zfxxgk/fdzdgknr/?gk=3&cid=13940",
+          "article_links": 2,
+          "dates_on_page": 0,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/",
+      "best_article_links": 17
     },
     {
       "region": "辽宁省",
       "home_url": "http://fgw.ln.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "needs_adapter",
       "final_url": "https://fgw.ln.gov.cn/",
       "home_sha256": "370abf6af6b10bda7b417101dbe8f17337204dd99a489e7a11db8ec018b5ff98",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://fgw.ln.gov.cn/fgw/index/tzgg/index.shtml"
+          "url": "https://fgw.ln.gov.cn/fgw/index/tzgg/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 22,
+          "has_next": true
+        },
+        {
+          "title": "最新政策",
+          "url": "https://fgw.ln.gov.cn/fgw/zc/zxzc/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 15,
+          "has_next": true
+        },
+        {
+          "title": "政策",
+          "url": "https://fgw.ln.gov.cn/fgw/zc/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 8,
+          "has_next": false
+        },
+        {
+          "title": "政策研究室",
+          "url": "https://fgw.ln.gov.cn/fgw/jg/jgsz/zcfgc/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "发展规划处",
+          "url": "https://fgw.ln.gov.cn/fgw/jg/jgsz/fzghc/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "法规处",
+          "url": "https://fgw.ln.gov.cn/fgw/jg/jgsz/fgc/index.shtml",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fgw.ln.gov.cn/fgw/index/tzgg/index.shtml",
+      "best_article_links": 0
     },
     {
       "region": "吉林省",
       "home_url": "http://jldrc.jl.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "https://jldrc.jl.gov.cn/",
+      "home_sha256": "f8d07fbfe854da2d5ed17e89d34b547d69d9a710501349b7c14c4039a6436bbe",
+      "columns": [
+        {
+          "title": "政策信息",
+          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/",
+          "article_links": 51,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "关于印发《关于支持农产品加工业加快发展的若干政策措施》的通知",
+          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260611_3641769.html",
+          "article_links": 2,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "关于优化以工代赈工作路径促进农民持续增收的指导意见",
+          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260615_3642625.html",
+          "article_links": 1,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "关于印发《吉林省〈国家化肥商业储备管理办法〉实施方案》的通知",
+          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202512/t20251216_3612914.html",
+          "article_links": 0,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "政策研究室",
+          "url": "https://jldrc.jl.gov.cn/jggk/nsjg/zcyjs/202604/t20260414_3623205.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "发展规划处",
+          "url": "https://jldrc.jl.gov.cn/jggk/nsjg/fzghc/202604/t20260414_3623206.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://jldrc.jl.gov.cn/zcfg/jlzc/",
+      "best_article_links": 51
     },
     {
       "region": "黑龙江省",
       "home_url": "http://drc.hlj.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "https://drc.hlj.gov.cn/",
+      "home_sha256": "9bb6dd42c3f6e4ea0f9c2cc75594a97f05d004975ec7127a04d244b1aeffc3cc",
+      "columns": [
+        {
+          "title": "政策",
+          "url": "https://drc.hlj.gov.cn/drc/c111442/common_zfxxgk_fgw.shtml?tab=gkzc",
+          "article_links": 34,
+          "dates_on_page": 42,
+          "has_next": false
+        },
+        {
+          "title": "公示公告",
+          "url": "https://drc.hlj.gov.cn/drc/c111433/common_list.shtml",
+          "article_links": 15,
+          "dates_on_page": 15,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://drc.hlj.gov.cn/drc/c111442/common_zfxxgk_fgw.shtml?tab=gkzc",
+      "best_article_links": 34
     },
     {
       "region": "上海市",
       "home_url": "http://fgw.sh.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "needs_adapter",
       "final_url": "https://fgw.sh.gov.cn/",
       "home_sha256": "73bfcaf267e904b54d162132477a29a2286e038b96b5268fab370184ac365bb2",
       "columns": [
         {
           "title": "政策文件",
-          "url": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html"
+          "url": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html",
+          "article_links": 1,
+          "dates_on_page": 23,
+          "has_next": false
+        },
+        {
+          "title": "五年规划",
+          "url": "https://fgw.sh.gov.cn/fgw_wngh/index.html",
+          "article_links": 0,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "《新型电力系统建设“十五五”规划》发布",
+          "url": "https://fgw.sh.gov.cn/fgw_fzggdt/20260813/f082332c3ccf4744b9ce963533cb01e2.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html",
+      "best_article_links": 1
     },
     {
       "region": "江苏省",
@@ -104,207 +435,646 @@
       "region": "浙江省",
       "home_url": "http://fzggw.zj.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "needs_adapter",
       "final_url": "https://fzggw.zj.gov.cn/",
-      "home_sha256": "f7ab7ee954b594b90b09002b31f7793ff52d7deb76a63650943af6c741aea823",
+      "home_sha256": "bcb5bba6a4d7ddcc3501c151d7f5a4fb4dd8d75a51507972cc1726f98e194175",
       "columns": [
         {
+          "title": "浙江省发展和改革研究所编外工作人员招聘公告",
+          "url": "https://fzggw.zj.gov.cn/col/col1229123497/art/2026/art_4525bd7c8e1241e29434efe7687a324e.html",
+          "article_links": 0,
+          "dates_on_page": 4,
+          "has_next": false
+        },
+        {
+          "title": "五年蓝图已绘！建设高能级开放强省，浙江出台重点规划",
+          "url": "https://fzggw.zj.gov.cn/col/col1599562/art/2026/art_4eab81c838e54912a958287f267faa13.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "国家发展改革委规划司召开2019年全国特色小镇现场经...",
+          "url": "https://fzggw.zj.gov.cn/art/2019/4/22/art_1632201_34125183.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
           "title": "通知公告",
-          "url": "https://fzggw.zj.gov.cn/col/col1599544/index.html"
+          "url": "https://fzggw.zj.gov.cn/col/col1599544/index.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         },
         {
           "title": "政策文件",
-          "url": "https://fzggw.zj.gov.cn/col/col1599528/index.html"
+          "url": "https://fzggw.zj.gov.cn/col/col1599528/index.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fzggw.zj.gov.cn/col/col1229123497/art/2026/art_4525bd7c8e1241e29434efe7687a324e.html",
+      "best_article_links": 0
     },
     {
       "region": "安徽省",
       "home_url": "http://fzggw.ah.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTP 403"
+      "status": "connected_candidate",
+      "final_url": "https://fzggw.ah.gov.cn/",
+      "home_sha256": "b9b90e68769b171e6afc641b4ac63844bccb97831b96b65cc66e4eab35cfe29c",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fzggw.ah.gov.cn/ywdt/tzgg/index.html",
+          "article_links": 18,
+          "dates_on_page": 18,
+          "has_next": false
+        },
+        {
+          "title": "全省投资工作暨“六张网”规划建设推进会议召开",
+          "url": "https://fzggw.ah.gov.cn/ywdt/fgyw/150673441.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "淮南市发展改革委召开全市政策性资金项目谋划培训会",
+          "url": "https://fzggw.ah.gov.cn/ywdt/sxcz/150603361.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://fzggw.ah.gov.cn/ywdt/tzgg/index.html",
+      "best_article_links": 18
     },
     {
       "region": "福建省",
       "home_url": "http://fgw.fujian.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "http://fgw.fujian.gov.cn/",
+      "home_sha256": "abbdfde81747c81756b934d7d8e9097ff3332edfe075920ea67ffee8408344fc",
+      "columns": [
+        {
+          "title": "公示公告",
+          "url": "http://fgw.fujian.gov.cn/zwgk/gsgg/",
+          "article_links": 73,
+          "dates_on_page": 75,
+          "has_next": true
+        },
+        {
+          "title": "规划计划",
+          "url": "http://fgw.fujian.gov.cn/zwgk/ghjh/",
+          "article_links": 22,
+          "dates_on_page": 25,
+          "has_next": false
+        },
+        {
+          "title": "政策文件",
+          "url": "http://fgw.fujian.gov.cn/zwgk/fgzd/",
+          "article_links": 15,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "福建省“十五五”规划",
+          "url": "http://fgw.fujian.gov.cn/zwgk/ghjh/fjssswgh/",
+          "article_links": 8,
+          "dates_on_page": 5,
+          "has_next": false
+        },
+        {
+          "title": "学习贯彻习近平党建思想课题研究 承担单位遴选结果公告",
+          "url": "http://fgw.fujian.gov.cn/zwgk/gsgg/202609/t20260907_7209712.htm",
+          "article_links": 0,
+          "dates_on_page": 3,
+          "has_next": false
+        },
+        {
+          "title": "2026年首单4笔新型政策性金融工具成功投放",
+          "url": "http://fgw.fujian.gov.cn/zwgk/xwdt/bwdt/202609/t20260907_7209884.htm",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://fgw.fujian.gov.cn/zwgk/gsgg/",
+      "best_article_links": 73
     },
     {
       "region": "江西省",
       "home_url": "http://drc.jiangxi.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
       "status": "needs_adapter",
-      "final_url": "https://drc.jiangxi.gov.cn/",
+      "final_url": "http://drc.jiangxi.gov.cn/",
       "home_sha256": "e934a07bc59a27fc4e6420f3e21ec0c8933bc206abb0c7753602ec3dcceaf07c",
-      "columns": []
+      "columns": [],
+      "error": "首页未发现政策类栏目链接（栏目可能在二级页或需渲染）"
     },
     {
       "region": "山东省",
       "home_url": "http://fgw.shandong.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTPError"
+      "status": "needs_adapter",
+      "final_url": "http://fgw.shandong.gov.cn/",
+      "home_sha256": "2b5503b43d207c73c028d4eba6c52994be487dde1bb5c7539cef3b677a32edec",
+      "columns": [
+        {
+          "title": "法规处",
+          "url": "http://fgw.shandong.gov.cn/col/col91475/index.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "规划处",
+          "url": "http://fgw.shandong.gov.cn/col/col91482/index.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://fgw.shandong.gov.cn/col/col91475/index.html",
+      "best_article_links": 0
     },
     {
       "region": "河南省",
       "home_url": "http://fgw.henan.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTP 403"
+      "status": "needs_adapter",
+      "final_url": "https://fgw.henan.gov.cn:443/",
+      "home_sha256": "c2f9a03aeeabc0211b682192a5bfa917fb14ee09a6dd58a4444625ebaa1ffb1a",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "https://fgw.henan.gov.cn:443/xwzx/tzgg/gs",
+          "article_links": 0,
+          "dates_on_page": 24,
+          "has_next": false
+        },
+        {
+          "title": "政策发布",
+          "url": "https://fgw.henan.gov.cn:443/zwgk/wfgw",
+          "article_links": 0,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "我为河南省“十五五”现代综合交通运输体系发展规划建言献策",
+          "url": "http://fgw.henan.gov.cn/2026/05-18/3355309.html",
+          "article_links": 0,
+          "dates_on_page": 3,
+          "has_next": false
+        },
+        {
+          "title": "6G基站、6G智能手机要来了！这份规划作...",
+          "url": "http://fgw.henan.gov.cn/2026/09-11/3418313.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://fgw.henan.gov.cn:443/xwzx/tzgg/gs",
+      "best_article_links": 0
     },
     {
       "region": "湖北省",
       "home_url": "http://fgw.hubei.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
       "status": "blocked",
-      "error": "ReadTimeout"
+      "error": "HTTPError"
     },
     {
       "region": "湖南省",
       "home_url": "http://fgw.hunan.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTPError"
+      "status": "connected_candidate",
+      "final_url": "http://fgw.hunan.gov.cn/",
+      "home_sha256": "657b3313fa36d90315ff1b117f2914483b1b8d7647c8d8dc3c68784a4b48008a",
+      "columns": [
+        {
+          "title": "通知公告",
+          "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/tzgg/newxxgklist_nochn.html",
+          "article_links": 20,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "规划计划",
+          "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/newxxgklist_nochn.html",
+          "article_links": 18,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "关于公开遴选《长株潭一体化发展条例》立法调研第三方机构的公告",
+          "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/tzgg/202609/t20260908_34059135.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "政策文件",
+          "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/first_channel.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/tzgg/newxxgklist_nochn.html",
+      "best_article_links": 20
     },
     {
       "region": "广东省",
       "home_url": "http://drc.gd.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "https://drc.gd.gov.cn/",
+      "home_sha256": "3b70910c8fe42007d0682f2442da919b632ba768a7029c86ef38bf36264b7450",
+      "columns": [
+        {
+          "title": "规范性文件",
+          "url": "https://drc.gd.gov.cn/gfxwj5633/index.html",
+          "article_links": 25,
+          "dates_on_page": 20,
+          "has_next": true
+        },
+        {
+          "title": "政府信息公开制度文件",
+          "url": "https://drc.gd.gov.cn/zcwj5632/zfxxgkzdwj/gjzdwj/index.html",
+          "article_links": 6,
+          "dates_on_page": 17,
+          "has_next": false
+        },
+        {
+          "title": "关于印发《广东省公共数据资源授权运营价格管理办法》的通知",
+          "url": "https://drc.gd.gov.cn/gfxwj5633/content/post_4895356.html",
+          "article_links": 6,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "广东省发展改革委关于印发价格监测定点单位管理办法的通知",
+          "url": "https://drc.gd.gov.cn/gfxwj5633/content/post_4888581.html",
+          "article_links": 5,
+          "dates_on_page": 4,
+          "has_next": false
+        },
+        {
+          "title": "公告公示",
+          "url": "https://drc.gd.gov.cn/gggs5623/index.html",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        }
+      ],
+      "best_column": "https://drc.gd.gov.cn/gfxwj5633/index.html",
+      "best_article_links": 25
     },
     {
       "region": "广西壮族自治区",
       "home_url": "http://fgw.gxzf.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "ReadTimeout"
+      "status": "connected_candidate",
+      "final_url": "http://fgw.gxzf.gov.cn/",
+      "home_sha256": "8152e073725f9c906013388363ec81b8ae90c5b1aef4a2afd9eca7062334076d",
+      "columns": [
+        {
+          "title": "主动公开文件",
+          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/wjzx/",
+          "article_links": 30,
+          "dates_on_page": 30,
+          "has_next": false
+        },
+        {
+          "title": "通知公告",
+          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/wjzx/tzgg/",
+          "article_links": 30,
+          "dates_on_page": 30,
+          "has_next": false
+        },
+        {
+          "title": "政策法规",
+          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/fdzdgknr/zcfg/",
+          "article_links": 23,
+          "dates_on_page": 35,
+          "has_next": false
+        },
+        {
+          "title": "规划计划",
+          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/fdzdgknr/ghjh/",
+          "article_links": 17,
+          "dates_on_page": 7,
+          "has_next": false
+        },
+        {
+          "title": "政策文件",
+          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/wjzx/zyzc/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://fgw.gxzf.gov.cn/zfxxgkzl/wjzx/",
+      "best_article_links": 30
     },
     {
       "region": "海南省",
       "home_url": "http://plan.hainan.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTPError"
+      "status": "needs_adapter",
+      "final_url": "http://plan.hainan.gov.cn/",
+      "home_sha256": "8b9cd444593f7bf15c78320ecda9015df16973abde27282f085ece77791604de",
+      "columns": [
+        {
+          "title": "发展规划",
+          "url": "http://plan.hainan.gov.cn/sfgw/fzgh/list3.shtml",
+          "article_links": 0,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "通知公告",
+          "url": "https://plan.hainan.gov.cn/common/search/a0d73dab7c3740779419e6ef289c247e?sort=publishedTime&_isAgg=false&_pageSize=12&_template=sfgw&_channelName=&page=1",
+          "article_links": 0,
+          "dates_on_page": 12,
+          "has_next": true
+        },
+        {
+          "title": "政策文件",
+          "url": "http://plan.hainan.gov.cn/sfgw/0500/zcwj.shtml",
+          "article_links": 0,
+          "dates_on_page": 10,
+          "has_next": false
+        },
+        {
+          "title": "规划计划",
+          "url": "http://plan.hainan.gov.cn/sfgw/0800/slist.shtml?ddtab=true",
+          "article_links": 0,
+          "dates_on_page": 7,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://plan.hainan.gov.cn/sfgw/fzgh/list3.shtml",
+      "best_article_links": 0
     },
     {
       "region": "重庆市",
       "home_url": "http://fzggw.cq.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
-      "final_url": "https://fzggw.cq.gov.cn/",
-      "home_sha256": "b5acf24458b0419d30c39607900ee2bdc4cf8d69daee0ffc31c7b5491be22304",
+      "status": "connected_candidate",
+      "final_url": "http://fzggw.cq.gov.cn/",
+      "home_sha256": "2839cba6af123fbc4998e4832b324e48560b11187da32abb82f1faa5b7aeb702",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://fzggw.cq.gov.cn/zwxx/tzgg/"
+          "url": "http://fzggw.cq.gov.cn/zwxx/tzgg/",
+          "article_links": 20,
+          "dates_on_page": 20,
+          "has_next": false
         },
         {
           "title": "政策文件",
-          "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/"
+          "url": "http://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/",
+          "article_links": 18,
+          "dates_on_page": 18,
+          "has_next": false
+        },
+        {
+          "title": "重庆市发展和改革委员会2026年公开遴选公务员公告",
+          "url": "http://fzggw.cq.gov.cn/zwxx/jgjs/202607/t20260720_15832640.html",
+          "article_links": 1,
+          "dates_on_page": 2,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "http://fzggw.cq.gov.cn/zwxx/tzgg/",
+      "best_article_links": 20
     },
     {
       "region": "四川省",
       "home_url": "http://fgw.sc.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "connected_candidate",
       "final_url": "https://fgw.sc.gov.cn/",
       "home_sha256": "aaea4a2a1310c38f6347bf2c7c01dc1d7ff659724d46f5cb521d042b14cef2a4",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml"
+          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml",
+          "article_links": 15,
+          "dates_on_page": 16,
+          "has_next": false
         },
         {
           "title": "政策文件",
-          "url": "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml"
+          "url": "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml",
+          "article_links": 15,
+          "dates_on_page": 16,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fgw.sc.gov.cn/sfgw/tzgg/olist.shtml",
+      "best_article_links": 15
     },
     {
       "region": "贵州省",
       "home_url": "http://fgw.guizhou.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
-      "final_url": "https://fgw.guizhou.gov.cn/",
-      "home_sha256": "a2a722fe6bd1c28afd92d5e120cb9c087d8ec76a92e6b116a5912fd0f8711a2c",
+      "status": "connected_candidate",
+      "final_url": "http://fgw.guizhou.gov.cn/",
+      "home_sha256": "64f44407305f77faca7bc345c0a51ffcd2b15b878faf32d1582d2099c75f329e",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/"
+          "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/",
+          "article_links": 15,
+          "dates_on_page": 22,
+          "has_next": false
+        },
+        {
+          "title": "品牌谈 | 把握“六张网”规划建设的三个协同",
+          "url": "https://fgw.guizhou.gov.cn/fggz/ywdt/202608/t20260827_90788577.html",
+          "article_links": 1,
+          "dates_on_page": 1,
+          "has_next": false
         },
         {
           "title": "政策文件",
-          "url": "https://fgw.guizhou.gov.cn/zwgk/zcwj/"
+          "url": "https://fgw.guizhou.gov.cn/zwgk/zcwj/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fgw.guizhou.gov.cn/fggz/tzgg/",
+      "best_article_links": 15
     },
     {
       "region": "云南省",
       "home_url": "https://yndrc.yn.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "connected_candidate",
       "final_url": "https://yndrc.yn.gov.cn/",
-      "home_sha256": "21dcba22607a3bc983c82a4b765c13f939cef519dfe9027868ceb83d8a5ba27a",
+      "home_sha256": "e3fa931a901dc31eeef0db11a56fddb253f740fd597a0ff35c4244dc41f8fc4c",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/fadingzhudonggongkaineirong/tongzhigonggao/"
+          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/fadingzhudonggongkaineirong/tongzhigonggao/",
+          "article_links": 25,
+          "dates_on_page": 25,
+          "has_next": false
         },
         {
           "title": "政策文件",
-          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/"
+          "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/",
+          "article_links": 25,
+          "dates_on_page": 25,
+          "has_next": false
+        },
+        {
+          "title": "处长讲政策丨42条措施保障民间资本能投、敢投、愿投",
+          "url": "https://yndrc.yn.gov.cn/html/2026/zhengcejiedu_0902/28273.html",
+          "article_links": 1,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "2026年下半年云南省数据局所属事业单位公开招聘人员公告",
+          "url": "https://yndrc.yn.gov.cn/html/2026/tongzhigonggao_0902/28282.html",
+          "article_links": 0,
+          "dates_on_page": 15,
+          "has_next": false
+        },
+        {
+          "title": "国家及云南省惠企强企政策清单（2026版）",
+          "url": "https://yndrc.yn.gov.cn/html/2026/qitawenjian_0611/27243.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "处长讲政策丨数创企业看过来 专属扶持好政策来了！",
+          "url": "https://yndrc.yn.gov.cn/html/2026/zhengcejiedu_0909/28363.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://yndrc.yn.gov.cn/html/zhengwugongkai/fadingzhudonggongkaineirong/tongzhigonggao/",
+      "best_article_links": 25
     },
     {
       "region": "西藏自治区",
       "home_url": "http://drc.xizang.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
-      "final_url": "https://drc.xizang.gov.cn/",
-      "home_sha256": "7618ea4e9f221494ea10645116485d355d0f2b70b2499b9712ed26776dde13e9",
+      "status": "connected_candidate",
+      "final_url": "http://drc.xizang.gov.cn/",
+      "home_sha256": "df54fda413d04c0b4ede674788b681761d56af70c73266797572c513393bdb96",
       "columns": [
         {
           "title": "通知公告",
-          "url": "https://drc.xizang.gov.cn/zwgk_1941/tz/"
-        },
-        {
-          "title": "规范性文件",
-          "url": "https://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/"
+          "url": "http://drc.xizang.gov.cn/zwgk_1941/tz/",
+          "article_links": 20,
+          "dates_on_page": 0,
+          "has_next": false
         },
         {
           "title": "通知公告",
-          "url": "https://drc.xizang.gov.cn/zsyz/tzgd1/"
+          "url": "http://drc.xizang.gov.cn/zsyz/tzgd1/",
+          "article_links": 16,
+          "dates_on_page": 0,
+          "has_next": false
         },
         {
           "title": "政策法规",
-          "url": "https://drc.xizang.gov.cn/zsyz/zc/"
+          "url": "http://drc.xizang.gov.cn/zsyz/zc/",
+          "article_links": 10,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "规范性文件",
+          "url": "http://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/",
+          "article_links": 9,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "“零信任”安全网关建设项目公开询价公告",
+          "url": "http://drc.xizang.gov.cn/zwgk_1941/tz/202609/t20260909_557408.html",
+          "article_links": 2,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "发展规划",
+          "url": "http://drc.xizang.gov.cn/zwgk_1941/fz/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "http://drc.xizang.gov.cn/zwgk_1941/tz/",
+      "best_article_links": 20
     },
     {
       "region": "陕西省",
       "home_url": "http://sndrc.shaanxi.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "connected_candidate",
       "final_url": "https://sndrc.shaanxi.gov.cn/",
-      "home_sha256": "cb3c7cb9da33e6b66de14ab39360508ef0e523ec4f76b2d0a32cfd0ac5735da3",
+      "home_sha256": "a15f1a10113d60f2d384eb4a2cd30a584e9a9b4192a5314aad3db0a382b82e55",
       "columns": [
         {
-          "title": "规范性文件",
-          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gjfgwwj_1/gfxwj/"
+          "title": "行政规范性文件",
+          "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/",
+          "article_links": 20,
+          "dates_on_page": 20,
+          "has_next": true
         },
         {
-          "title": "行政规范性文件",
-          "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/"
+          "title": "公示公告",
+          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gggg/",
+          "article_links": 14,
+          "dates_on_page": 14,
+          "has_next": true
+        },
+        {
+          "title": "发改文件",
+          "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/index_1.html",
+          "article_links": 13,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "规范性文件",
+          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gjfgwwj_1/gfxwj/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "公告",
+          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gjfgwwj_1/gg/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
+        },
+        {
+          "title": "规划文本",
+          "url": "https://sndrc.shaanxi.gov.cn/sy/xwxx/gjfgwwj_1/ghwb/",
+          "article_links": 0,
+          "dates_on_page": 0,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/",
+      "best_article_links": 20
     },
     {
       "region": "甘肃省",
@@ -317,35 +1087,112 @@
       "region": "青海省",
       "home_url": "http://fgw.qinghai.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "blocked",
-      "error": "HTTPError"
+      "status": "connected_candidate",
+      "final_url": "http://fgw.qinghai.gov.cn/",
+      "home_sha256": "d9cf9c15ec62231678557898b96e1f5140b9f377d9d5f20c054689b17b5d8e33",
+      "columns": [
+        {
+          "title": "行政规范性文件",
+          "url": "http://fgw.qinghai.gov.cn/22/32/index.html",
+          "article_links": 20,
+          "dates_on_page": 40,
+          "has_next": false
+        },
+        {
+          "title": "通知公告",
+          "url": "http://fgw.qinghai.gov.cn/xwzx/tzgg/",
+          "article_links": 20,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "2026年度青海省营商环境评价项目竞争性磋商公告",
+          "url": "http://fgw.qinghai.gov.cn/xwzx/tzgg/202609/t20260907_92642.html",
+          "article_links": 0,
+          "dates_on_page": 7,
+          "has_next": false
+        },
+        {
+          "title": "关于召开青海湖景区门票收费标准调整听证会的公告",
+          "url": "http://fgw.qinghai.gov.cn/xwzx/tzgg/202608/t20260807_92365.html",
+          "article_links": 0,
+          "dates_on_page": 2,
+          "has_next": false
+        },
+        {
+          "title": "《金融强国建设“十五五”规划》正式出台",
+          "url": "http://fgw.qinghai.gov.cn/xwzx/szyw/202609/t20260911_92668.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        },
+        {
+          "title": "我省首个招标代理机构专项管理办法正式印发实施",
+          "url": "http://fgw.qinghai.gov.cn/xwzx/fgxx/202609/t20260907_92646.html",
+          "article_links": 0,
+          "dates_on_page": 1,
+          "has_next": false
+        }
+      ],
+      "best_column": "http://fgw.qinghai.gov.cn/22/32/index.html",
+      "best_article_links": 20
     },
     {
       "region": "宁夏回族自治区",
       "home_url": "http://fzggw.nx.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
-      "status": "columns_found",
+      "status": "connected_candidate",
       "final_url": "https://fzggw.nx.gov.cn/",
       "home_sha256": "8a7ec7e0d4592aeed0abf64ac3250a958dd6997f9998d30b1caeaa4f565d2c21",
       "columns": [
         {
-          "title": "通知公告",
-          "url": "https://fzggw.nx.gov.cn/tzgg/"
+          "title": "自治区发展改革委文件",
+          "url": "https://fzggw.nx.gov.cn/zcgh/fgwwj/",
+          "article_links": 40,
+          "dates_on_page": 20,
+          "has_next": false
         },
         {
           "title": "规范性文件",
-          "url": "https://fzggw.nx.gov.cn/zcgh/gfxwj1/"
+          "url": "https://fzggw.nx.gov.cn/zcgh/gfxwj1/",
+          "article_links": 38,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "通知公告",
+          "url": "https://fzggw.nx.gov.cn/tzgg/",
+          "article_links": 20,
+          "dates_on_page": 20,
+          "has_next": false
+        },
+        {
+          "title": "自治区发展改革委行政规范性文件清单",
+          "url": "https://fzggw.nx.gov.cn/zcgh/gfxwj1/202308/t20230817_4224278.html",
+          "article_links": 0,
+          "dates_on_page": 51,
+          "has_next": false
+        },
+        {
+          "title": "宁夏成品油价格调整公告（2026年第16号）",
+          "url": "https://fzggw.nx.gov.cn/tzgg/202608/t20260828_5325812.html",
+          "article_links": 0,
+          "dates_on_page": 2,
+          "has_next": false
         }
-      ]
+      ],
+      "best_column": "https://fzggw.nx.gov.cn/zcgh/fgwwj/",
+      "best_article_links": 40
     },
     {
       "region": "新疆维吾尔自治区",
       "home_url": "http://xjdrc.xinjiang.gov.cn/",
       "evidence_url": "https://www.ndrc.gov.cn/",
       "status": "needs_adapter",
-      "final_url": "https://xjdrc.xinjiang.gov.cn/",
-      "home_sha256": "e5544f19aa40ca9a442c6bbc4fbbe3ab0dadaa2da5bf45b8eb79c6c17a6a2dbf",
-      "columns": []
+      "final_url": "http://xjdrc.xinjiang.gov.cn/",
+      "home_sha256": "42db4cb29a5ba00982d919e99671802f2b5896cdad79255da420cba6ad94d552",
+      "columns": [],
+      "error": "首页未发现政策类栏目链接（栏目可能在二级页或需渲染）"
     }
   ]
 }

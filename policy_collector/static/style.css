@@ -2160,3 +2160,11 @@ pre.content {
 .agent-timeline li {padding:8px 0;border-bottom:1px solid #edf0f2;overflow-wrap:anywhere;}
 .agent-timeline time {color:#687888;font-size:12px;margin-right:8px;}
 .review-form textarea {width:100%;display:block;margin:8px 0 12px;}
+
+/* 一键全国采集入口（2026-09-13） */
+.batch-actions { border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:22px; background:var(--soft, #f8fafc) }
+.batch-actions form { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px }
+.batch-actions h2 { margin:0 0 4px }
+.batch-actions p { margin:0 }
+.inline-run { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px }
+.inline-run .hint { margin:0 }

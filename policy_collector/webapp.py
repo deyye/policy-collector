@@ -159,6 +159,62 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             if pipe: pipe.close()
             _RUN_LOCK.release()
 
+    def _run_all_worker(run_id: str, prefer: str, retry_only=False) -> None:
+        pipe = None
+        try:
+            pipe = Pipeline(cfg)
+            # create_run=False：批次行已由路由预先登记，保证跳转到进度页时它已存在
+            pipe.run_all_sources(prefer=prefer, limit=200, retry_only=retry_only,
+                                 batch_run_id=run_id, create_run=False)
+        except Exception as exc:                                   # noqa: BLE001
+            try:
+                d = Database(cfg.db_path)
+                try:
+                    d.finish_run(run_id, {}, status='failed', note=f'批次异常：{exc}')
+                finally:
+                    d.close()
+            except Exception:                                      # noqa: BLE001
+                pass
+        finally:
+            if pipe: pipe.close()
+            _RUN_LOCK.release()
+
+    @app.route("/sources/run-all", methods=["POST"])
+    def source_run_all():
+        """一键全国采集：不必逐个来源点「开始采集」。"""
+        prefer = request.form.get('prefer', 'llm')
+        if prefer not in ('llm', 'rule'): abort(400)
+        names = [n for n, s in cfg.sources.items()
+                 if s.enabled and not s.list_url.startswith('file:')]
+        if not names:
+            flash('没有已启用的来源，请先在来源配置中启用并完成验收。', 'warn')
+            return redirect(url_for('sources'))
+        if not _RUN_LOCK.acquire(blocking=False):
+            flash('已有采集任务运行，请等待完成', 'warn')
+            return redirect(url_for('runs'))
+        run_id = f"batch-{secrets.token_hex(8)}"
+        # 先登记批次行再起线程：否则跳转到进度页时会因记录尚未写入而 404
+        try:
+            d = Database(cfg.db_path)
+            try:
+                d.start_run(run_id, None, kind='batch')
+                d.run_progress(run_id, total=len(names), completed=0, stage='starting',
+                               message=f'准备采集 {len(names)} 个来源', results=[])
+            finally:
+                d.close()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        t = threading.Thread(target=_run_all_worker,
+                             args=(run_id, prefer, request.form.get('retry_only') == '1'),
+                             daemon=True)
+        try: t.start()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        flash(f"已启动一键全国采集：{len(names)} 个来源将依次执行，可离开此页。", "ok")
+        return redirect(url_for("run_detail", run_id=run_id))
+
     @app.route("/sources/<name>/run", methods=["POST"])
     def source_run(name: str):
         src = cfg.sources.get(name)

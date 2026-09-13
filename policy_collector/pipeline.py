@@ -58,6 +58,8 @@ class Pipeline:
         self.discovery_errors=[]
         self.active_run = ''
         self.active_fetch = None
+        # 一键全国采集时指向批次 run_id；用于让 run_source 的"清理上次中断"跳过本批次自身。
+        self.active_batch = ''
         from .agent import PolicyAgent
         self.agent = PolicyAgent(self.classifier, self._event)
 
@@ -212,10 +214,15 @@ class Pipeline:
                 att['error']=parsed.parse_error
                 att['parse_status']='partial' if parsed.content and parsed.parse_error else (
                     'ok' if parsed.content else 'unsupported' if fmt not in ('pdf','docx','txt','ofd','doc','wps') else 'needs_ocr')
-                if att['parse_status']!='ok':stats.attachments_unparsed+=1
+                # 计数只应统计"没拿到可用正文"的附件。parse_status='partial' 表示已出文本、
+                # 仅是转换过程留有提示（如 textutil 转换可能失真）——把它算成"未解析"，会让
+                # 广东/宁夏这类附件其实已可判读的站点在接入验收里被判为未通过。
+                if att['parse_status']!='ok' and not (att.get('parsed_text') or '').strip():
+                    stats.attachments_unparsed+=1
             except Exception as e:
                 att['error']=str(e)[:500]
-                if att.get('sha256'):stats.attachments_unparsed+=1
+                if att.get('sha256') and not (att.get('parsed_text') or '').strip():
+                    stats.attachments_unparsed+=1
                 else:stats.attachments_failed+=1
 
     def ingest_url(self,source,url,raw=None,prefer='llm',reclassify=False):
@@ -430,8 +437,11 @@ class Pipeline:
             row=self.db.get_source(source_name)
             run_id=f'run-{uuid.uuid4().hex[:16]}'
             # The process lock proves any previously running ingest process has ended.
+            # 但必须放过"当前正在跑的批次本身"——批量采集时每个来源都会走这里，
+            # 若不排除，刚建立的批次行会在第一个来源启动时被误标为失败。
             with self.db.tx() as c:
-                c.execute("UPDATE run_logs SET status='failed',finished_at=?,note=note || '；上次运行中断，待重试' WHERE status='running'",(now(),))
+                c.execute("UPDATE run_logs SET status='failed',finished_at=?,note=note || '；上次运行中断，待重试'"
+                          " WHERE status='running' AND run_id != ?",(now(), self.active_batch or ''))
             self.db.start_run(run_id,row['id'],kind=kind)
             self.active_run=run_id
             self.active_fetch=None
@@ -467,6 +477,78 @@ class Pipeline:
             self.active_run=''
             self.active_fetch=None
             return total
+
+    def run_all_sources(self, prefer='llm', limit=50, retry_only=False, reclassify=False,
+                        sources=None, batch_run_id=None, pause_seconds=1.0, create_run=True):
+        """一键全国采集：按顺序跑完全部启用来源，单源失败不中断整批。
+
+        与"逐个点来源"的差别不只是省几次点击：整批只留**一条批次记录**，
+        进度按"第 i/N 个来源"推进，人不必守着每个来源；某一站挂掉不会让整批停住，
+        失败来源在批次里留痕、可单独重试。
+
+        为什么串行不并发：政府站对并发抓取敏感，各来源又共用同一份限速配置；
+        并发只会让更多站点触发反爬，省下的时间不值这个风险。
+
+        每个来源仍会在 run_logs 里留下自己的子批次记录，批次行只做汇总与进度，
+        因此"看到某一站具体处理了什么"仍然可查（点来源名进子批次）。
+        """
+        if limit < 1:
+            raise ValueError('limit必须大于0')
+        names = list(sources) if sources else [
+            n for n, s in self.cfg.sources.items() if s.enabled and not s.list_url.startswith('file:')]
+        if not names:
+            raise ValueError('没有可运行的启用来源；请先在 config/sources.yaml 启用并验证')
+        for name in names:
+            if name not in self.cfg.sources:
+                raise ValueError(f'未知来源: {name}')
+
+        run_id = batch_run_id or f'batch-{uuid.uuid4().hex[:16]}'
+        # 先登记本批次，让 run_source 的"清理上次中断"放过它（否则会被误标失败）。
+        self.active_batch = run_id
+        if create_run:
+            self.db.start_run(run_id, None, kind='batch')
+        started = time.monotonic()
+        aggregate = RunStats()
+        results = []
+        self.db.run_progress(run_id, total=len(names), completed=0, stage='starting',
+                             message=f'准备采集 {len(names)} 个来源', results=[])
+        try:
+            for index, name in enumerate(names):
+                src = self.cfg.sources[name]
+                self.db.run_progress(run_id, index=index + 1, current=name,
+                                     current_site=src.site, stage='source_start',
+                                     message=f'正在采集 {src.site}（第 {index + 1}/{len(names)} 个）')
+                item = {'source': name, 'site': src.site, 'region': src.region}
+                try:
+                    stats = self.run_source(name, prefer=prefer, limit=limit,
+                                            retry_only=retry_only, reclassify=reclassify)
+                    item.update(stats.to_dict())
+                    item['status'] = 'partial' if stats.has_errors else 'ok'
+                    aggregate += stats
+                except Exception as exc:                                  # noqa: BLE001
+                    # 单站失败必须被隔离：否则一个 403 会让后面 20 个省一并不采。
+                    item.update({'status': 'failed', 'error': f'{type(exc).__name__}: {exc}'})
+                    aggregate.failed += 1
+                results.append(item)
+                self.db.run_progress(run_id, completed=index + 1, results=results,
+                                     message=f'{src.site} 已处理（{index + 1}/{len(names)}）')
+                if pause_seconds and index < len(names) - 1:
+                    time.sleep(pause_seconds)
+            ok = sum(1 for r in results if r.get('status') == 'ok')
+            status = 'ok' if ok == len(results) else ('failed' if ok == 0 else 'partial')
+            self.db.run_progress(run_id, stage='finished',
+                                 message=f'全国采集结束：{ok}/{len(results)} 个来源正常')
+        except Exception as exc:                                          # noqa: BLE001
+            status = 'failed'
+            self.db.run_progress(run_id, stage='failed', message=f'批次中断：{exc}')
+        aggregate.elapsed_seconds = round(time.monotonic() - started, 3)
+        self.db.finish_run(
+            run_id, aggregate.to_dict(), status=status,
+            model_version=self.cfg.llm.effective_model if aggregate.llm_classified else '',
+            note=f'一键全国采集：{len(names)} 个来源，串行执行；单源失败不中断整批')
+        self.active_batch = ''
+        return {'run_id': run_id, 'total': len(names), 'results': results,
+                'stats': aggregate.to_dict(), 'status': status}
 
     def run_demo(self,samples_dir:Optional[Path]=None):
         src=SourceConfig(name='demo_local',site='本地样例（合成数据）',region='样例',category='演示',list_url='file://samples/list.html')

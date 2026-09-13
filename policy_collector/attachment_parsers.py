@@ -5,6 +5,7 @@ import os
 import posixpath
 import shutil
 import subprocess
+import sys
 import tempfile
 import zipfile
 from functools import lru_cache
@@ -83,6 +84,91 @@ def legacy_to_pdf(data, fmt):
         output=root/'input.pdf'
         if not output.exists() or output.stat().st_size > 100*1024*1024: raise ValueError('Office转换未生成可用PDF')
         return output.read_bytes()
+
+
+def xlsx_text(data):
+    """提取 xlsx 单元格文本（含共享字符串表）。
+
+    用于「规范性文件目录」这类以 Excel 附表发布的政策清单——正文往往只有一句
+    印发通知，实质内容（文件标题、文号、有效期）全在表里。
+    只读不写、不计算公式，解压规模设上限。
+    """
+    NS = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        infos = z.infolist()
+        if len(infos) > 5000 or sum(i.file_size for i in infos) > 200 * 1024 * 1024:
+            raise ValueError('xlsx解压规模超过限制')
+        names = set(z.namelist())
+        parser = etree.XMLParser(resolve_entities=False, no_network=True)
+
+        shared: list[str] = []
+        if 'xl/sharedStrings.xml' in names:
+            root = etree.fromstring(z.read('xl/sharedStrings.xml'), parser)
+            for si in root:
+                shared.append(''.join(si.itertext()).strip())
+
+        sheets = sorted(n for n in names
+                        if n.startswith('xl/worksheets/sheet') and n.endswith('.xml'))
+        if not sheets:
+            raise ValueError('xlsx未找到工作表')
+
+        lines: list[str] = []
+        for name in sheets:
+            root = etree.fromstring(z.read(name), parser)
+            for row in root.iter(f'{NS}row'):
+                cells = []
+                for c in row.iter(f'{NS}c'):
+                    kind = c.get('t')
+                    value = c.find(f'{NS}v')
+                    inline = c.find(f'{NS}is')
+                    if kind == 's' and value is not None and value.text is not None:
+                        idx = int(value.text)
+                        cells.append(shared[idx] if 0 <= idx < len(shared) else '')
+                    elif inline is not None:
+                        cells.append(''.join(inline.itertext()).strip())
+                    elif value is not None and value.text:
+                        cells.append(value.text.strip())
+                line = ' | '.join(x for x in cells if x)
+                if line.strip():
+                    lines.append(line)
+        if not lines:
+            raise ValueError('xlsx未提取到单元格文本')
+        # 第二个返回值语义是"问题提示"，不是统计信息——放统计会被上层当成解析失败。
+        issue = f'含 {len(sheets)} 个工作表，需核对是否读全' if len(sheets) > 1 else ''
+        return ('\n'.join(lines), issue, len(sheets), len(sheets), 'xlsx-text')
+
+
+def textutil_text(data, fmt):
+    """用 macOS 自带的 textutil 提取旧版 Word/WPS 文本（零安装回退方案）。
+
+    .wps 的实际内容是 OLE 复合文档，与旧 .doc 同格式；textutil 按扩展名识别，
+    故落盘时统一用 .doc 扩展名。实测两者均可正常提取，内容与 LibreOffice 一致。
+    """
+    if not shutil.which('textutil'):
+        raise ValueError('缺少 textutil（仅 macOS 自带）')
+    with tempfile.TemporaryDirectory(prefix='policy-office-') as directory:
+        source = Path(directory) / 'input.doc'
+        source.write_bytes(data)
+        result = subprocess.run(['textutil', '-convert', 'txt', '-stdout', str(source)],
+                                check=True, capture_output=True, timeout=90)
+        text = result.stdout.decode('utf-8', errors='replace').strip()
+    if not text:
+        raise ValueError('textutil 未提取到文本')
+    return (text, f'经 textutil 转换（原格式 {fmt}），需人工核对转换完整性',
+            1, 1 if len(text) >= 40 else 0, 'textutil')
+
+
+def legacy_text(data, fmt):
+    """旧版 Word/WPS 文本提取：优先 LibreOffice，回退 macOS 自带 textutil。
+
+    LibreOffice 无平台限制、转换质量更高；textutil 无需安装，适合 macOS 本机。
+    两者都不可用时给出明确提示，不静默失败。
+    """
+    if shutil.which('libreoffice') or shutil.which('soffice'):
+        return pdf_text(legacy_to_pdf(data, fmt))
+    if sys.platform == 'darwin' and shutil.which('textutil'):
+        return textutil_text(data, fmt)
+    raise ValueError('需安装LibreOffice以转换旧Word/WPS（macOS 亦可依赖自带 textutil）')
 
 
 def ofd_text(data):

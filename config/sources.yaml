@@ -145,6 +145,219 @@ sources:
     max_pages: 20
     note: "跟随官网Base64编码的下一页链接，解码HTML不执行脚本；栏目内转载保留官网URL。"
 
+  # ==========================================================================
+  # 2026-09-13 新增：由修好的 discover_provinces.py 按「结构」探测出的省级栏目。
+  # 探测方法：保持原始协议（不强制 https）、超时 25s、重试 1 次；
+  # 栏目判定看"文章型链接数"，不看栏目名白名单。
+  # 这些条目先 enabled:false，须经 audit_sources.py 验证列表/正文/附件/入库后才启用。
+  # ==========================================================================
+  - name: bj_zcwj
+    site: 北京市发展和改革委员会
+    region: 北京
+    category: 政策文件
+    enabled: true
+    list_url: "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/"
+    include: ["/fgwzwgk/2024zcwj/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]htm$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "探测得到 15 个文章链接；待 audit_sources.py 验证。"
+
+  - name: hb_jhzcfg
+    site: 河北省发展和改革委员会
+    region: 河北
+    category: 规划政策法规
+    enabled: true
+    list_url: "https://hbdrc.hebei.gov.cn/jhlm/jhzcfg/"
+    include: ["/xxgk_", "/zc/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "探测得到 18 个文章链接；栏目页聚合了各 xxgk 子栏目，故 include 放宽到 /zc/ 片段。"
+
+  - name: sx_zcfb
+    site: 山西省发展和改革委员会
+    region: 山西
+    category: 规划计划
+    enabled: true
+    list_url: "http://fgw.shanxi.gov.cn/zcfb/gjjh/"
+    include: ["/zcfb/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]shtml$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: single
+    max_pages: 1
+    note: "探测得到 20 个文章链接；该站政策发布目录下按 gjjh/gjfgzc/zcjd 分栏，include 取 /zcfb/ 覆盖。"
+
+  - name: nmg_tzgg
+    site: 内蒙古自治区发展和改革委员会
+    region: 内蒙古
+    category: 通知公告
+    enabled: true
+    list_url: "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/"
+    include: ["/xxgk/zxzx/tzgg/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: trs
+    max_pages: 3
+    note: "首页 HTTPS 走代理会 502；本栏目实测 HTTPS 可取。待 audit_sources.py 验证。"
+
+  - name: hlj_gkzc
+    site: 黑龙江省发展和改革委员会
+    region: 黑龙江
+    category: 政策
+    enabled: true
+    list_url: "https://drc.hlj.gov.cn/drc/c111442/common_zfxxgk_fgw.shtml?tab=gkzc"
+    include: ["/drc/"]
+    detail_url_pattern: "/c[0-9]{2,}_[0-9]+[.]shtml$"
+    exclude: ["common_list", "common_zfxxgk", "index"]
+    pagination: single
+    max_pages: 1
+    note: "政务公开-政策聚合页，文章散落在 /drc/gkzd/、/drc/gknb/ 等子目录；include 放宽到 /drc/ 并用详情形态收紧。"
+
+  - name: ah_tzgg
+    site: 安徽省发展和改革委员会
+    region: 安徽
+    category: 通知公告
+    enabled: true
+    list_url: "https://fzggw.ah.gov.cn/ywdt/tzgg/index.html"
+    include: ["/ywdt/tzgg/"]
+    detail_url_pattern: "/ywdt/tzgg/[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: single
+    max_pages: 1
+    note: "探测得到 18 个文章链接；详情为纯数字 id 形态。"
+
+  - name: fj_zcwj
+    site: 福建省发展和改革委员会
+    region: 福建
+    category: 政策文件
+    enabled: true
+    list_url: "http://fgw.fujian.gov.cn/zwgk/fgzd/"
+    include: ["/zwgk/fgzd/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]htm$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "与既有 fj_normative（规范性文件库）互补，本栏目为政策文件；探测 15 个文章链接。"
+
+  - name: gd_gfxwj
+    site: 广东省发展和改革委员会
+    region: 广东
+    category: 规范性文件
+    enabled: true
+    list_url: "https://drc.gd.gov.cn/gfxwj5633/index.html"
+    include: ["/gfxwj5633/content/post_"]
+    detail_url_pattern: "/post_[0-9]+[.]html$"
+    exclude: ["index"]
+    pagination: next_link
+    max_pages: 3
+    note: "探测得到 25 个文章链接；详情为 /content/post_数字.html。翻页实测 index_N 不存在（404），改跟随页面「下一页」链接。"
+
+  - name: gx_zcfg
+    site: 广西壮族自治区发展和改革委员会
+    region: 广西
+    category: 政策法规
+    enabled: true
+    list_url: "http://fgw.gxzf.gov.cn/zfxxgkzl/fdzdgknr/zcfg/"
+    include: ["/zfxxgkzl/"]
+    detail_url_pattern: "/t[0-9]+[.]shtml$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: single
+    max_pages: 1
+    note: "探测得到 23 个文章链接；详情为 /t数字.shtml。"
+
+  - name: cq_tzgg
+    site: 重庆市发展和改革委员会
+    region: 重庆
+    category: 通知公告
+    enabled: true
+    list_url: "http://fzggw.cq.gov.cn/zwxx/tzgg/"
+    include: ["/zwxx/tzgg/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "与既有 cq_normative（行政规范性文件）互补。"
+
+  - name: sc_zcwj
+    site: 四川省发展和改革委员会
+    region: 四川
+    category: 政策文件
+    enabled: false
+    list_url: "https://fgw.sc.gov.cn/sfgw/zcwj/olist.shtml"
+    include: ["/sfgw/zcwj/"]
+    detail_url_pattern: "/sfgw/zcwj/[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}/[0-9a-f]+[.]shtml$"
+    exclude: ["olist", ".pdf", ".doc", ".ofd"]
+    max_pages: 1
+    note: "【未通过验收，暂不启用】列表由脚本构建，静态 HTML 里没有候选链接（discovered=0），需先判定其动态列表接口（参考 scripts/probe_sources.py）再选 list_format 适配。"
+
+  - name: gz_tzgg
+    site: 贵州省发展和改革委员会
+    region: 贵州
+    category: 通知公告
+    enabled: true
+    list_url: "https://fgw.guizhou.gov.cn/fggz/tzgg/"
+    include: ["/fggz/tzgg/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: single
+    max_pages: 1
+    note: "探测得到 15 个文章链接。"
+
+  - name: xz_xzgfxwj
+    site: 西藏自治区发展和改革委员会
+    region: 西藏
+    category: 行政规范性文件
+    enabled: true
+    list_url: "http://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/"
+    include: ["/zwgk_1941/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: single
+    max_pages: 1
+    note: "同一站另有 /zsyz/zc/（政策法规）与 /zwgk_1941/tz/（通知公告）；本栏目最贴近行政规范性文件。"
+
+  - name: qh_fgwwj
+    site: 青海省发展和改革委员会
+    region: 青海
+    category: 行政规范性文件
+    enabled: false
+    list_url: "http://fgw.qinghai.gov.cn/22/32/index.html"
+    include: ["/zfxxgk/sdzdgknr/fgwwj/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "【未通过验收，暂不启用】栏目与正文均可取（正文 357 字），但抽样中有一篇详情取回 0 字、整条失败，需先排查是偶发还是该文已下线，再启用。栏目页与文章目录不同层（文章在 /zfxxgk/sdzdgknr/fgwwj/），include 按文章目录写。"
+
+  - name: nx_fgwwj
+    site: 宁夏回族自治区发展和改革委员会
+    region: 宁夏
+    category: 发改委文件
+    enabled: true
+    list_url: "https://fzggw.nx.gov.cn/zcgh/fgwwj/"
+    include: ["/zcgh/fgwwj/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "探测得到 40 个文章链接；同组还有 gfxwj1（规范性文件）与 tzgg（通知公告）。"
+
+  - name: hn_ghjh
+    site: 湖南省发展和改革委员会
+    region: 湖南
+    category: 规划计划
+    enabled: true
+    list_url: "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/newxxgklist_nochn.html"
+    include: ["/fgw/xxgk_70899/ghjh/"]
+    detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    pagination: next_link
+    max_pages: 3
+    note: "与既有 hn_local_rules（地方性法规规章）互补。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例

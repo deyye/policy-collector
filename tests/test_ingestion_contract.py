@@ -101,3 +101,71 @@ def test_provincial_registry_has_only_31_provinces():
     entries=json.loads((Path(__file__).resolve().parents[1]/'config/provinces.json').read_text())
     assert len(entries)==31 and len({e['region'] for e in entries})==31
     assert '杭州市' not in {e['region'] for e in entries}
+
+
+def test_run_all_sources_isolates_single_source_failure(tmp_path, monkeypatch):
+    """一键全国采集：单源失败必须被隔离，不能让后面 20 个省一并不采。
+
+    这是这个功能存在的唯一理由。若某个省 403/超时就把整批打断，
+    那"一键"反而比逐个点更糟——人得盯着哪一站挂了再手动补跑。
+    """
+    cfg=config(tmp_path)
+    cfg.sources={
+        'a_ok': SourceConfig(name='a_ok',site='甲省发改委',region='甲',enabled=True,
+                             list_url='https://a.gov.cn/zc/',include=['/zc/']),
+        'b_broken': SourceConfig(name='b_broken',site='乙省发改委',region='乙',enabled=True,
+                             list_url='https://b.gov.cn/zc/',include=['/zc/']),
+        'c_ok': SourceConfig(name='c_ok',site='丙省发改委',region='丙',enabled=True,
+                             list_url='https://c.gov.cn/zc/',include=['/zc/']),
+    }
+    call_order=[]
+    def fake_run_source(self, name, prefer='llm', limit=50, retry_only=False, reclassify=False):
+        from policy_collector.pipeline import RunStats
+        call_order.append(name)
+        if name=='b_broken':
+            raise RuntimeError('HTTP 403')
+        s=RunStats();s.discovered=1;s.ingested=1;return s
+    monkeypatch.setattr(Pipeline,'run_source',fake_run_source)
+    pipe=Pipeline(cfg)
+    try:
+        out=pipe.run_all_sources(prefer='rule',limit=10,pause_seconds=0)
+        # 关键断言：三个来源都被尝试过，失败的那个没有中断整批
+        assert call_order==['a_ok','b_broken','c_ok']
+        assert out['total']==3
+        by={r['source']:r for r in out['results']}
+        assert by['a_ok']['status']=='ok' and by['c_ok']['status']=='ok'
+        assert by['b_broken']['status']=='failed' and '403' in by['b_broken']['error']
+        assert out['status']=='partial' and out['stats']['ingested']==2
+        # 批次记录必须存在且已收尾，进度里能按来源追责
+        row=pipe.db.get_run_summary(out['run_id'])
+        assert row['kind']=='batch' and row['status']=='partial'
+        progress=json.loads(row['progress'])
+        assert progress['completed']==3 and len(progress['results'])==3
+        assert {r['source'] for r in progress['results']}=={'a_ok','b_broken','c_ok'}
+    finally:
+        pipe.close()
+
+
+def test_batch_run_is_not_killed_by_stale_run_cleanup(tmp_path, monkeypatch):
+    """批次行不能被 run_source 的"清理上次中断"误标为失败。
+
+    每个来源启动时都会把 status='running' 的行标失败（防上次中断留脏）。
+    若不排除当前批次自身，批次会在第一个来源启动瞬间变成 failed。
+    """
+    cfg=config(tmp_path)
+    cfg.sources={'a_ok': SourceConfig(name='a_ok',site='甲省发改委',region='甲',enabled=True,
+                                      list_url='https://a.gov.cn/zc/',include=['/zc/'])}
+    pipe=Pipeline(cfg)
+    try:
+        captured={}
+        real=Pipeline.run_source
+        def spy(self, name, prefer='llm', limit=50, retry_only=False, reclassify=False):
+            captured['batch_status_during_run']=self.db.get_run_summary(self.active_batch)['status']
+            from policy_collector.pipeline import RunStats
+            return RunStats()
+        monkeypatch.setattr(Pipeline,'run_source',spy)
+        out=pipe.run_all_sources(prefer='rule',limit=5,pause_seconds=0)
+        assert captured['batch_status_during_run']=='running'
+        assert pipe.db.get_run_summary(out['run_id'])['status']=='ok'
+    finally:
+        pipe.close()
