@@ -7,7 +7,7 @@ import uuid
 from collections import Counter, defaultdict
 from pathlib import Path
 from .models import now
-from .attachment_parsers import PARSER_VERSION
+from .attachment_parsers import PARSER_VERSION, is_permanent_download_error
 from .locking import ingestion_lock
 
 
@@ -67,8 +67,13 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
             if source and row['source_name']!=source:continue
             if policy_id and row['id']!=policy_id:continue
             attachments=pipe.db.list_attachments(row['id'])
+            # 永久失效的附件（站点 404/410）机器修不了：既不该反复重试刷请求，
+            # 也不该让整条政策一直占着"待补材料"队列排不空。
+            def _needs_repair(a):
+                if is_permanent_download_error(a.get('error')):return False
+                return not attachment_quality(a)['parse_complete'] or a.get('parser_version')!=PARSER_VERSION
             if not policy_id and not row.get('parse_error') and not any(
-                not attachment_quality(a)['parse_complete'] or a.get('parser_version')!=PARSER_VERSION for a in attachments):continue
+                _needs_repair(a) for a in attachments):continue
             selected.append(row)
             if len(selected)==limit:break
         run_id='repair-'+uuid.uuid4().hex[:16];pipe.db.start_run(run_id,None,'repair');started=time.monotonic()

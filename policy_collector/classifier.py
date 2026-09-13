@@ -24,6 +24,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from .attachment_parsers import is_permanent_download_error
 from .config import AppConfig
 from .llm_client import LLMClient
 from .models import Classification, Document
@@ -438,7 +439,18 @@ class Classifier:
             status = a.get('parse_status', 'ok' if a.get('parsed_text') else 'missing')
             return status in _MISSING or not (a.get('parsed_text') or '').strip()
 
-        incomplete = bool(doc.parse_error) or any(_material_missing(a) for a in doc.attachments)
+        absent = [a for a in doc.attachments if _material_missing(a)]
+        # 附件已失效（站点 404/410）属**永久性**缺失：重试不可能成功，机器修不了。
+        # 只要还有可用材料（网页正文或其它附件已出文本），就照常判定并把失效附件
+        # 记为提示——否则一条死链会把该政策永远钉在"待补材料"队列里空转，
+        # 队列再也排不空（实测：某政策 2 个附件，1 个 404、1 个完好 22106 字节）。
+        # 若完全没有可用材料，则仍挂待补材料——无米下锅，不能凭标题硬判。
+        _usable_text = bool((doc.content or '').strip()) or any(
+            (a.get('parsed_text') or '').strip() for a in doc.attachments)
+        gone = [a for a in absent if is_permanent_download_error(a.get('error'))]
+        _only_dead_links = bool(absent) and len(gone) == len(absent)
+
+        incomplete = bool(doc.parse_error) or (bool(absent) and not (_only_dead_links and _usable_text))
         if incomplete:
             # 材料不完整属机器可自修事项：挂到「待补材料」，不占用业务待办队列。
             out.todo_type = 'material'
@@ -447,6 +459,11 @@ class Classifier:
                                    '正文或附件不完整，待补采/重解析后自动重跑分类') if x)
             if out.is_investment_policy == 'no':
                 out.is_investment_policy = 'pending'
+        elif gone:
+            names = '、'.join((a.get('name') or '未命名附件')[:30] for a in gone[:3])
+            detail = str(gone[0].get('error') or '已失效')
+            out.reviewer_hint = '；'.join(x for x in (out.reviewer_hint,
+                f'附件《{names}》在来源站点已失效（{detail}），本条按现有材料判定') if x)
         return out
 
     def _classify(self, doc: Document, prefer: str = "llm") -> Classification:

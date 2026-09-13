@@ -76,6 +76,32 @@ def test_repair_reclassifies_stale_material_verdict(pipe,monkeypatch):
     assert rerun['stats']['reclassified']==0
 
 
+def test_attachment_dead_link_does_not_freeze_verdict(pipe,monkeypatch):
+    """站点已失效（404）的附件不该把结论永久冻在「待补材料」；暂时性失败仍应挡住。
+
+    实测事故：某政策 2 个附件，1 个 HTTP 200（22106 字节）、1 个 HTTP 404（文件已从站点移除）。
+    旧逻辑把"任一附件失败"一律当成材料缺口 → 该政策永远挂在待补材料队列，队列再也排不空，
+    每次 repair 还白跑一次下载。区分永久/暂时失败后：有可用材料就照常判定并留痕。
+    """
+    raw=word()
+    def fetch(url):
+        if 'gone' in url:return FetchResult(ok=False,error='HTTP 404')
+        if 'flaky' in url:return FetchResult(ok=False,error='HTTP 503')
+        return FetchResult(content=raw,final_url=url)
+    monkeypatch.setattr(pipe.collector,'fetch',fetch)
+    src=pipe.cfg.sources['test']
+    pipe.ingest_url(src,'https://agency.gov.cn/policy/1.html',raw=html().replace(
+        b'</article>',b'<a href="gone.docx">gone.docx</a></article>'),prefer='rule')
+    pipe.ingest_url(src,'https://agency.gov.cn/policy/2.html',raw=html().replace(
+        b'</article>',b'<a href="flaky.docx">flaky.docx</a></article>'),prefer='rule')
+    rows={r['page_url']:dict(r) for r in pipe.db._conn.execute('SELECT * FROM policies')}
+    dead=rows['https://agency.gov.cn/policy/1.html']
+    assert dead['todo_type']!='material','死链不该把结论冻在待补材料'
+    assert '已失效' in (dead['reviewer_hint'] or '')
+    flaky=rows['https://agency.gov.cn/policy/2.html']
+    assert flaky['todo_type']=='material','暂时性失败仍应等补采'
+
+
 def test_failed_sibling_does_not_discard_successful_reparse(pipe,monkeypatch):
     original=pipe.parser.parse;raw=word()
     def fetch(url):return FetchResult(ok=False,error='503') if 'missing' in url else FetchResult(content=raw,final_url=url)

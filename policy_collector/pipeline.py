@@ -8,6 +8,7 @@ import urllib.parse
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
+from .attachment_parsers import is_permanent_download_error
 from .classifier import Classifier
 from .collector import Collector,ListPageParser,list_page_url
 from .config import AppConfig,SourceConfig,PROJECT_ROOT
@@ -248,12 +249,17 @@ class Pipeline:
                     # Metadata backfill remains supported on same-source reparses.
                     for key in ('wenhao','page_date','doc_date','issuing_authority'):
                         if not old.get(key) and getattr(doc,key):fields[key]=getattr(doc,key)
-                    # 因 reclassify 而重判时，要求材料确实可用——否则是在对判不了的东西空转：
-                    # 材料仍不完整时会反复进入这里、反复调模型，且结论不会变。
-                    # （`changed` 走另一条路：材料内容真的变了就应重判，不受此限。）
-                    _material_ok = (not doc.parse_error and
-                                    all((a.get('parsed_text') or '').strip() for a in doc.attachments))
-                    if (changed or (reclassify and _material_ok)) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
+                    # 重判的两道门槛都要"无视已失效的附件"，否则一条死链会把结论永久冻住：
+                    #   · 站点 404/410 的附件机器永远补不到，挡着重判没有意义；
+                    #   · 但暂时性失败（超时/5xx）仍必须挡住——那才是"等补采"的正常情况。
+                    def _dead(a):
+                        return is_permanent_download_error(a.get('error'))
+                    _repairable_failed = any(
+                        a.get('parse_status') == 'failed' and not _dead(a) for a in doc.attachments)
+                    _material_ok = (not doc.parse_error and not _repairable_failed and
+                                    all((a.get('parsed_text') or '').strip()
+                                        for a in doc.attachments if not _dead(a)))
+                    if (changed or (reclassify and _material_ok)) and not _repairable_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
                         cls=self.classifier.classify(doc,prefer);self._count_classification(cls,stats)
                         rowfields=self._policy_row(source,doc,cls,fid)
                         fields.update({k:v for k,v in rowfields.items() if k not in ('title','wenhao','page_date','doc_date','issuing_authority','region','site','page_url','source_fetch_id')})
