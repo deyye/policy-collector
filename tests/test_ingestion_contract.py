@@ -169,3 +169,65 @@ def test_batch_run_is_not_killed_by_stale_run_cleanup(tmp_path, monkeypatch):
         assert pipe.db.get_run_summary(out['run_id'])['status']=='ok'
     finally:
         pipe.close()
+
+
+def test_audit_flags_national_repost_and_ignores_date_dirs():
+    """验收脚本的归属检查：聚合栏目下的中央转载要能被抓出来，年月目录不能误报。
+
+    背景：福建 /zwgk/fgzd/ 是聚合页，前 15 条全在 gjfgwwj（国家发改委文件转载）子目录下，
+    收进来会把中央文件的 region 错记成福建——而机制检查（列表/正文/附件/入库）全过。
+    这条检查把"归属错记"从只能人工发现，变成脚本能判。
+    """
+    from scripts.audit_sources import sub_column_distribution, NATIONAL_REPOST
+    # 常规 TRS 站：栏目下第一段是年月，不是子栏目 —— 不能误报
+    normal = ['https://x.gov.cn/zcfb/ghxwj/202604/t20260430_1.html',
+              'https://x.gov.cn/zcfb/ghxwj/202601/t20260109_2.html',
+              'https://x.gov.cn/zcfb/ghxwj/2026/t20260109_3.html']
+    assert sub_column_distribution(normal, 'https://x.gov.cn/zcfb/ghxwj/') == {}
+    # 聚合页：并列多个子栏目，其中一个是中央转载
+    mixed = ['https://x.gov.cn/zwgk/fgzd/gjfgwwj/202609/t1.htm',
+             'https://x.gov.cn/zwgk/fgzd/gjfgwwj/202608/t2.htm',
+             'https://x.gov.cn/zwgk/fgzd/sfgwgfxwj/202609/t3.htm']
+    dist = sub_column_distribution(mixed, 'https://x.gov.cn/zwgk/fgzd/')
+    assert dist == {'gjfgwwj': 2, 'sfgwgfxwj': 1}
+    assert [k for k in dist if NATIONAL_REPOST.search(k)] == ['gjfgwwj']
+
+
+def test_audit_sub_column_distribution_marks_out_of_column_links():
+    """详情跳到栏目路径之外的也要标出来（跨栏目/跨站混杂的另一种形态）。"""
+    from scripts.audit_sources import sub_column_distribution
+    urls = ['https://x.gov.cn/other/section/t1.html',
+            'https://x.gov.cn/zwgk/fgzd/sub/t2.htm']
+    dist = sub_column_distribution(urls, 'https://x.gov.cn/zwgk/fgzd/')
+    assert dist == {'(栏目路径之外)': 1, 'sub': 1}
+
+
+def test_audit_flags_national_repost_and_ignores_date_dirs():
+    """验收脚本的归属检查：聚合栏目下的中央转载要能被抓出来，年月目录不能误报。
+
+    背景：福建 /zwgk/fgzd/ 是聚合页，前 15 条全在 gjfgwwj（国家发改委文件转载）子目录下，
+    收进来会把中央文件的 region 错记成福建——而机制检查（列表/正文/附件/入库）全过。
+    这条检查把"归属错记"从只能人工发现，变成脚本能判。
+    """
+    from scripts.audit_sources import sub_column_distribution, NATIONAL_REPOST
+    # 常规 TRS 站：栏目下第一段是年月，不是子栏目 —— 不能误报
+    normal = ['https://x.gov.cn/zcfb/ghxwj/202604/t20260430_1.html',
+              'https://x.gov.cn/zcfb/ghxwj/202601/t20260109_2.html',
+              'https://x.gov.cn/zcfb/ghxwj/2026/t20260109_3.html']
+    assert sub_column_distribution(normal, 'https://x.gov.cn/zcfb/ghxwj/') == {}
+    # 聚合页：并列多个子栏目，其中一个是中央转载
+    mixed = ['https://x.gov.cn/zwgk/fgzd/gjfgwwj/202609/t1.htm',
+             'https://x.gov.cn/zwgk/fgzd/gjfgwwj/202608/t2.htm',
+             'https://x.gov.cn/zwgk/fgzd/sfgwgfxwj/202609/t3.htm']
+    dist = sub_column_distribution(mixed, 'https://x.gov.cn/zwgk/fgzd/')
+    assert dist == {'gjfgwwj': 2, 'sfgwgfxwj': 1}
+    assert [k for k in dist if NATIONAL_REPOST.search(k)] == ['gjfgwwj']
+
+
+def test_audit_sub_column_distribution_marks_out_of_column_links():
+    """详情跳到栏目路径之外的也要标出来（跨栏目/跨站混杂的另一种形态）。"""
+    from scripts.audit_sources import sub_column_distribution
+    urls = ['https://x.gov.cn/other/section/t1.html',
+            'https://x.gov.cn/zwgk/fgzd/sub/t2.htm']
+    dist = sub_column_distribution(urls, 'https://x.gov.cn/zwgk/fgzd/')
+    assert dist == {'(栏目路径之外)': 1, 'sub': 1}
