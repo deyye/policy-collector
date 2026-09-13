@@ -16,3 +16,6 @@ export_policies.csv
 .tv*/
 .dbg*/
 .tmp*/
+
+# macOS
+.DS_Store
