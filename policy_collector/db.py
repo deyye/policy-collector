@@ -508,6 +508,40 @@ class Database:
                 "attachments": one("SELECT COUNT(*) FROM attachments"),
             }
 
+    def region_overview(self) -> list[dict]:
+        """按地区汇总政策数量与四类分布，供"按省份浏览"使用。
+
+        地区取 policies.region（由来源的 region 落库）。一个地区可能对应多个来源
+        （如"国家"下有发改委、中国政府网），这里按地区合并——用户要的是
+        "哪个省收了多少、都是哪几类"，不是来源台账。
+
+        只统计当前版本、未被剔除的条目，与列表页口径保持一致；
+        否则页面上各省之和会大于"政策记录"总数，看起来像数据错了。
+
+        待办列用 need_review（本分支的字段）。注意另一条并行分支
+        （feat/scope-criteria-and-acceptance）把"待复核"细分成了 todo_type，
+        两条线在 policies 表结构上已不同（37 列 vs 40 列）——合并时要对齐。
+        """
+        with self._conn:
+            rows = self._conn.execute(
+                """
+                SELECT region,
+                       COUNT(*) AS total,
+                       MAX(page_date) AS latest_date,
+                       SUM(CASE WHEN category LIKE '%guide%'     THEN 1 ELSE 0 END) AS guide,
+                       SUM(CASE WHEN category LIKE '%access%'    THEN 1 ELSE 0 END) AS access,
+                       SUM(CASE WHEN category LIKE '%guarantee%' THEN 1 ELSE 0 END) AS guarantee,
+                       SUM(CASE WHEN category LIKE '%incentive%' THEN 1 ELSE 0 END) AS incentive,
+                       SUM(CASE WHEN need_review=1 THEN 1 ELSE 0 END) AS todo
+                FROM policies p
+                WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                  AND review_status != 'rejected'
+                GROUP BY region
+                ORDER BY total DESC, region
+                """
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def record_attachment_attempts(self, fid, attachments):
         with self.tx() as c:
             for a in attachments:

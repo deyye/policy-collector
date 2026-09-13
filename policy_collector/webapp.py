@@ -80,7 +80,28 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         stats = d.dashboard()
         recent = d.query_policies(limit=8)
         runs = d.list_runs(limit=5)
-        return render_template("index.html", stats=stats, recent=recent, runs=runs)
+        return render_template("index.html", stats=stats, recent=recent, runs=runs,
+                               regions=[r for r in d.region_overview() if r["region"] != "样例"])
+
+    # ---------------- 按省份浏览 ----------------
+    @app.route("/provinces")
+    def provinces():
+        """把"全都在一个列表里"拆成"按地区分开"。
+
+        用户反馈：政策全部堆在一个列表里看不出各省分布。这里按 region 分组，
+        并把四类小计一起给出——一眼能看出某省是"只收了准入类"还是四类齐全。
+        """
+        d = db()
+        rows = d.region_overview()
+        # 中央与地方分开呈现：把"国家"混在省里，会让人误以为它是一个省。
+        central = [r for r in rows if r["region"] in ("国家", "中央", "全国")]
+        local = [r for r in rows if r["region"] and r["region"] not in ("国家", "中央", "全国", "样例")]
+        samples = [r for r in rows if r["region"] == "样例"]
+        unlabeled = [r for r in rows if not r["region"]]
+        return render_template("provinces.html", central=central, local=local,
+                               samples=samples, unlabeled=unlabeled,
+                               local_count=len(local),
+                               local_total=sum(r["total"] for r in local))
 
     # ---------------- 政策库 ----------------
     @app.route("/policies")

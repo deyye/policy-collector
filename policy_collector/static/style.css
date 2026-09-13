@@ -2168,3 +2168,37 @@ pre.content {
 .batch-actions p { margin:0 }
 .inline-run { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px }
 .inline-run .hint { margin:0 }
+
+
+/* ── 按地区浏览：省份分组（2026-09-14）────────────────────────
+   背景：政策原本只能在一个列表里从头翻到尾，看不出各省分布。
+   region 字段本来就有，这里只是把它呈现出来。 */
+.region-strip { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:26px }
+.region-chip { display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:7px 14px; color:var(--ink); font-size:13px; transition:border-color .2s,transform .2s }
+.region-chip:hover { border-color:#bbc9d7; transform:translateY(-1px) }
+.region-name { font-weight:500 }
+.region-count { background:#edf2f8; color:#587898; border-radius:999px; padding:1px 8px; font-size:11px; font-variant-numeric:tabular-nums }
+.region-chip-more { color:var(--blue); border-style:dashed }
+
+.province-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:14px; margin-bottom:28px }
+.province-grid-wide { grid-template-columns:repeat(auto-fill,minmax(292px,1fr)) }
+.province-card { display:block; background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:15px 16px; color:var(--ink); box-shadow:var(--shadow); transition:border-color .2s,transform .2s }
+.province-card:hover { border-color:#bbc9d7; transform:translateY(-2px) }
+.province-card-central { border-left:3px solid var(--navy) }
+.province-card-muted { opacity:.72 }
+.province-top { display:flex; align-items:baseline; justify-content:space-between; gap:10px }
+.province-top h3 { margin:0; font-size:15px; font-weight:600 }
+.province-total { font-size:19px; font-weight:600; color:var(--navy); font-variant-numeric:tabular-nums }
+.province-total small { font-size:11px; font-weight:400; color:var(--muted); margin-left:2px }
+.province-cats { display:flex; gap:6px; margin:11px 0 10px; flex-wrap:wrap }
+.province-cat { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); background:#f5f7fa; border-radius:4px; padding:2px 7px }
+.province-cat b { font-weight:600; font-variant-numeric:tabular-nums }
+.province-cat.c-guide b { color:#577b9f }
+.province-cat.c-access b { color:#8a6a3d }
+.province-cat.c-guarantee b { color:#548772 }
+.province-cat.c-incentive b { color:#8c5a56 }
+.province-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; border-top:1px solid var(--line); padding-top:9px }
+.province-date { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums }
+.region-hint { margin:0; padding-left:1.3em }
+.region-hint li { margin-bottom:6px; font-size:13px }
+@media (max-width:760px) { .province-grid, .province-grid-wide { grid-template-columns:1fr 1fr } }
