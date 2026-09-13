@@ -233,14 +233,14 @@ sources:
     site: 福建省发展和改革委员会
     region: 福建
     category: 政策文件
-    enabled: true
+    enabled: false
     list_url: "http://fgw.fujian.gov.cn/zwgk/fgzd/"
     include: ["/zwgk/fgzd/"]
     detail_url_pattern: "/[0-9]{6}/t[0-9]{8}_[0-9]+[.]htm$"
     exclude: ["index", ".pdf", ".doc", ".ofd"]
     pagination: next_link
     max_pages: 3
-    note: "与既有 fj_normative（规范性文件库）互补，本栏目为政策文件；探测 15 个文章链接。"
+    note: "【已停用】该栏目是多子栏目聚合页，实测前 15 条全部来自 /gjfgwwj/（国家发改委文件转载），收进来会把中央文件的归属错记成福建——按既定规则省级栏目的中央转载不单独收录。两个子栏目页（/sfgwgfxwj/、/szcfg/）自身取不到文章链接，无法改为子栏目接入。福建已有可用的 fj_normative（行政规范性文件库），本来源不再启用。"
 
   - name: gd_gfxwj
     site: 广东省发展和改革委员会
