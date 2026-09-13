@@ -231,3 +231,39 @@ def test_audit_sub_column_distribution_marks_out_of_column_links():
             'https://x.gov.cn/zwgk/fgzd/sub/t2.htm']
     dist = sub_column_distribution(urls, 'https://x.gov.cn/zwgk/fgzd/')
     assert dist == {'(栏目路径之外)': 1, 'sub': 1}
+
+
+def test_discover_follows_js_redirect_stub():
+    """栏目页可能是"跳转桩"（整页只有一行 location.href），必须跟一次。
+
+    实测山东 /col/col91475/index.html 全文仅 1823 字节、零链接，是占位页；
+    不跟跳会得出"这个栏目是空的"这种错误结论（并把可用省份记为需适配）。
+    """
+    from scripts.discover_provinces import js_redirect_target
+    stub = '<html><body><SCRIPT> location.href="/col/col91477/index.html";</SCRIPT></body></html>'
+    assert js_redirect_target(stub, 'http://fgw.shandong.gov.cn/col/col91475/index.html') \
+        == 'http://fgw.shandong.gov.cn/col/col91477/index.html'
+    # 相对地址按 base 解析
+    assert js_redirect_target('<script>location.href="list2.html"</script>',
+                              'http://x.gov.cn/a/b/index.html') == 'http://x.gov.cn/a/b/list2.html'
+    # 无跳转 / 伪跳转 都不能误判
+    assert js_redirect_target('<html>正常列表页</html>', 'http://x.gov.cn/') == ''
+    assert js_redirect_target('<a onclick="location.href=\'javascript:;\'">x</a>', 'http://x.gov.cn/') == ''
+
+
+def test_discover_follows_js_redirect_stub():
+    """栏目页可能是"跳转桩"（整页只有一行 location.href），必须跟一次。
+
+    实测山东 /col/col91475/index.html 全文仅 1823 字节、零链接，是占位页；
+    不跟跳会得出"这个栏目是空的"这种错误结论（并把可用省份记为需适配）。
+    """
+    from scripts.discover_provinces import js_redirect_target
+    stub = '<html><body><SCRIPT> location.href="/col/col91477/index.html";</SCRIPT></body></html>'
+    assert js_redirect_target(stub, 'http://fgw.shandong.gov.cn/col/col91475/index.html') \
+        == 'http://fgw.shandong.gov.cn/col/col91477/index.html'
+    # 相对地址按 base 解析
+    assert js_redirect_target('<script>location.href="list2.html"</script>',
+                              'http://x.gov.cn/a/b/index.html') == 'http://x.gov.cn/a/b/list2.html'
+    # 无跳转 / 伪跳转 都不能误判
+    assert js_redirect_target('<html>正常列表页</html>', 'http://x.gov.cn/') == ''
+    assert js_redirect_target('<a onclick="location.href=\'javascript:;\'">x</a>', 'http://x.gov.cn/') == ''

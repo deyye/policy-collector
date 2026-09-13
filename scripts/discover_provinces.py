@@ -53,6 +53,21 @@ ARTICLE_PATTERNS = (
     re.compile(r"/20\d{6}/[0-9a-f]{8,}\.s?html?$", re.I),
 )
 DATE_RE = re.compile(r"20\d{2}[-/年.]\d{1,2}[-/月.]\d{1,2}")
+# 栏目页可能是"跳转桩"：整页只有一行 location.href 指向真正的栏目。
+# 实测山东 /col/col91475/index.html 全文 1823 字节、零链接，就是这种占位页；
+# 不跟跳会在"这个栏目是空的"上得出错误结论。
+_JS_REDIRECT = re.compile(r"location\.href\s*=\s*[\"']([^\"']+)[\"']", re.I)
+
+
+def js_redirect_target(html: str, base: str) -> str:
+    """返回页面声明的 JS 跳转目标（相对地址按 base 解析）；无则空串。"""
+    m = _JS_REDIRECT.search(html or "")
+    if not m:
+        return ""
+    target = m.group(1).strip()
+    if not target or target.lower().startswith(("javascript", "#")):
+        return ""
+    return urljoin(base, target)
 
 
 def looks_like_article(url: str) -> bool:
@@ -131,7 +146,19 @@ def probe(entry: dict, deep: bool, max_cols: int = 6) -> dict:
             if not got.ok:
                 scored.append({**c, "article_links": 0, "error": got.error})
                 continue
-            s = score_list_page(got.content.decode("utf-8", "ignore"), got.final_url or c["url"])
+            page = got.content.decode("utf-8", "ignore")
+            page_url = got.final_url or c["url"]
+            # 跳转桩：跟一次，否则会把"占位页"误判成"空栏目"
+            hop = js_redirect_target(page, page_url)
+            if hop and not same_host(hop, final):
+                hop = ""
+            if hop:
+                again = collector.fetch(hop)
+                if again.ok:
+                    page = again.content.decode("utf-8", "ignore")
+                    page_url = again.final_url or hop
+                    c = {**c, "redirected_to": page_url}
+            s = score_list_page(page, page_url)
             scored.append({**c, **s})
         scored.sort(key=lambda x: (-x.get("article_links", 0), -x.get("dates_on_page", 0)))
         best = scored[0] if scored else {}
