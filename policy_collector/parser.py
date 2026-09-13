@@ -184,7 +184,10 @@ class Parser:
                              # 2026-09-13 省级接入实测补充：这几类是政务站（多为 Word 粘贴或 TRS 变体）真实承载正文的容器
                              # 注意 Custom_UnionStyle 是 **class** 不是 id（实测 #Custom_UnionStyle 不命中、.Custom_UnionStyle 命中）
                              ".Custom_UnionStyle", "#trs_editor_view", ".newscontnet", "#con_main", ".slh_wrap",
-                             "#Article_Con", "#nry", "#NewsContent", ".Article_content", ".conBox"):
+                             "#Article_Con", "#nry", "#NewsContent", ".Article_content", ".conBox",
+                             # 2026-09-14：重庆 fzggw.cq.gov.cn 的行政规范性文件详情。该站 6/6 篇都
+                             # 定位不到正文（只能拿"仅供复核"的整页文本），实测正文在 .zcwjk-xlcon 内。
+                             ".zcwjk-xlcon"):
                 candidate = soup.select_one(selector)
                 if candidate and len(candidate.get_text(strip=True)) > 20:
                     main = candidate
