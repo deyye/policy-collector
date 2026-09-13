@@ -2150,3 +2150,13 @@ pre.content {
   font-size:11px;
   color:#7b8a9b
 }
+
+/* Compact task status and bounded agent trace. */
+.agent-progress {padding:24px;margin-bottom:20px;}
+.agent-progress progress {width:100%;height:12px;accent-color:#276b70;}
+.process-steps {display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;}
+.process-steps span {background:#eef3f4;border-radius:6px;padding:8px 12px;font-size:13px;}
+.agent-timeline {padding-left:22px;line-height:1.8;}
+.agent-timeline li {padding:8px 0;border-bottom:1px solid #edf0f2;overflow-wrap:anywhere;}
+.agent-timeline time {color:#687888;font-size:12px;margin-right:8px;}
+.review-form textarea {width:100%;display:block;margin:8px 0 12px;}

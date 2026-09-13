@@ -56,6 +56,14 @@ class Pipeline:
         self.classifier=Classifier(cfg)
         self.dedup=Deduplicator(self.db)
         self.discovery_errors=[]
+        self.active_run = ''
+        self.active_fetch = None
+        from .agent import PolicyAgent
+        self.agent = PolicyAgent(self.classifier, self._event)
+
+    def _event(self, action, status, message):
+        self.db.agent_event(self.active_run, self.active_fetch, action, status, message)
+        self.db.run_progress(self.active_run, stage=action, message=message)
 
     def close(self):
         self.collector.close();self.db.close()
@@ -163,10 +171,11 @@ class Pipeline:
                 c.execute('UPDATE source_configs SET last_success_at=? WHERE id=?',(now(),row['id']))
         return stats
 
-    def _attachments(self,source,doc,stats,reuse_cached=False,local_only=False):
+    def _attachments(self,source,doc,stats,reuse_cached=False,local_only=False,only_urls=None):
         old=self.db.policy_for_url(doc.page_url)
         cached={a['url']:a for a in self.db.list_attachments(old['id'])} if old else {}
         for att in doc.attachments:
+            if only_urls is not None and att['url'] not in only_urls: continue
             att.update(local_path='',sha256='',parsed_text='',parse_status='failed',error='')
             try:
                 cache=cached.get(att['url'],{})
@@ -226,6 +235,8 @@ class Pipeline:
         sid=row['id']
         existing=self.db.get_fetch(sid,url)
         fid=existing['id'] if existing else self.db.add_fetch(sid,url)
+        self.active_fetch = fid
+        self._event('download', 'running', '正在获取原文')
         self.db.update_fetch(fid,last_checked_at=now(),error='')
         try:
             base=url;ctype=''
@@ -240,6 +251,7 @@ class Pipeline:
             self.db.update_fetch(fid,status='downloaded',downloaded_at=now(),raw_path=origin,
                                  content_sha256=hashlib.sha256(raw).hexdigest())
             stats.downloaded+=1
+            self._event('parse', 'running', '正在提取正文、元数据与附件')
             doc=self.parser.parse(raw,fmt,page_url=base,origin_path=origin)
             doc.page_url=url;doc.source_name=source.name;doc.raw_bytes_sha256=hashlib.sha256(raw).hexdigest()
             if not doc.content.strip() and not doc.attachments:
@@ -247,11 +259,24 @@ class Pipeline:
             if not doc.title:doc.title=(existing or {}).get('title','') or '待核实标题'
             self._attachments(source,doc,stats,reuse_cached,local_only)
             self.db.record_attachment_attempts(fid,doc.attachments)
+            def repair(urls):
+                retry_stats=RunStats()
+                self._attachments(source,doc,retry_stats,only_urls=urls)
+                stats.attachments_downloaded += retry_stats.attachments_downloaded
+                stats.attachments_failed = sum(a.get('parse_status')!='ok' and not a.get('sha256') for a in doc.attachments)
+                stats.attachments_unparsed = sum(a.get('parse_status')!='ok' and bool(a.get('sha256')) for a in doc.attachments)
+                self.db.record_attachment_attempts(fid,[a for a in doc.attachments if a['url'] in urls])
+            if not local_only:
+                self.agent.classifier=self.classifier
+                self.agent.prepare(doc,repair,prefer)
+                stats.input_tokens += self.agent.usage.get('input_tokens',0)
+                stats.output_tokens += self.agent.usage.get('output_tokens',0)
             self.db.update_fetch(fid,document_json=json.dumps(asdict(doc),ensure_ascii=False))
             stats.parsed+=1
             if doc.parse_error:
                 stats.documents_incomplete+=1
             old=self.db.policy_for_url(url)
+            self._event('dedup', 'running', '正在核对重复文件与已有版本')
             if old:
                 reclassify = reclassify or self._needs_model_retry(old, prefer)
                 previous=self.db.list_attachments(old['id'])
@@ -334,6 +359,7 @@ class Pipeline:
             self._count_classification(cls,stats)
             self.db.update_fetch(fid,classification_json=json.dumps(asdict(cls),ensure_ascii=False))
             if cls.is_investment_policy=='no':
+                self._event('excluded','done','明确不属于归集范围，保留采集记录')
                 stats.excluded+=1
                 self.db.update_fetch(fid,status='excluded',processed_at=now(),error=cls.reason)
                 return stats
@@ -348,6 +374,7 @@ class Pipeline:
             if old:
                 # New evidence/version requires review; keep the old human decision on its historical version.
                 fields.update(need_review=1,review_status='pending')
+            self._event('store','running','正在保存政策、附件及来源')
             pid,_=self.db.store_document(key,fields,doc.attachments,fid,sid,url)
             if old:stats.updated+=1
             else:stats.ingested+=1
@@ -355,6 +382,7 @@ class Pipeline:
             self.db.update_fetch(fid,status='failed' if stats.attachments_failed else 'processed',processed_at=now(),
                                  error='附件下载失败，等待补采' if stats.attachments_failed else '')
         except Exception as e:
+            self._event('failed','attention','处理未完成：'+str(e)[:240])
             stats.failed+=1
             self.db.update_fetch(fid,status='failed',error=str(e)[:1000])
         return stats
@@ -366,7 +394,8 @@ class Pipeline:
                 and row.get('review_status') not in ('confirmed', 'adjusted', 'rejected'))
 
     def _classify_document(self, doc, prefer):
-        cls = self.classifier.classify(doc, prefer)
+        self.agent.classifier=self.classifier
+        cls = self.agent.classify(doc, prefer)
         # A tentative negative belongs in the review queue, not the exclusion log.
         if cls.is_investment_policy == 'no' and cls.need_review:
             cls.is_investment_policy = 'pending'
@@ -404,6 +433,9 @@ class Pipeline:
             with self.db.tx() as c:
                 c.execute("UPDATE run_logs SET status='failed',finished_at=?,note=note || '；上次运行中断，待重试' WHERE status='running'",(now(),))
             self.db.start_run(run_id,row['id'],kind=kind)
+            self.active_run=run_id
+            self.active_fetch=None
+            self._event('discover','running','正在发现官网政策文件；此阶段暂不估计总量')
             total=RunStats();start=time.monotonic();note=''
             try:
                 if not retry_only:
@@ -417,8 +449,12 @@ class Pipeline:
                 where=" AND status='failed'" if retry_only else ''
                 queue=self.db._conn.execute(f"""SELECT * FROM fetch_records WHERE source_id=? {where}
                     ORDER BY COALESCE(last_checked_at,''),id LIMIT ?""",(row['id'],limit)).fetchall()
-                for fr in queue:
+                self.db.run_progress(run_id, total=len(queue), completed=0)
+                for index,fr in enumerate(queue):
+                    self.db.run_progress(run_id, title=fr['title'] or fr['page_url'])
                     total+=self._ingest_url(src,fr['page_url'],prefer=prefer,reclassify=reclassify)
+                    self._event('document_done','done','本份文件已处理，结果见记录')
+                    self.db.run_progress(run_id, completed=index+1)
                     with self.db.tx() as c:
                         c.execute('UPDATE run_logs SET summary=? WHERE run_id=?',(json.dumps(total.to_dict()),run_id))
                 status='partial' if total.has_errors else 'ok'
@@ -426,7 +462,10 @@ class Pipeline:
             except Exception as e:
                 total.failed+=1;status='failed';note+='\n'+str(e)
             total.elapsed_seconds=round(time.monotonic()-start,3)
+            self.db.run_progress(run_id, stage='finished', message='本批处理结束；有待办请继续处理')
             self.db.finish_run(run_id,total.to_dict(),status=status,model_version=self.cfg.llm.effective_model if total.llm_classified else '',note=note)
+            self.active_run=''
+            self.active_fetch=None
             return total
 
     def run_demo(self,samples_dir:Optional[Path]=None):
@@ -435,9 +474,16 @@ class Pipeline:
             self.db.upsert_source(name=src.name,site=src.site,region=src.region,enabled=0,list_url=src.list_url)
             row=self.db.get_source(src.name);run_id=f'demo-{uuid.uuid4().hex[:16]}'
             self.db.start_run(run_id,row['id'],kind='demo')
+            self.active_run=run_id
+            files=sorted((samples_dir or PROJECT_ROOT/'samples'/'policies').glob('*.html'))
+            self.db.run_progress(run_id,total=len(files),completed=0,title='离线样例')
             total=RunStats()
-            for f in sorted((samples_dir or PROJECT_ROOT/'samples'/'policies').glob('*.html')):
+            for index,f in enumerate(files):
                 total.discovered+=1
                 total+=self._ingest_url(src,f.resolve().as_uri(),prefer='rule')
+                self.db.run_progress(run_id,completed=index+1)
+            self.db.run_progress(run_id,stage='finished',message='离线样例处理完成')
             self.db.finish_run(run_id,total.to_dict(),status='partial' if total.has_errors else 'ok')
+            self.active_run=''
+            self.active_fetch=None
             return total

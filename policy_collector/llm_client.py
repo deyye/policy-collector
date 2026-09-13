@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from urllib.parse import urlsplit
 import requests
 from .config import LLMConfig
 
@@ -26,7 +27,8 @@ class LLMClient:
 
     @property
     def available(self):
-        return bool(self.cfg.enabled and self.cfg.api_key and self.cfg.effective_model)
+        local = urlsplit(self.base_url).hostname in ('localhost','127.0.0.1','::1')
+        return bool(self.cfg.enabled and self.cfg.effective_model and (self.cfg.api_key or local))
 
     def chat_json(self,system,user,temperature=0.0):
         self.last_error=''
@@ -38,7 +40,7 @@ class LLMClient:
         for attempt in range(self.cfg.retries+1):
             try:
                 with requests.post(f'{self.base_url}/chat/completions',
-                    headers={'Authorization':f'Bearer {self.cfg.api_key}'},
+                    headers={'Authorization':f'Bearer {self.cfg.api_key}'} if self.cfg.api_key else {},
                     json={'model':self.cfg.effective_model,'temperature':temperature,
                           'response_format':{'type':'json_object'},
                           'messages':[{'role':'system','content':system},{'role':'user','content':user}],

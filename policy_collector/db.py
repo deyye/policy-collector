@@ -325,14 +325,40 @@ class Database:
         with self._conn:
             return [dict(r) for r in self._conn.execute("SELECT * FROM run_logs ORDER BY id DESC LIMIT ?", (limit,))]
 
+    def agent_event(self, run_id, fetch_id, action, status, message):
+        with self.tx() as cur:
+            cur.execute('INSERT INTO agent_events(run_id,fetch_id,action,status,message,created_at) VALUES(?,?,?,?,?,?)',
+                        (run_id,fetch_id,action,status,message,now()))
+
+    def run_progress(self, run_id, **fields):
+        if not run_id: return
+        with self.tx() as cur:
+            row=cur.execute('SELECT progress FROM run_logs WHERE run_id=?',(run_id,)).fetchone()
+            data=json.loads(row['progress'] or '{}') if row else {}
+            data.update(fields)
+            cur.execute('UPDATE run_logs SET progress=? WHERE run_id=?',(json.dumps(data,ensure_ascii=False),run_id))
+
+    def run_events(self, run_id, limit=100):
+        return [dict(r) for r in self._conn.execute('SELECT * FROM agent_events WHERE run_id=? ORDER BY id DESC LIMIT ?', (run_id,limit))][::-1]
+
+    def policy_agent_events(self, pid):
+        return [dict(r) for r in self._conn.execute("""SELECT * FROM agent_events WHERE fetch_id IN
+            (SELECT fetch_id FROM policy_sources WHERE policy_id=?) ORDER BY id DESC LIMIT 30""",(pid,))][::-1]
+
     def get_run_summary(self, run_id: str) -> Optional[dict]:
         with self._conn:
             r = self._conn.execute("SELECT * FROM run_logs WHERE run_id=?", (run_id,)).fetchone()
             return dict(r) if r else None
 
     def _migrate(self):
+        self._conn.executescript("""CREATE TABLE IF NOT EXISTS agent_events (
+            id INTEGER PRIMARY KEY, run_id TEXT NOT NULL DEFAULT '', fetch_id INTEGER,
+            action TEXT, status TEXT, message TEXT, created_at TEXT);
+            CREATE INDEX IF NOT EXISTS idx_agent_run ON agent_events(run_id,id);
+            CREATE INDEX IF NOT EXISTS idx_agent_fetch ON agent_events(fetch_id,id);""")
         self._conn.execute("CREATE INDEX IF NOT EXISTS idx_attachment_policy ON attachments(policy_id)")
         additions = {
+            "run_logs": {"progress":"TEXT DEFAULT '{}'"},
             "source_configs": {"last_success_at": "TEXT", "last_error": "TEXT DEFAULT ''"},
             "fetch_records": {"last_checked_at": "TEXT", "policy_id": "INTEGER", "classification_json": "TEXT DEFAULT ''", "document_json":"TEXT DEFAULT ''"},
             "policies": {"reviewer_hint": "TEXT DEFAULT ''", "classification_method": "TEXT DEFAULT ''",

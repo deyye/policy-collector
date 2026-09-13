@@ -115,7 +115,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         cats = _policy_category_names(p)
         return render_template(
             "policy.html", p=p, versions=versions, attachments=attachments, cats=cats, material_issues=material_issues,
-            provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid),
+            provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid), agent_events=d.policy_agent_events(pid),
             cat_codes=CAT_CODES, _cat_label=_cat_label, review_style=_REVIEW_STYLE.get(p["review_status"], ""),
         )
 
@@ -147,18 +147,17 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         for s in rows:
             s["in_config"] = s["name"] in cfg.sources
             s["note"] = cfg.sources[s["name"]].note if s["in_config"] else ""
-        return render_template("sources.html", rows=rows)
+        from .llm_client import LLMClient
+        return render_template("sources.html", rows=rows, model_ready=LLMClient(cfg.llm).available)
 
-    def _run_worker(source_name: str, prefer: str) -> None:
-        with _RUN_LOCK:
+    def _run_worker(source_name: str, prefer: str, retry_only=False) -> None:
+        pipe = None
+        try:
             pipe = Pipeline(cfg)
-            try:
-                stats = pipe.run_source(source_name, prefer=prefer, limit=200)
-                print(f"[web] run {source_name} done: {stats.to_dict()}")
-            except Exception as e:  # noqa: BLE001
-                print(f"[web] run {source_name} failed: {e}")
-            finally:
-                pipe.close()
+            pipe.run_source(source_name, prefer=prefer, limit=200, retry_only=retry_only)
+        finally:
+            if pipe: pipe.close()
+            _RUN_LOCK.release()
 
     @app.route("/sources/<name>/run", methods=["POST"])
     def source_run(name: str):
@@ -168,12 +167,15 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             return redirect(url_for("sources"))
         prefer = request.form.get('prefer', 'llm')
         if prefer not in ('llm','rule'): abort(400)
-        if _RUN_LOCK.locked():
+        if not _RUN_LOCK.acquire(blocking=False):
             flash('已有采集任务运行，请等待完成', 'warn')
             return redirect(url_for('runs'))
-        t = threading.Thread(target=_run_worker, args=(name, prefer), daemon=True)
-        t.start()
-        flash(f"已开始运行来源 [{name}]（{prefer} 模式），可在运行日志查看进度", "ok")
+        t = threading.Thread(target=_run_worker, args=(name, prefer, request.form.get('retry_only') == '1'), daemon=True)
+        try: t.start()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        flash("任务已启动，下方会自动显示处理进度。", "ok")
         return redirect(url_for("runs"))
 
     # ---------------- 运行日志 ----------------
@@ -181,16 +183,29 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
     def runs():
         d = db()
         rows = d.list_runs(limit=50)
-        smap = {s["id"]: s["name"] for s in d.list_sources()}
+        smap = {s["id"]: (s["site"] or s["name"]) for s in d.list_sources()}
         parsed = []
         for r in rows:
             try:
                 r["summary_obj"] = json.loads(r["summary"] or "{}")
+                r["progress_obj"] = json.loads(r.get("progress") or "{}")
             except Exception:  # noqa: BLE001
                 r["summary_obj"] = {}
+                r["progress_obj"] = {}
             parsed.append(r)
-        running = any(r["status"] == "running" for r in rows)
+        running = _RUN_LOCK.locked() or any(r["status"] == "running" for r in rows)
         return render_template("runs.html", rows=parsed, running=running, smap=smap)
+
+    @app.get('/runs/<run_id>')
+    def run_detail(run_id):
+        d=db()
+        row=d._conn.execute('SELECT * FROM run_logs WHERE run_id=?',(run_id,)).fetchone()
+        if row is None: abort(404)
+        r=dict(row)
+        r['summary_obj']=json.loads(r['summary'] or '{}')
+        r['progress_obj']=json.loads(r.get('progress') or '{}')
+        source=next((s for s in d.list_sources() if s['id']==r['source_id']),{})
+        return render_template('run_detail.html',r=r,source=source,events=d.run_events(run_id),running=r['status']=='running')
 
     @app.get('/attachments/<int:aid>/download')
     def attachment_download(aid):
