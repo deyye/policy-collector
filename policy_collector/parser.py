@@ -184,7 +184,7 @@ class Parser:
                              # 2026-09-13 省级接入实测补充：这几类是政务站（多为 Word 粘贴或 TRS 变体）真实承载正文的容器
                              # 注意 Custom_UnionStyle 是 **class** 不是 id（实测 #Custom_UnionStyle 不命中、.Custom_UnionStyle 命中）
                              ".Custom_UnionStyle", "#trs_editor_view", ".newscontnet", "#con_main", ".slh_wrap",
-                             "#Article_Con", "#nry", "#NewsContent"):
+                             "#Article_Con", "#nry", "#NewsContent", ".Article_content", ".conBox"):
                 candidate = soup.select_one(selector)
                 if candidate and len(candidate.get_text(strip=True)) > 20:
                     main = candidate

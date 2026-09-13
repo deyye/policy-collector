@@ -358,6 +358,33 @@ sources:
     max_pages: 3
     note: "与既有 hn_local_rules（地方性法规规章）互补。"
 
+  # ---- 2026-09-13 第二轮：放宽"文章型链接"判据后新发现的可用栏目 ----
+  # 这两站的详情 URL **不在栏目路径下**（河南在根目录、上海在 /fgw_xxx/），
+  # 故 include 留空、只靠 detail_url_pattern 卡形态。
+  - name: henan_xzgfxwj
+    site: 河南省发展和改革委员会
+    region: 河南
+    category: 行政规范性文件
+    enabled: true
+    list_url: "https://fgw.henan.gov.cn/zwgk/zc/xzgfxwj"
+    include: []
+    detail_url_pattern: "/20[0-9]{2}/[0-9]{1,2}-[0-9]{1,2}/[0-9]+[.]html$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    max_pages: 1
+    note: "详情形态为 /2026/09-11/3418623.html（年月日带连字符），此前识别器不认导致误判为需适配；详情不在栏目路径下，故 include 留空。抽样中另有一条 /2022/11-11/2638153.html 标题「基本信息」，是该站导航页而非政策（形态与正文页一致，无法按网址排除），会由分类层判不相关、不入库。"
+
+  - name: sh_zcwj
+    site: 上海市发展和改革委员会
+    region: 上海
+    category: 政策文件
+    enabled: true
+    list_url: "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html"
+    include: []
+    detail_url_pattern: "/20[0-9]{6}/[0-9a-f]{8,}[.]html?$"
+    exclude: ["index", ".pdf", ".doc", ".ofd"]
+    max_pages: 1
+    note: "栏目页实测 17 篇，形态 /fgw_xxx/20260828/hash.html；详情不在栏目路径下，故 include 留空。正文容器 .Article_content 已补（此前整页文本仅供复核）。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例

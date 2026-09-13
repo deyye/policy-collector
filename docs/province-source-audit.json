@@ -1,7 +1,7 @@
 {
   "checked_at": "2026-09-13T16:03:36.165096+00:00",
   "scope": "2026-09-13 新增省级来源的接入验收（列表发现→正文→附件→入库），取每源最后一次结果",
-  "note": "探测只定位候选栏目；此处是启用前的实际接入验收，通过者已在 sources.yaml 启用。sc_tzgg 为四川改用通知公告栏目后的结果（原 sc_zcwj 的政策文件栏目列表页取不到候选链接）。qh_fgwwj 抽样中有一篇为站点自身死链（实测 HTTP 404），故本文件仍记 needs_attention，但来源本身可用，已人工确认后启用——这是站点侧问题，不是接入缺陷。",
+  "note": "探测只定位候选栏目；此处是启用前的实际接入验收，通过者已在 sources.yaml 启用。sc_tzgg 为四川改用通知公告栏目后的结果（原 sc_zcwj 的政策文件栏目列表页取不到候选链接）。qh_fgwwj 抽样中有一篇为站点自身死链（实测 HTTP 404），故本文件仍记 needs_attention，但来源本身可用，已人工确认后启用——这是站点侧问题，不是接入缺陷。 2026-09-13 第二轮：新增 henan_xzgfxwj（河南）与 sh_zcwj（上海）；河南抽样中一条为站点导航页，由分类层判不相关。",
   "results": [
     {
       "source": "ah_tzgg",
@@ -797,6 +797,149 @@
       "accepted_sample": true
     },
     {
+      "source": "henan_xzgfxwj",
+      "region": "河南",
+      "column": "行政规范性文件",
+      "url": "https://fgw.henan.gov.cn/zwgk/zc/xzgfxwj",
+      "discovered": 19,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 19
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "https://fgw.henan.gov.cn/2022/11-11/2638153.html",
+          "title": "基本信息",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 1,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2022-11-11",
+            "doc_date": "",
+            "wenhao": ""
+          },
+          "body_chars": 776,
+          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
+          "attachments": [],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.henan.gov.cn/2026/07-15/3375681.html",
+          "title": "关于进一步加强殡葬服务收费管理的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-15",
+            "doc_date": "2026-06-30",
+            "wenhao": "豫发改收费〔2026〕450号"
+          },
+          "body_chars": 4277,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "河南省殡葬服务基础项目清单",
+              "url": "https://xcoss.henan.gov.cn/typtfile/20260723/c3f2d3f3c678499fb656672849920bb6.docx",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.henan.gov.cn/2026/05-13/3350878.html",
+          "title": "关于公布行政规范性文件清理结果的决定",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-05-13",
+            "doc_date": "2026-05-05",
+            "wenhao": "豫发改法规规〔2026〕290号"
+          },
+          "body_chars": 7191,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
       "source": "hlj_gkzc",
       "region": "黑龙江",
       "column": "政策",
@@ -1464,6 +1607,168 @@
           "body_chars": 851,
           "parse_error": "",
           "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "sh_zcwj",
+      "region": "上海",
+      "column": "政策文件",
+      "url": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html",
+      "discovered": 17,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 17
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "http://fgw.sh.gov.cn/fgw_jggl/20260911/9aaae46f75e24072bfc5ac52742d2642.html",
+          "title": "上海市发展和改革委员会关于车用汽、柴油价格的通知（2026年9月11日）",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-11",
+            "wenhao": "沪发改价管〔2026〕39号"
+          },
+          "body_chars": 511,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.sh.gov.cn/fgw_zyjyhhjbh/20260909/4a6150c8589f48e9aac8256bc23b6dd7.html",
+          "title": "关于印发《上海市零碳园区建设工作方案》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 3,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-09",
+            "doc_date": "2026-09-07",
+            "wenhao": "沪发改环资〔2026〕130号"
+          },
+          "body_chars": 3238,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "上海市零碳园区建设基本条件.docx",
+              "url": "https://fgw.sh.gov.cn/cmsres/dd/dd3d450a16404e4794cbbe35b030ab64/feba42a7005ddeea9d248c6067dbb14e.docx",
+              "parse_status": "ok",
+              "error": ""
+            },
+            {
+              "name": "上海市零碳园区建设指标体系.docx",
+              "url": "https://fgw.sh.gov.cn/cmsres/46/46ea6e5c85ce4de88a29d27999bbf085/c246eded2450f5db43648d9d5073ee91.docx",
+              "parse_status": "partial",
+              "error": "Word含图片，文本已提取，图片中的条款需人工核对或OCR"
+            },
+            {
+              "name": "5b418e690b7af74f8b7c7632a95da2af.pdf",
+              "url": "https://fgw.sh.gov.cn/cmsres/71/71490e6d58394947a807cf3fdd97b912/5b418e690b7af74f8b7c7632a95da2af.pdf",
+              "parse_status": "partial",
+              "error": "第15页文本不足，需OCR/人工核对"
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.sh.gov.cn/fgw_jggl/20260909/c3c96f13d4a240cd89d7d82d3cd46705.html",
+          "title": "关于我市居民瓶装液化石油气基准价的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-09",
+            "doc_date": "2026-09-09",
+            "wenhao": "沪发改价管〔2026〕38号"
+          },
+          "body_chars": 253,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "fd8a38aa7e2c73d260fd8bb607b58f8d.pdf",
+              "url": "https://fgw.sh.gov.cn/cmsres/1c/1c4c955b6fb74c67b741885c8e2eb141/fd8a38aa7e2c73d260fd8bb607b58f8d.pdf",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
           "error": ""
         }
       ],
