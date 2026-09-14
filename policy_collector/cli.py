@@ -63,8 +63,11 @@ def cmd_demo(args: argparse.Namespace) -> int:
     print("离线样例演示完成（采集→解析→分类→去重→入库）：")
     print(json.dumps(stats.to_dict(), ensure_ascii=False, indent=2))
     print("\n查询结果：")
+    from .todo import NONE, TODO_META
     for p in pipe.db.query_policies(limit=20):
-        mark = "【待复核】" if p["need_review"] else ""
+        tt = p.get("todo_type") or NONE
+        # 标注"该谁处理"，与待办清单同口径（原来只标「待复核」，看不出责任方）
+        mark = f"【{TODO_META[tt][0]}·{TODO_META[tt][1]}】" if tt != NONE else ""
         cat = (p["category_names"] or "-")[:24]
         print(f"  #{p['id']} v{p['version']} [{cat}] {p['title'][:40]}{mark} ({p['region']})")
     return 0
@@ -113,8 +116,11 @@ def cmd_query(args: argparse.Namespace) -> int:
         print("（无匹配记录）")
         return 0
     print(f"共 {len(rows)} 条：")
+    from .todo import NONE, TODO_META
     for p in rows:
-        flag = "待复核" if p["need_review"] else "已入库"
+        # 与待办清单同口径：标出"该谁处理"，而不是笼统的"待复核/已入库"
+        tt = p.get("todo_type") or NONE
+        flag = TODO_META[tt][0] if tt != NONE else "无需处理"
         cat = (p["category_names"] or "-")[:24]
         print(f"  #{p['id']} v{p['version']} [{flag}] {cat} | {p['title'][:50]}（{p['region'] or '-'}）")
     return 0
@@ -167,10 +173,21 @@ def cmd_stats(args: argparse.Namespace) -> int:
     cfg = _cfg(args)
     db = Database(cfg.db_path)
     total = db.query_policies(limit=100000)
-    need_review = sum(1 for p in total if p["need_review"])
-    print(f"政策总数: {len(total)}（当前版本，不含已剔除）| 待复核: {need_review}")
+    print(f"政策总数: {len(total)}（当前版本，不含已剔除）")
+    # 待办按"谁能解决"分开报，读的是与 Web 待办清单**同一个字段**（policies.todo_type）。
+    # 原实现报的是旧的 need_review 计数——那个布尔把材料缺件、模型故障、口径待定
+    # 混在一起，于是 CLI 报一个数、页面报另一组数，两边对不上账。
+    from .todo import NONE, TODO_META, TODO_ORDER
+    ov = db.todo_overview()
+    counts = ov["counts"]
+    print(f"待办分布（在库 {len(total)} 条 · 需你逐条处理 {ov['human']} 条）:")
+    for key in TODO_ORDER:
+        name, owner, _ = TODO_META[key]
+        print(f"  {name}（{owner}）: {counts.get(key, 0)}")
+    print(f"  {TODO_META[NONE][0]}: {counts.get(NONE, 0)}")
     from collections import Counter
     by_cat = Counter(p["category_names"] or "未分类" for p in total)
+    print("\n按类别：")
     for k, v in by_cat.most_common():
         print(f"  {k}: {v}")
     print("\n最近运行日志：")

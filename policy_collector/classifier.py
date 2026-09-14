@@ -111,7 +111,21 @@ class RuleClassifier:
         # ── 1) 条件 A：排除不属于本库业务范围的信息发布类 ─────────────
         # 判断的是"是否本库业务范围内值得归集的政策性文件"，
         # 而不是"是否属于法律意义上的行政规范性文件"（详见 classification.yaml 说明）。
+        #
+        # 这里要分两类排除词，因为**反误杀豁免只对其中一类成立**：
+        #   · 词根类（soft）：会议、采购、招标… 可能与政策标题共存——"联席会议制度"
+        #     "采购管理办法"确实是政策。含 POLICY_FORM_EXEMPT 里的词就不排除。
+        #   · 事务性（hard）：比选、中选、招募、遴选、询价、获奖、公示、公众参与…
+        #     出现即说明这是一条事务公告，而不是政策正文。豁免**不适用**：
+        #     实测《关于比选《…项目实施方案》研究承担单位的公告》里有个"方案"，
+        #     按词根类规则会被豁免掉、照样判「收」——正是漏网的原因。
         scope = rel.get("policy_document_scope", {}) or {}
+        title_hard = [_norm(k) for k in scope.get("exclude_types_hard", [])]
+        hit_hard = next((e for e in title_hard if e in title), "")
+        if hit_hard:
+            return self._verdict("no", "none",
+                                 f"命中事务性关键词「{hit_hard}」，属事务公告而非政策正文，不收录",
+                                 doc_type)
         exclude_types = [_norm(k) for k in scope.get("exclude_types", [])]
         hit_excl = next((e for e in exclude_types if e in title), "")
         # "联席会议制度""采购管理办法"这类虽含排除词，但确实是政策文件，不能误杀
