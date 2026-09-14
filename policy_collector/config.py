@@ -183,6 +183,6 @@ class SourceConfig:
     pagination: str = "single"  # single / trs / template / next_link
     allowed_hosts: list[str] = field(default_factory=list)
     note: str = ""
-    list_format: str = "html"  # html / gov_json / zj_unit / jpage
+    list_format: str = "html"  # html / gov_json / zj_unit / jpage / jx_query
     feed_url: str = ""
     detail_url_pattern: str = ""

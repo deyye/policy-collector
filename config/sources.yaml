@@ -460,6 +460,27 @@ sources:
     max_pages: 1
     note: "列表页静态直出 13 条详情链接；发现数偏少，历史翻页尚未接入。"
 
+  # ---- 江西：2026-09-14 深夜接通。9/13 记为"入口待找"，那是只看了首页——
+  #      首页导航给的是栏目页，而**栏目页静态 HTML 里一条文章链接都没有**：
+  #      页面自报 articleCount:200 / childCount:0，列表与正文都在同一份 JSON 里。
+  #      接口 = POST {站点根}/queryList（GET 直接 404），参数从栏目页内联脚本的
+  #      channelId / siteId / websiteId 取，见 collector.discover_jx_query_links。
+  #      ⚠️ 只启用本省自有栏目：col14586 是**国家发改委转载栏目**（15 条里 11 条中央文件），
+  #      启用它会重演福建那种归属错误。
+  - name: jx_tzgg
+    site: 江西省发展和改革委员会
+    region: 江西
+    category: 通知公告
+    enabled: true
+    list_url: "http://drc.jiangxi.gov.cn/jxsfzhggwyh/col/col14590/index.html"
+    list_format: jx_query
+    include: ["/jxsfzhggwyh/col/col14590/content/"]
+    detail_url_pattern: "/jxsfzhggwyh/col/col14590/content/content_[0-9]+\\.html$"
+    exclude: [".pdf", ".doc", ".ofd", ".xls"]
+    pagination: single
+    max_pages: 2
+    note: "必须用 http（https 需 legacy renegotiation，直接 SSLError）。列表走 POST /queryList。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例

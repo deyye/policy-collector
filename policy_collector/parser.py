@@ -187,7 +187,10 @@ class Parser:
                              "#Article_Con", "#nry", "#NewsContent", ".Article_content", ".conBox",
                              # 2026-09-14：重庆 fzggw.cq.gov.cn 的行政规范性文件详情。该站 6/6 篇都
                              # 定位不到正文（只能拿"仅供复核"的整页文本），实测正文在 .zcwjk-xlcon 内。
-                             ".zcwjk-xlcon"):
+                             # 同批补：江西 drc.jiangxi.gov.cn 详情页正文在 div.article1 内——静态页
+                             # 其实带正文，只是容器表没有它，于是被判成"整页仅供复核"（本项目第五次
+                             # "把可用材料当成缺失"）。
+                             ".zcwjk-xlcon", ".article1"):
                 candidate = soup.select_one(selector)
                 if candidate and len(candidate.get_text(strip=True)) > 20:
                     main = candidate

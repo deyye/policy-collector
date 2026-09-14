@@ -110,7 +110,10 @@ class Collector:
     def close(self):
         self.session.close()
 
-    def fetch(self, url: str, timeout: Optional[int] = None, params: Optional[dict] = None) -> FetchResult:
+    def fetch(self, url: str, timeout: Optional[int] = None, params: Optional[dict] = None,
+              form: Optional[dict] = None) -> FetchResult:
+        """取一个 URL。`form` 非空则改用 POST（表单编码）——部分政府站把列表放在
+        POST 接口后面（如江西 CMS 的 /queryList），GET 会 404。"""
         if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
             return FetchResult(ok=False, url=url, error="仅允许 HTTP/HTTPS 下载")
         last_err = ""
@@ -120,8 +123,10 @@ class Collector:
                 time.sleep(wait)
             self._last_request = time.monotonic()
             try:
-                with self.session.get(url, params=params, timeout=timeout or self.cfg.fetch.timeout_seconds,
-                                      verify=self.cfg.fetch.verify_ssl, stream=True) as resp:
+                send = self.session.post if form else self.session.get
+                kwargs = {"data": form} if form else {"params": params}
+                with send(url, timeout=timeout or self.cfg.fetch.timeout_seconds,
+                          verify=self.cfg.fetch.verify_ssl, stream=True, **kwargs) as resp:
                     # Authentication / blocking / missing pages require source maintenance, not aggressive retries.
                     if resp.status_code in (401, 403, 404):
                         return FetchResult(ok=False, url=url, error=f"HTTP {resp.status_code}")
@@ -309,6 +314,95 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
             break
         if not fresh:           # 重复页不等于已采完，提示翻页参数/接口需维护。
             raise DiscoveryError(f"第{page_no}页完全重复，未确认历史列表采完", links)
+    return links
+
+
+# ---- 江西系政府站 CMS：栏目页声明 channelId，列表由 POST /queryList 返回 ----
+# 栏目页静态 HTML 里没有一条文章链接（页面自报 articleCount:200、childCount:0），
+# 列表与**正文**都在同一份 JSON 里：data.results[].source.{title,pubDate,content.content,id}。
+# 因此这是"接口型列表"，不是"需要 JS 渲染"——渲染能拿到链接，但接口给得更完整。
+_JX_CHANNEL_RE = re.compile(r"channelId\s*=\s*['\"](\d+)")
+_JX_WEBSITE_RE = re.compile(r"websiteId\s*=\s*['\"](\d+)")
+_JX_SITE_RE = re.compile(r"siteId\s*=\s*['\"](\d+)")
+_JX_CODE_RE = re.compile(r"codeName\s*=\s*['\"](\w+)")
+
+
+def extract_jx_query_spec(page_html: str, page_url: str) -> dict | None:
+    """从栏目页内联脚本里取 queryList 的调用参数（取不到就说明结构变了）。"""
+    ch = _JX_CHANNEL_RE.search(page_html)
+    if not ch:
+        return None
+    site = _JX_SITE_RE.search(page_html)
+    web = _JX_WEBSITE_RE.search(page_html)
+    code = _JX_CODE_RE.search(page_html)
+    origin = "{0.scheme}://{0.netloc}".format(urllib.parse.urlsplit(page_url))
+    return {
+        "endpoint": origin + "/queryList",
+        "column_path": code.group(1) if code else "",
+        "channelId": ch.group(1),
+        "siteId": site.group(1) if site else "",
+        "websiteId": web.group(1) if web else "",
+    }
+
+
+def discover_jx_query_links(collector: Collector, src: SourceConfig, page_raw: bytes,
+                            page_url: str, max_pages: int = 1,
+                            page_size: int = 15) -> list[CandidateLink]:
+    """江西 CMS 列表发现：栏目页 → POST /queryList（逐页）→ 详情链接。
+
+    与 zj_unit 的区别：这里必须 POST（GET 该端点直接 404），所以用 `collector.fetch(form=…)`。
+    详情 URL 由栏目名 + 文章 id 拼出：`/{websiteCode}/col/{codeName}/content/content_{id}.html`。
+    """
+    collector.discovery_status[src.name] = {'pages_fetched': 0, 'end_reached': False,
+                                            'stop_reason': 'page_limit'}
+    spec = extract_jx_query_spec(page_raw.decode("utf-8", "ignore"), page_url)
+    if spec is None:
+        raise ValueError("栏目页未发现 channelId（结构变化或反爬页）")
+    endpoint, origin = urllib.parse.urlsplit(spec["endpoint"]), urllib.parse.urlsplit(page_url)
+    if (endpoint.scheme, endpoint.netloc) != (origin.scheme, origin.netloc):
+        raise ValueError("列表接口不在官网同源内")
+    prefix = "/" + (urllib.parse.urlsplit(page_url).path.split("/")[1] or "")
+    if spec["column_path"]:
+        prefix += "/col/" + spec["column_path"]
+    links, seen = [], set()
+    for page_no in range(1, max_pages + 1):
+        form = {
+            "channelId": spec["channelId"], "siteId": spec["siteId"],
+            "websiteId": spec["websiteId"], "pageNo": page_no, "pageSize": page_size,
+            "perPage": page_size, "showMode": "1", "themeName": "default",
+        }
+        result = collector.fetch(spec["endpoint"], form=form)
+        if not result.ok:
+            raise DiscoveryError(f"queryList 第{page_no}页请求失败: {result.error}", links)
+        collector.save(src.name, spec["endpoint"], result.content, "json")
+        collector.discovery_status[src.name]['pages_fetched'] += 1
+        try:
+            payload = json.loads(result.content.decode("utf-8", "ignore"))
+        except json.JSONDecodeError as e:
+            raise DiscoveryError(f"queryList 第{page_no}页返回非 JSON", links) from e
+        rows = ((payload or {}).get("data") or {}).get("results") or []
+        if not rows:
+            collector.discovery_status[src.name]['end_reached'] = True
+            collector.discovery_status[src.name]['stop_reason'] = 'empty_page'
+            break
+        fresh = []
+        for row in rows:
+            item = row.get("source") if isinstance(row, dict) else None
+            if not isinstance(item, dict):
+                continue
+            aid = str(item.get("id") or "").strip()
+            if not aid:
+                continue
+            href = urllib.parse.urljoin(page_url,
+                                        f"{prefix}/content/content_{aid}.html")
+            if href in seen or not allowed_url(href, src):
+                continue
+            seen.add(href)
+            title = " ".join(str(item.get("title") or "").split())
+            fresh.append(CandidateLink(href, title[:300]))
+        links.extend(fresh)
+        if not fresh:
+            raise DiscoveryError(f"queryList 第{page_no}页无新增（过滤规则或接口结构变化）", links)
     return links
 
 

@@ -125,6 +125,10 @@ class Pipeline:
                 elif source.list_format == 'jpage':
                     from .collector import discover_jpage_links
                     found = discover_jpage_links(self.collector, source, raw, base, source.max_pages)
+                elif source.list_format == 'jx_query':
+                    from .collector import discover_jx_query_links
+                    found = discover_jx_query_links(self.collector, source, raw, base,
+                                                    max_pages=source.max_pages)
                 elif custom:
                     from bs4 import BeautifulSoup
                     found=custom(BeautifulSoup(raw,'lxml'),source)
@@ -137,7 +141,7 @@ class Pipeline:
                     raise ValueError('列表页完全重复，未确认历史采完')
                 seen_links.update(item.url for item in fresh)
                 links.extend(fresh)
-                if source.list_format in ('zj_unit', 'jpage'):
+                if source.list_format in ('zj_unit', 'jpage', 'jx_query'):
                     break
                 status = self.collector.discovery_status[source.name]
                 status['pages_fetched'] += 1
