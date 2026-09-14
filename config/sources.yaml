@@ -427,6 +427,39 @@ sources:
     max_pages: 3
     note: "详情形态为 /长数字串/index.shtml（此前识别器不认，被误判为需 JS 渲染）。翻页是慧点的静态分页，但\"下一页\"链接同样只在 onclick 里，故 next_link 必须走 anchor_target。"
 
+  # ---- 新疆：2026-09-14 接通。此前记为"入口待找"，实际是首页导航只给
+  #      栏目页、且栏目页 URL 猜不出来；真正的入口是「政务公开」总览页，
+  #      它把 c108361…c108372 几个政策子栏目聚在一页（实测 65 条文章型链接）。
+  #      ⚠️ 聚合页要盯归属：用 scripts/audit_sources.py 的 sub_column_distribution
+  #      确认详情落在哪些子目录，避免把中央文件转载错记成新疆。
+  - name: xj_zwgk
+    site: 新疆维吾尔自治区发展和改革委员会
+    region: 新疆
+    category: 政务公开（政策文件）
+    enabled: true
+    list_url: "https://xjdrc.xinjiang.gov.cn/xjfgw/c108345/zwgk.shtml"
+    include: ["/xjfgw/"]
+    detail_url_pattern: "/xjfgw/c[0-9]+/[0-9]{6}/[0-9a-f]{16,}[.]s?html?$"
+    exclude: ["index", ".pdf", ".doc", ".ofd", ".xls"]
+    pagination: single
+    max_pages: 1
+    note: "政务公开总览页即列表（无独立 list.shtml，猜 c108299/c108361 的 index 均 404）。"
+
+  # ---- 海南：2026-09-14 接通。9/13 记为"列表走 AJAX 的壳"——那是旧的文章型
+  #      判据太窄造成的误判：本页 38 个 <a> 里确有 13 条详情链接，静态直出。
+  - name: hn_zcwj
+    site: 海南省发展和改革委员会
+    region: 海南
+    category: 政策文件
+    enabled: true
+    list_url: "https://plan.hainan.gov.cn/sfgw/0500/zcwj.shtml"
+    include: ["/sfgw/"]
+    detail_url_pattern: "/sfgw/[0-9]{4}/[0-9]{6}/[0-9a-f]{16,}[.]s?html?$"
+    exclude: [".pdf", ".doc", ".ofd", ".xls"]
+    pagination: single
+    max_pages: 1
+    note: "列表页静态直出 13 条详情链接；发现数偏少，历史翻页尚未接入。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例

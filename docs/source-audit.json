@@ -1,128 +1,29 @@
 {
-  "checked_at": "2026-09-11T09:50:06.494351+00:00",
-  "pages_limit": 2,
+  "checked_at": "2026-09-14T15:40:25.886679+00:00",
+  "pages_limit": 1,
   "details_limit": 2,
-  "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率",
+  "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率。含归属检查：聚合型栏目与中央文件转载子栏目会被判不通过（实测：福建 /zwgk/fgzd/ 下 gjfgwwj 会把国家发改委文件的归属错记成福建）",
   "results": [
     {
-      "source": "yn_policies",
-      "region": "云南",
-      "column": "其他文件",
-      "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/",
+      "source": "xj_zwgk",
+      "region": "新疆",
+      "column": "政务公开（政策文件）",
+      "url": "https://xjdrc.xinjiang.gov.cn/xjfgw/c108345/zwgk.shtml",
       "discovered": 0,
       "discovery": {
         "pages_fetched": 0,
         "end_reached": false,
         "stop_reason": "error"
       },
+      "sub_columns": {},
+      "national_reposts": [],
       "errors": [
-        "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/: ReadTimeout"
+        "https://xjdrc.xinjiang.gov.cn/xjfgw/c108345/zwgk.shtml: ProxyError"
       ],
       "sample_count": 0,
       "samples": [],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
       "accepted_sample": false
-    },
-    {
-      "source": "jl_policies",
-      "region": "吉林",
-      "column": "吉林政策",
-      "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/",
-      "discovered": 27,
-      "discovery": {
-        "pages_fetched": 2,
-        "end_reached": false,
-        "stop_reason": "page_limit"
-      },
-      "errors": [],
-      "sample_count": 2,
-      "samples": [
-        {
-          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260615_3642625.html",
-          "title": "关于优化以工代赈工作路径促进农民持续增收的指导意见",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-06-05",
-            "doc_date": "2026-06-05",
-            "wenhao": ""
-          },
-          "body_chars": 4206,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260611_3641769.html",
-          "title": "关于印发《关于支持农产品加工业加快发展的若干政策措施》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-06-11",
-            "doc_date": "2026-06-05",
-            "wenhao": ""
-          },
-          "body_chars": 140,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "关于支持农产品加工业加快发展的若干政策措施.wps",
-              "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/P020260611588546359352.wps",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
-        }
-      ],
-      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
-      "accepted_sample": true
     }
   ]
 }
