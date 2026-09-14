@@ -1,7 +1,6 @@
 """Material inventory and repair share the production ingestion path."""
 from __future__ import annotations
 import hashlib
-import json
 import time
 import uuid
 from collections import Counter, defaultdict

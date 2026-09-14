@@ -1,7 +1,6 @@
 """本机模型配置；只保存到被忽略的数据目录，不进入源码。"""
 import json
 import os
-from pathlib import Path
 from urllib.parse import urlsplit
 
 PROVIDERS = {

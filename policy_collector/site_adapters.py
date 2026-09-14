@@ -19,7 +19,6 @@ from typing import Callable, Optional
 from bs4 import BeautifulSoup
 
 from .collector import CandidateLink
-from .config import SourceConfig
 
 # ---------------------------------------------------------------------------
 # 列表页适配注册

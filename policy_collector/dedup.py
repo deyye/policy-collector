@@ -6,7 +6,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from .db import Database
-from .models import Document, IngestResult
+from .models import IngestResult
 
 @dataclass
 class PolicyKey:

@@ -8,7 +8,6 @@ import re
 import time
 import urllib.parse
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
 import requests

@@ -16,7 +16,7 @@ from .config import AppConfig,SourceConfig,PROJECT_ROOT
 from .db import Database
 from .dedup import Deduplicator,content_hash,make_policy_key
 from .locking import ingestion_lock
-from .models import Classification,Document,now
+from .models import now
 from .parser import Parser
 
 @dataclass

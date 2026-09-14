@@ -1,7 +1,7 @@
 {
-  "checked_at": "2026-09-13T16:13:29.200705+00:00",
-  "pages_limit": 2,
-  "details_limit": 2,
+  "checked_at": "2026-09-14T15:56:31.267721+00:00",
+  "pages_limit": 1,
+  "details_limit": 1,
   "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率。含归属检查：聚合型栏目与中央文件转载子栏目会被判不通过（实测：福建 /zwgk/fgzd/ 下 gjfgwwj 会把国家发改委文件的归属错记成福建）",
   "results": [
     {
@@ -9,16 +9,16 @@
       "region": "国家",
       "column": "政策通知",
       "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/",
-      "discovered": 50,
+      "discovered": 25,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202609/t20260910_1407524.html",
@@ -57,57 +57,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202608/t20260828_1407232.html",
-          "title": "关于印发《物流网建设实施方案》的通知(发改经贸〔2026〕1241号)",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 2,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-27",
-            "doc_date": "2026-08-18",
-            "wenhao": "发改经贸〔2026〕1241号"
-          },
-          "body_chars": 149,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "《物流网建设实施方案》.pdf",
-              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202608/P020260828319115295873.pdf",
-              "parse_status": "ok",
-              "error": ""
-            },
-            {
-              "name": "《物流网建设实施方案》.ofd",
-              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202608/P020260828320256635020.ofd",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -118,16 +67,16 @@
       "region": "国家",
       "column": "规范性文件",
       "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/",
-      "discovered": 50,
+      "discovered": 25,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202605/t20260519_1405292.html",
@@ -179,83 +128,32 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202604/t20260430_1404998.html",
-          "title": "关于印发《中华人民共和国实行能源效率标识的产品目录(2026年版)》及相关实施规则的通知(发改环资规〔2026〕550号)",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 1,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "failed",
-          "metadata": {
-            "page_date": "2026-04-30",
-            "doc_date": "2026-04-20",
-            "wenhao": "发改环资规〔2026〕550号"
-          },
-          "body_chars": 1190,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "目录及实施规则.pdf",
-              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202604/P020260430353381580470.pdf",
-              "parse_status": "failed",
-              "error": "超过单文件大小上限"
-            },
-            {
-              "name": "目录及实施规则.ofd",
-              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202604/P020260430353386318479.ofd",
-              "parse_status": "partial",
-              "error": "第1页含图形/模板或缺少文本，需渲染核对；第2页含图形/模板或缺少文本，需渲染核对；第3页含图形/模板或缺少文本，需渲染核对；第4页含图形/模板或缺少文本，需渲染核对；第5页含图形/模板或缺少文本，需渲染核对；第6页含图形/模板或缺少文本，需渲染核对；第7页含图形/模板或缺少文本，需渲染核对；第8页含图形/模板或缺少文本，需渲染核对；第9页含图形/模板或缺少文本，需渲染核对；第10页含图形/模板或缺少文本，需渲染核对；第11页含图形/模板或缺少文本，需渲染核对；第12页含图形/模板或缺少文本，需渲染核对；第13页含图形/模板或缺少文本，需渲染核对；第14页含图形/模板或缺少文本，需渲染核对；第15页含图形/模板或缺少文本，需渲染核对；第16页含图形/模板或缺少文本，需渲染核对；第17页含图形/模板或缺少文本，需渲染核对；第18页含图形/模板或缺少文本，需渲染核对；第19页含图形/模板或缺少文本，需渲染核对；第20页含图形/模板或缺少文本，需渲染核对；第21页含图形/模板或缺少文本，需渲染核对；第22页含图形/模板或缺少文本，需渲染核对；第23页含图形/模板或缺少文本，需渲染核对；第24页含图形/模板或缺少文本，需渲染核对；第25页含图形/模板或缺少文本，需渲染核对；第26页含图形/模板或缺少文本，需渲染核对；第27页含图形/模板或缺少文本，需渲染核对；第28页含图形/模板或缺少文本，需渲染核对；第29页含图形/模板或缺少文本，需渲染核对；第30页含图形/模板或缺少文本，需渲染核对；第31页含图形/模板或缺少文本，需渲染核对；第32页含图形/模板或缺少文本，需渲染核对；第33页含图形/模板或缺少文本，需渲染核对；第34页含图形/模板或缺少文本，需渲染核对；第35页含图形/模板或缺少文本，需渲染核对；第36页含图形/模板或缺少文本，需渲染核对；第37页含图形/模板或缺少文本，需渲染核对；第38页含图形/模板或缺少文本，需渲染核对；第39页含图形/模板或缺少文本，需渲染核对；第40页含图形/模板或缺少文本，需渲染核对；第41页含图形/模板或缺少文本，需渲染核对；第42页含图形/模板或缺少文本，需渲染核对；第43页含图形/模板或缺少文本，需渲染核对；第44页含图形/模板或缺少文本，需渲染核对；第45页含图形/模板或缺少文本，需渲染核对；第46页含图形/模板或缺少文本，需渲染核对；第47页含图形/模板或缺少文本，需渲染核对；第48页含图形/模板或缺少文本，需渲染核对；第49页含图形/模板或缺少文本，需渲染核对；第50页含图形/模板或缺少文本，需渲染核对；第51页含图形/模板或缺少文本，需渲染核对；第52页含图形/模板或缺少文本，需渲染核对；第53页含图形/模板或缺少文本，需渲染核对；第54页含图形/模板或缺少文本，需渲染核对；第55页含图形/模板或缺少文本，需渲染核对；第56页含图形/模板或缺少文本，需渲染核对；第57页含图形/模板或缺少文本，需渲染核对；第58页含图形/模板或缺少文本，需渲染核对；第59页含图形/模板或缺少文本，需渲染核对；第60页含图形/模板或缺少文本，需渲染核对；第61页含图形/模板或缺少文本，需渲染核对；第62页含图形/模板或缺少文本，需渲染核对；第63页含图形/模板或缺少文本，需渲染核对；第64页含图形/模板或缺少文本，需渲染核对；第65页含图形/模板或缺少文本，需渲染核对"
-            }
-          ],
-          "error": "附件下载失败，等待补采"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
-      "accepted_sample": false
+      "accepted_sample": true
     },
     {
       "source": "gov_latest",
       "region": "国家",
       "column": "最新政策",
       "url": "https://www.gov.cn/zhengce/zuixin/",
-      "discovered": 40,
+      "discovered": 20,
       "discovery": {
         "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "feed_window"
       },
       "sub_columns": {
-        "(栏目路径之外)": 40
+        "(栏目路径之外)": 20
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
-          "url": "https://www.gov.cn/zhengce/content/202609/content_7080735.htm",
-          "title": "市场监督管理所条例_其他_中国政府网",
+          "url": "https://www.gov.cn/zhengce/202609/content_7081017.htm",
+          "title": "中共中央办公厅 国务院办公厅 中央军委办公厅印发《退役军人服务和保障“十五五”规划》",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
@@ -282,49 +180,11 @@
           },
           "fetch_status": "processed",
           "metadata": {
-            "page_date": "2026-09-11",
-            "doc_date": "2026-09-06",
-            "wenhao": "国令第846号"
+            "page_date": "2026-09-14",
+            "doc_date": "",
+            "wenhao": ""
           },
-          "body_chars": 1506,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://www.gov.cn/zhengce/content/202609/content_7080627.htm",
-          "title": "国务院办公厅关于加强中小企业回款难问题治理有关工作的通知_其他_中国政府网",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-10",
-            "doc_date": "2026-09-03",
-            "wenhao": "国办发〔2026〕24号"
-          },
-          "body_chars": 2472,
+          "body_chars": 655,
           "parse_error": "",
           "attachments": [],
           "error": ""
@@ -349,7 +209,7 @@
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/xzgfxwj/sfzggwxzgfxwj/202609/t20260904_16034139.html",
@@ -367,7 +227,7 @@
             "attachments_downloaded": 2,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
-            "documents_incomplete": 1,
+            "documents_incomplete": 0,
             "llm_classified": 0,
             "rule_classified": 1,
             "llm_fallback": 0,
@@ -384,8 +244,8 @@
             "doc_date": "2026-09-04",
             "wenhao": "渝发改规范〔2026〕9号"
           },
-          "body_chars": 4621,
-          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
+          "body_chars": 3462,
+          "parse_error": "",
           "attachments": [
             {
               "name": "重庆市发展和改革委员会关于印发重庆市鼓励外商投资企业境内再投资若干措施的通知.docx",
@@ -401,79 +261,28 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/xzgfxwj/sfzggwxzgfxwj/202608/t20260812_15921872.html",
-          "title": "重庆市发展和改革委员会关于提升外商投资项目全生命周期服务水平的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 2,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 1,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-07",
-            "doc_date": "2026-08-07",
-            "wenhao": "渝发改规范〔2026〕8号"
-          },
-          "body_chars": 4327,
-          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
-          "attachments": [
-            {
-              "name": "重庆市发展和改革委员会关于提升外商投资项目全生命周期服务水平的通知.docx",
-              "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/xzgfxwj/sfzggwxzgfxwj/202608/W020260902550162535375.docx",
-              "parse_status": "partial",
-              "error": "Word含图片，文本已提取，图片中的条款需人工核对或OCR"
-            },
-            {
-              "name": "重庆市发展和改革委员会关于提升外商投资项目全生命周期服务水平的通知.pdf",
-              "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/xzgfxwj/sfzggwxzgfxwj/202608/W020260902550161469209.pdf",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
-      "accepted_sample": false
+      "accepted_sample": true
     },
     {
       "source": "zjfgw_gsgg",
       "region": "浙江",
       "column": "行政规范性文件",
       "url": "https://fzggw.zj.gov.cn/col/col1229565788/index.html",
-      "discovered": 30,
+      "discovered": 15,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {
-        "(栏目路径之外)": 30
+        "(栏目路径之外)": 15
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fzggw.zj.gov.cn/col/col1229123351/art/2026/art_937add6719f140bdac86d5b97c525d28.html",
@@ -519,51 +328,6 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://fzggw.zj.gov.cn/col/col1229123351/art/2026/art_df23514f54b13049bd314a791d1facee.html",
-          "title": "省发展改革委 省生态环境厅 省能源局关于印发《浙江省低（零）碳园区建设实施方案》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-06-03",
-            "doc_date": "2026-05-29",
-            "wenhao": "浙发改环资〔2026〕113号"
-          },
-          "body_chars": 343,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "省发展改革委 省生态环境厅 省能源局关于印发《浙江省低（零）碳园区建设实施方案》的通知无痕迹稿.wps",
-              "url": "https://fzggw.zj.gov.cn/api-gateway/jpaas-web-server/front/document/download?fileUrl=YW5UzzlvCwcM%2FNHHX%2FtT6LrYNhq0U62PycPHz4zOVn2FSbv71%2BpYnoRJdZvpLzkP8b1Q8cdYzlDi5cdd%2FRjptQIh5o2WCL5Oif5iHulKPh6d6Oub2nVO6EfPNR876FjdVMs51WMuQGxOQGszPz1ovsvWlhpIfzf%2FLFLVv9dHDO8%3D&fileName=%E7%9C%81%E5%8F%91%E5%B1%95%E6%94%B9%E9%9D%A9%E5%A7%94+%E7%9C%81%E7%94%9F%E6%80%81%E7%8E%AF%E5%A2%83%E5%8E%85+%E7%9C%81%E8%83%BD%E6%BA%90%E5%B1%80%E5%85%B3%E4%BA%8E%E5%8D%B0%E5%8F%91%E3%80%8A%E6%B5%99%E6%B1%9F%E7%9C%81%E4%BD%8E%EF%BC%88%E9%9B%B6%EF%BC%89%E7%A2%B3%E5%9B%AD%E5%8C%BA%E5%BB%BA%E8%AE%BE%E5%AE%9E%E6%96%BD%E6%96%B9%E6%A1%88%E3%80%8B%E7%9A%84%E9%80%9A%E7%9F%A5%E6%97%A0%E7%97%95%E8%BF%B9%E7%A8%BF.wps",
-              "parse_status": "partial",
-              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -574,18 +338,18 @@
       "region": "江苏",
       "column": "通知公告",
       "url": "https://fzggw.jiangsu.gov.cn/col/col284/index.html",
-      "discovered": 138,
+      "discovered": 30,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {
-        "(栏目路径之外)": 138
+        "(栏目路径之外)": 30
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fzggw.jiangsu.gov.cn/art/2026/9/11/art_284_11828542.html",
@@ -598,7 +362,7 @@
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
+            "need_review": 0,
             "excluded": 0,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
@@ -624,44 +388,6 @@
           "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://fzggw.jiangsu.gov.cn/art/2026/8/28/art_284_11821965.html",
-          "title": "江苏省成品油价格调整公告（2026年第16号）",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-28",
-            "doc_date": "",
-            "wenhao": ""
-          },
-          "body_chars": 343,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -672,7 +398,7 @@
       "region": "福建",
       "column": "行政规范性文件",
       "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/",
-      "discovered": 15,
+      "discovered": 16,
       "discovery": {
         "pages_fetched": 1,
         "end_reached": false,
@@ -681,11 +407,11 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
-          "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202608/t20260805_7196169.htm",
-          "title": "福建省发展和改革委员会 国家能源局福建监管办公室关于印发《福建省虚拟电厂建设运行管理办法（试行）》的通知",
+          "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202609/t20260914_7212956.htm",
+          "title": "福建省发展和改革委员会关于印发福建省支持民营企业投资低空、能源领域基础设施工作导则（试行）的通知",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
@@ -712,63 +438,18 @@
           },
           "fetch_status": "processed",
           "metadata": {
-            "page_date": "2026-08-05",
-            "doc_date": "2026-07-31",
-            "wenhao": "闽发改规〔2026〕4号"
+            "page_date": "2026-09-14",
+            "doc_date": "2026-09-10",
+            "wenhao": "闽发改规〔2026〕6号"
           },
-          "body_chars": 4655,
+          "body_chars": 4794,
           "parse_error": "",
           "attachments": [
             {
               "name": "下载图片版",
-              "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202608/P020260805348463240487.ofd",
+              "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202609/P020260914357430773924.ofd",
               "parse_status": "partial",
-              "error": "第1页含图形/模板或缺少文本，需渲染核对"
-            }
-          ],
-          "error": ""
-        },
-        {
-          "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202607/t20260727_7192471.htm",
-          "title": "福建省发展和改革委员会关于有序开展绿电直连项目建设工作的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-07-27",
-            "doc_date": "2026-07-24",
-            "wenhao": "闽发改规〔2026〕3号"
-          },
-          "body_chars": 4351,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "下载图片版",
-              "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/202607/P020260727578756293250.ofd",
-              "parse_status": "partial",
-              "error": "第1页含图形/模板或缺少文本，需渲染核对"
+              "error": "第1页含图形/模板或缺少文本，需渲染核对；第10页含图形/模板或缺少文本，需渲染核对"
             }
           ],
           "error": ""
@@ -791,7 +472,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/202604/t20260410_3628966.html",
@@ -830,51 +511,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/202606/t20260612_3646999.html",
-          "title": "陕西省发展和改革委员会等五部门关于印发《陕西省综合评标专家库管理办法》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-03-19",
-            "doc_date": "2026-03-16",
-            "wenhao": "陕发改法规〔2026〕315号"
-          },
-          "body_chars": 5881,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "陕西省发展和改革委员会等五部门关于印发《陕西省综合评标专家库管理办法》的通知（陕发改法规〔2026〕315号.pdf",
-              "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/202606/P020260612553623268147.pdf",
-              "parse_status": "partial",
-              "error": "第1页文本不足，需OCR/人工核对；第2页文本不足，需OCR/人工核对；第16页文本不足，需OCR/人工核对"
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -894,7 +530,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/202609/t20260908_34059355.html",
@@ -933,44 +569,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/202609/t20260908_34059350.html",
-          "title": "关于延长《“机器管招投标”交易系统可直接判定识别的信用惩戒不良行为清单》文件有效期的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-08",
-            "doc_date": "2026-08-10",
-            "wenhao": "湘发改法规规〔2026〕471号"
-          },
-          "body_chars": 242,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -981,16 +579,16 @@
       "region": "吉林",
       "column": "吉林政策",
       "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/",
-      "discovered": 27,
+      "discovered": 12,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260615_3642625.html",
@@ -1029,51 +627,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/t20260611_3641769.html",
-          "title": "关于印发《关于支持农产品加工业加快发展的若干政策措施》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-06-11",
-            "doc_date": "2026-06-05",
-            "wenhao": ""
-          },
-          "body_chars": 140,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "关于支持农产品加工业加快发展的若干政策措施.wps",
-              "url": "https://jldrc.jl.gov.cn/zcfg/jlzc/202606/P020260611588546359352.wps",
-              "parse_status": "partial",
-              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1084,18 +637,18 @@
       "region": "云南",
       "column": "其他文件",
       "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/",
-      "discovered": 50,
+      "discovered": 25,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {
-        "(栏目路径之外)": 50
+        "(栏目路径之外)": 25
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://yndrc.yn.gov.cn/html/2026/qitawenjian_0731/27861.html",
@@ -1141,57 +694,6 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://yndrc.yn.gov.cn/html/2026/qitawenjian_0702/27507.html",
-          "title": "关于印发云南省加快场景培育和开放推动新场景大规模应用工作方案的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 2,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-07-02",
-            "doc_date": "2026-06-25",
-            "wenhao": "云发改体改〔2026〕491号"
-          },
-          "body_chars": 4124,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "1.云南省场景培育和开放重点领域推进清单",
-              "url": "https://yndrc.yn.gov.cn/uploadfile/s2/2026/0702/20260702112636946.docx",
-              "parse_status": "ok",
-              "error": ""
-            },
-            {
-              "name": "2.云南省标志性重点应用场景项目清单（2026年版）",
-              "url": "https://yndrc.yn.gov.cn/uploadfile/s2/2026/0702/20260702112643535.docx",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1209,27 +711,27 @@
         "stop_reason": "no_next_link"
       },
       "sub_columns": {
-        "bwqtwj": 10,
-        "bwgfxwj": 4,
+        "bwqtwj": 11,
+        "bwgfxwj": 3,
         "ghjhwb": 1
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
-          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/bwqtwj/202609/t20260904_4850200.htm",
-          "title": "北京市发展和改革委员会、北京市科学技术委员会中关村科技园区管理委员会、北京市经济和信息化局、顺义区人民政府等四部门关于印发加快平原新城建设支持顺义区发展国际口腔产业若干措施的通知",
+          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/bwqtwj/202609/t20260911_4860093.htm",
+          "title": "本市成品油价格调整",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -1244,54 +746,16 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
-            "page_date": "2026-09-04",
-            "doc_date": "2026-08-18",
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-11",
             "wenhao": ""
           },
-          "body_chars": 3511,
+          "body_chars": 718,
           "parse_error": "",
           "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://fgw.beijing.gov.cn/fgwzwgk/2024zcwj/bwgfxwj/202608/t20260831_4843466.htm",
-          "title": "北京市发展和改革委员会 北京市规划和自然资源委员会关于印发北京市先进制造业和现代服务业融合示范园区和试点企业认定及支持办法的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-31",
-            "doc_date": "2026-08-24",
-            "wenhao": ""
-          },
-          "body_chars": 3280,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
+          "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1313,7 +777,7 @@
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://hbdrc.hebei.gov.cn/xxgk_2232/zc/wzcwj/202609/t20260901_138797.html",
@@ -1359,44 +823,6 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://hbdrc.hebei.gov.cn/xxgk_2232/zc/wzcwj/202609/t20260901_138795.html",
-          "title": "河北省发展和改革委员会关于印发《河北南部电网小时级绿电交易方案》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-26",
-            "doc_date": "2026-08-26",
-            "wenhao": "冀发改运行[2026]770号"
-          },
-          "body_chars": 3690,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1416,7 +842,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "http://fgw.shanxi.gov.cn/zcfb/gjjh/202603/t20260316_10080985.shtml",
@@ -1455,44 +881,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "http://fgw.shanxi.gov.cn/zcfb/gjjh/202603/t20260306_10074175.shtml",
-          "title": "关于2025年国民经济和社会发展计划执行情况与2026年国民经济和社会发展计划草案的报告（摘要）",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-03-06",
-            "doc_date": "",
-            "wenhao": ""
-          },
-          "body_chars": 10179,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1503,16 +891,16 @@
       "region": "内蒙古",
       "column": "通知公告",
       "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/",
-      "discovered": 30,
+      "discovered": 15,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/202601/t20260109_2847026.html",
@@ -1551,44 +939,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://fgw.nmg.gov.cn/xxgk/zxzx/tzgg/202609/t20260911_2952817.html",
-          "title": "满洲里产业协作园区系列宣传推介活动成交结果公告",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-11",
-            "doc_date": "2026-09-11",
-            "wenhao": ""
-          },
-          "body_chars": 478,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1610,7 +960,7 @@
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://drc.hlj.gov.cn/drc/gkzd/202412/c00_31795048.shtml",
@@ -1649,44 +999,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "https://drc.hlj.gov.cn/drc/gkzd/202112/c00_31504876.shtml",
-          "title": "黑龙江省财政厅关于明确政府信息公开信息处理费收缴方式的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2022-12-19",
-            "doc_date": "2021-01-06",
-            "wenhao": "黑财税〔2021〕1号"
-          },
-          "body_chars": 554,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1706,7 +1018,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fzggw.ah.gov.cn/ywdt/tzgg/150674671.html",
@@ -1715,12 +1027,12 @@
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -1735,7 +1047,7 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
             "page_date": "2026-09-11",
             "doc_date": "2026-09-11",
@@ -1744,52 +1056,7 @@
           "body_chars": 266,
           "parse_error": "",
           "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://fzggw.ah.gov.cn/ywdt/tzgg/150663621.html",
-          "title": "日常生活节能降碳“金点子”公示",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-10",
-            "doc_date": "",
-            "wenhao": ""
-          },
-          "body_chars": 277,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "日常生活节能降碳“金点子”评选结果.docx",
-              "url": "https://fzggw.ah.gov.cn/group6/M00/0F/D6/wKg8BmqZS4WAH7ioAABXKJM4J7U85.docx",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
+          "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1800,18 +1067,18 @@
       "region": "广东",
       "column": "规范性文件",
       "url": "https://drc.gd.gov.cn/gfxwj5633/index.html",
-      "discovered": 40,
+      "discovered": 20,
       "discovery": {
-        "pages_fetched": 2,
+        "pages_fetched": 1,
         "end_reached": false,
         "stop_reason": "page_limit"
       },
       "sub_columns": {
-        "content": 40
+        "content": 20
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://drc.gd.gov.cn/gfxwj5633/content/post_4921838.html",
@@ -1863,51 +1130,6 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://drc.gd.gov.cn/gfxwj5633/content/post_4920675.html",
-          "title": "广东省发展和改革委员会等部门关于印发广东省远程异地评标招标项目范围规定（试行）的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-07-06",
-            "doc_date": "2026-07-03",
-            "wenhao": "粤发改规〔2026〕8号"
-          },
-          "body_chars": 2212,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "附件：广东省远程异地评标招标项目范围规定（试行）.doc",
-              "url": "https://drc.gd.gov.cn/attachment/0/618/618982/4920675.doc",
-              "parse_status": "partial",
-              "error": "经 textutil 转换（原格式 doc），需人工核对转换完整性"
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1927,7 +1149,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/fdzdgknr/zcfg/t17934343.shtml",
@@ -1966,44 +1188,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "http://fgw.gxzf.gov.cn/zfxxgkzl/fdzdgknr/zcfg/t9897939.shtml",
-          "title": "全国人民代表大会常务委员会关于修改《中华人民共和国人口与计划生育法》的决定",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2021-08-25",
-            "doc_date": "",
-            "wenhao": ""
-          },
-          "body_chars": 2080,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2023,11 +1207,11 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
-          "url": "http://fzggw.cq.gov.cn/zwxx/tzgg/202609/t20260911_16066347.html",
-          "title": "重庆市粮食和物资储备局关于比选《成渝区域粮食应急保障中心项目实施方案》研究承担单位的公告",
+          "url": "http://fzggw.cq.gov.cn/zwxx/tzgg/202609/t20260914_16075058.html",
+          "title": "重庆市“十五五”可再生能源发展规划（2026-2030年）生态环境影响评价公众参与第一次信息公示",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
@@ -2054,49 +1238,11 @@
           },
           "fetch_status": "processed",
           "metadata": {
-            "page_date": "2026-09-11",
-            "doc_date": "2026-09-11",
+            "page_date": "2026-09-14",
+            "doc_date": "2026-09-14",
             "wenhao": ""
           },
-          "body_chars": 1124,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "http://fzggw.cq.gov.cn/zwxx/tzgg/202609/t20260909_16052783.html",
-          "title": "重庆市支线机场、通用机场发展低空经济路径研究与重大项目策划（CQS26C02084） 竞争性磋商公告",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-09",
-            "doc_date": "",
-            "wenhao": ""
-          },
-          "body_chars": 1765,
+          "body_chars": 782,
           "parse_error": "",
           "attachments": [],
           "error": ""
@@ -2119,7 +1265,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/1/6/057d97f63f364e2fb3e94ebcc8d8a993.shtml",
@@ -2128,12 +1274,12 @@
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -2148,7 +1294,7 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
             "page_date": "2026-01-06",
             "doc_date": "2025-12-25",
@@ -2157,52 +1303,7 @@
           "body_chars": 1146,
           "parse_error": "",
           "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/9/11/63154fcdc1bb430cb38de18de6a535b9.shtml",
-          "title": "关于调整成品油价格的通知(川发改价格〔2026〕374号)",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-11",
-            "doc_date": "2026-09-11",
-            "wenhao": "川发改价格〔2026〕374号"
-          },
-          "body_chars": 695,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "四川省汽、柴油最高批发零售价格表",
-              "url": "https://fgw.sc.gov.cn/sfgw/tzgg/2026/9/11/63154fcdc1bb430cb38de18de6a535b9/files/四川省汽、柴油最高批发零售价格表.docx",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
+          "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2222,7 +1323,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/202609/t20260911_90863721.html",
@@ -2231,12 +1332,12 @@
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -2251,7 +1352,7 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
             "page_date": "2026-09-11",
             "doc_date": "2026-09-11",
@@ -2260,52 +1361,7 @@
           "body_chars": 360,
           "parse_error": "",
           "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/202609/t20260908_90843856.html",
-          "title": "关于贵州省2026年度“以竹代塑”应用推广奖补拟补助对象和资金的公示",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-09-08",
-            "doc_date": "2026-09-08",
-            "wenhao": ""
-          },
-          "body_chars": 359,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "贵州省2026年度“以竹代塑”应用推广拟奖补对象及资金明细表.xlsx",
-              "url": "https://fgw.guizhou.gov.cn/fggz/tzgg/202609/P020260908607594904873.xlsx",
-              "parse_status": "ok",
-              "error": ""
-            }
-          ],
-          "error": ""
+          "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2325,7 +1381,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "http://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/202605/t20260505_538240.html",
@@ -2364,44 +1420,6 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
-        {
-          "url": "http://drc.xizang.gov.cn/zwgk_1941/xzgfxwj/202605/t20260505_538238.html",
-          "title": "西藏自治区发展改革委等部门印发 《关于促进汽车消费的若干措施》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2023-10-20",
-            "doc_date": "2023-10-07",
-            "wenhao": "藏发改营商〔2023〕571号"
-          },
-          "body_chars": 436,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2423,7 +1441,7 @@
       },
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "http://fgw.qinghai.gov.cn/zfxxgk/sdzdgknr/fgwwj/202608/t20260819_92468.html",
@@ -2462,44 +1480,6 @@
           "parse_error": "",
           "attachments": [],
           "error": "HTTP 404"
-        },
-        {
-          "url": "http://fgw.qinghai.gov.cn/zfxxgk/sdzdgknr/fgwwj/202608/t20260819_92460.html",
-          "title": "关于印发《青海省公共信用信息目录和失信惩戒措施清单（2026/2027版）》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-07-23",
-            "doc_date": "2026-07-23",
-            "wenhao": "青发改财贸规〔2026〕398号"
-          },
-          "body_chars": 357,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2519,7 +1499,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "https://fzggw.nx.gov.cn/zcgh/fgwwj/202608/t20260804_5305751.html",
@@ -2565,51 +1545,6 @@
             }
           ],
           "error": ""
-        },
-        {
-          "url": "https://fzggw.nx.gov.cn/zcgh/fgwwj/202603/t20260320_5199180.html",
-          "title": "自治区发展改革委关于印发《宁夏回族自治区2026年度充电基础设施建设实施方案》的通知",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 1,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-03-18",
-            "doc_date": "2026-03-18",
-            "wenhao": ""
-          },
-          "body_chars": 199,
-          "parse_error": "",
-          "attachments": [
-            {
-              "name": "宁夏回族自治区2026年度充电基础设施建设实施方案.wps",
-              "url": "https://fzggw.nx.gov.cn/zcgh/fgwwj/202603/W020260320597568979500.wps",
-              "parse_status": "partial",
-              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
-            }
-          ],
-          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2629,7 +1564,7 @@
       "sub_columns": {},
       "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
           "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/202608/t20260812_34043672.html",
@@ -2668,10 +1603,159 @@
           "parse_error": "",
           "attachments": [],
           "error": ""
-        },
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "henan_xzgfxwj",
+      "region": "河南",
+      "column": "行政规范性文件",
+      "url": "https://fgw.henan.gov.cn/zwgk/zc/xzgfxwj",
+      "discovered": 19,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 19
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
         {
-          "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/202606/t20260629_34014735.html",
-          "title": "湖南省人民政府关于印发《湖南省推进服务业扩能提质行动方案（2026—2028年）》的通知",
+          "url": "https://fgw.henan.gov.cn/2022/11-11/2638153.html",
+          "title": "基本信息",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 1,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2022-11-11",
+            "doc_date": "",
+            "wenhao": ""
+          },
+          "body_chars": 776,
+          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
+          "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "sh_zcwj",
+      "region": "上海",
+      "column": "政策文件",
+      "url": "https://fgw.sh.gov.cn/fgw_zcwjfl/index.html",
+      "discovered": 17,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 17
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://fgw.sh.gov.cn/fgw_jjjctk/20260914/78d6e5eb4c724e6dac4365effb913304.html",
+          "title": "上海市主要主副食品品种价格信息表(2026年09月14日)",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 1,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-14",
+            "doc_date": "",
+            "wenhao": ""
+          },
+          "body_chars": 215,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "上海市主要主副食品品种价格信息表(2026年09月14日).xls",
+              "url": "https://fgw.sh.gov.cn/cmsres/cb/cb4f3db7d6854ed3b0f0a64641f72051/b2229903aa7a95f77fa3fb9ae660c4db.xls",
+              "parse_status": "unsupported",
+              "error": "xls解析失败：ValueError；需安装LibreOffice以转换旧Word/WPS"
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "sd_xxgk",
+      "region": "山东",
+      "column": "政府信息公开",
+      "url": "http://fgw.shandong.gov.cn/col/col91074/index.html",
+      "discovered": 50,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 50
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://fgw.shandong.gov.cn/art/2024/11/26/art_91102_10452689.html",
+          "title": "山东省发展和改革委员会关于公布2024年度省级服务业创新中心的通知",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
@@ -2682,7 +1766,7 @@
             "failed": 0,
             "need_review": 1,
             "excluded": 0,
-            "attachments_downloaded": 2,
+            "attachments_downloaded": 1,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
             "documents_incomplete": 0,
@@ -2698,22 +1782,16 @@
           },
           "fetch_status": "processed",
           "metadata": {
-            "page_date": "2026-06-29",
-            "doc_date": "2026-06-11",
-            "wenhao": "湘政发〔2026〕7号"
+            "page_date": "2024-11-26",
+            "doc_date": "2024-11-22",
+            "wenhao": "鲁发改服务〔2024〕923号"
           },
-          "body_chars": 4998,
+          "body_chars": 498,
           "parse_error": "",
           "attachments": [
             {
-              "name": "服务业扩能提质重点任务清单.docx",
-              "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/202606/34014735/files/e6c470bfa37a419da2ff443cee3c193f.docx",
-              "parse_status": "ok",
-              "error": ""
-            },
-            {
-              "name": "服务业扩能提质重点政策清单.docx",
-              "url": "http://fgw.hunan.gov.cn/fgw/xxgk_70899/ghjh/202606/34014735/files/6b98f4cf3cdc4ce7a114fbff6ac0ec3f.docx",
+              "name": "附件：2024年度省级服务业创新中心名单.pdf",
+              "url": "http://fgw.shandong.gov.cn/module/download/downfile.jsp?classid=0&filename=aaf95dfd6ec344debb94d76795ec3a04.pdf",
               "parse_status": "ok",
               "error": ""
             }
@@ -2725,30 +1803,24 @@
       "accepted_sample": true
     },
     {
-      "source": "fj_zcwj",
-      "region": "福建",
-      "column": "政策文件",
-      "url": "http://fgw.fujian.gov.cn/zwgk/fgzd/",
-      "discovered": 15,
+      "source": "tj_tzgg",
+      "region": "天津",
+      "column": "通知公告",
+      "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/",
+      "discovered": 17,
       "discovery": {
         "pages_fetched": 1,
         "end_reached": false,
-        "stop_reason": "no_next_link"
+        "stop_reason": "page_limit"
       },
-      "sub_columns": {
-        "gjfgwwj": 5,
-        "szcfg": 5,
-        "sfgwgfxwj": 5
-      },
-      "national_reposts": [
-        "gjfgwwj"
-      ],
+      "sub_columns": {},
+      "national_reposts": [],
       "errors": [],
-      "sample_count": 2,
+      "sample_count": 1,
       "samples": [
         {
-          "url": "http://fgw.fujian.gov.cn/zwgk/fgzd/gjfgwwj/202609/t20260907_7209731.htm",
-          "title": "国家发展改革委 交通运输部关于印发《物流网建设实施方案》的通知",
+          "url": "https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260914_7373458.html",
+          "title": "关于公开征求《关于天津市2026-2027采暖期居民冬季清洁取暖有关运行政策的通知》意见的公示",
           "stats": {
             "discovered": 0,
             "downloaded": 1,
@@ -2775,56 +1847,270 @@
           },
           "fetch_status": "processed",
           "metadata": {
-            "page_date": "2026-08-29",
-            "doc_date": "2026-08-18",
+            "page_date": "2026-09-14",
+            "doc_date": "2026-09-14",
             "wenhao": ""
           },
-          "body_chars": 100,
-          "parse_error": "",
-          "attachments": [],
-          "error": ""
-        },
-        {
-          "url": "http://fgw.fujian.gov.cn/zwgk/fgzd/gjfgwwj/202608/t20260810_7197845.htm",
-          "title": "关于印发《新型电力系统建设“十五五”规划》的通知(发改能源〔2026〕942号)",
-          "stats": {
-            "discovered": 0,
-            "downloaded": 1,
-            "parsed": 1,
-            "ingested": 1,
-            "updated": 0,
-            "duplicates": 0,
-            "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
-            "attachments_downloaded": 0,
-            "attachments_failed": 0,
-            "attachments_unparsed": 0,
-            "documents_incomplete": 0,
-            "llm_classified": 0,
-            "rule_classified": 1,
-            "llm_fallback": 0,
-            "reclassified": 0,
-            "reparsed": 0,
-            "attachments_cached": 0,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "elapsed_seconds": 0
-          },
-          "fetch_status": "processed",
-          "metadata": {
-            "page_date": "2026-08-03",
-            "doc_date": "2026-07-21",
-            "wenhao": "发改能源〔2026〕942号"
-          },
-          "body_chars": 249,
+          "body_chars": 921,
           "parse_error": "",
           "attachments": [],
           "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "ln_zxzc",
+      "region": "辽宁",
+      "column": "最新政策",
+      "url": "https://fgw.ln.gov.cn/fgw/zc/zxzc/index.shtml",
+      "discovered": 15,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {},
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://fgw.ln.gov.cn/fgw/zc/zxzc/2026090912183160373/index.shtml",
+          "title": "关于印发《辽宁省虚拟电厂管理办法（试行）》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-09",
+            "doc_date": "2026-08-28",
+            "wenhao": ""
+          },
+          "body_chars": 258,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "辽宁省虚拟电厂管理办法（试行）",
+              "url": "https://fgw.ln.gov.cn/fgw/zc/zxzc/2026090912183160373/2026090912183135573.pdf",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "xj_zwgk",
+      "region": "新疆",
+      "column": "政务公开（政策文件）",
+      "url": "https://xjdrc.xinjiang.gov.cn/xjfgw/c108345/zwgk.shtml",
+      "discovered": 66,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 66
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://xjdrc.xinjiang.gov.cn/xjfgw/c108361/202601/9dc7f2cf9f584baca4863130c492a421.shtml",
+          "title": "自治区发展改革委关于印发《新疆维吾尔自治区发展改革委重大固定资产投资项目社会稳定风险评估办法》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 1,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-03-27",
+            "doc_date": "2026-01-08",
+            "wenhao": "新发改规〔2026〕1号"
+          },
+          "body_chars": 3982,
+          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
+          "attachments": [
+            {
+              "name": "附件：重大项目社会稳定风险评估指标体系参考表.doc",
+              "url": "https://xjdrc.xinjiang.gov.cn/xjfgw/c108361/202601/9dc7f2cf9f584baca4863130c492a421/files/附件：重大项目社会稳定风险评估指标体系参考表.doc",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 doc），需人工核对转换完整性"
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
       "accepted_sample": false
+    },
+    {
+      "source": "hn_zcwj",
+      "region": "海南",
+      "column": "政策文件",
+      "url": "https://plan.hainan.gov.cn/sfgw/0500/zcwj.shtml",
+      "discovered": 11,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "single_window"
+      },
+      "sub_columns": {
+        "(栏目路径之外)": 11
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://plan.hainan.gov.cn/sfgw/0400/202201/52c919c68b1e4378896507405896c07b.shtml",
+          "title": "欢迎关注“海南发改”微信公众号的通知_通知公告_海南省发展和改革委员会",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 0,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 1,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "excluded",
+          "metadata": {
+            "page_date": "2022-01-04",
+            "doc_date": "2022-01-04",
+            "wenhao": ""
+          },
+          "body_chars": 203,
+          "parse_error": "",
+          "attachments": [],
+          "error": "未命中任何投资项目相关表述（文件类型：正式政策），不收录"
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "jx_tzgg",
+      "region": "江西",
+      "column": "通知公告",
+      "url": "http://drc.jiangxi.gov.cn/jxsfzhggwyh/col/col14590/index.html",
+      "discovered": 15,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {
+        "content": 15
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://drc.jiangxi.gov.cn/jxsfzhggwyh/col/col14590/content/content_2098331399481798656.html",
+          "title": "江西省发展改革委关于成品油价格调整的通告",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 0,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 1,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "excluded",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "",
+            "wenhao": ""
+          },
+          "body_chars": 472,
+          "parse_error": "",
+          "attachments": [],
+          "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
     }
   ]
 }
