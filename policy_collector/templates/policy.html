@@ -6,7 +6,7 @@
 <div class="detail-toolbar"><a class="text-link" href="{{ url_for('policies') }}">← 返回政策资料库</a><span class="dim mono">档案 #{{ p.id }} · v{{ p.version }}</span></div>
 <header class="detail-head"><div class="document-label">投资政策资料 · {{ p.region or '地区未登记' }}</div><h1>{{ p.title }}</h1>
 <div class="meta-line"><span>文号：<b>{{ p.wenhao or '未登记' }}</b></span><span>发文机关：{{ p.issuing_authority or '未登记' }}</span><span>发布日期：{{ (p.page_date or '')[:10] or '未登记' }}</span>{% if p.doc_date %}<span>成文日期：{{ p.doc_date[:10] }}</span>{% endif %}<span>来源：{{ p.site or '未登记' }}</span></div>
-<div class="cats">{% for c in cats %}<span class="chip">{{ _cat_label(c) }}</span>{% endfor %}<span class="tag {{ review_style }}">{{ review_labels.get(p.review_status, p.review_status) }}</span></div></header>
+<div class="cats">{% for c in cats %}<span class="chip">{{ _cat_label(c) }}</span>{% endfor %}<span class="tag {{ review_style }}">{{ review_labels.get(p.review_status, p.review_status) }}</span>{% set tt = p.todo_type or 'none' %}{% if todo_meta and tt != 'none' %}<span class="todo-chip {{ tt }}">{{ todo_meta[tt][0] }} · {{ todo_meta[tt][1] }}</span>{% endif %}</div></header>
 {% if p.parse_requires_review %}<div class="flash warn">材料待核对：存在解析缺口或材料变化。分类确认不代表材料已完整，请查看正文和附件提示。</div>{% endif %}
 {% if p.parse_error %}<div class="flash warn">正文解析缺口：{{ p.parse_error }}</div>{% endif %}
 {% for issue in material_issues %}<div class="flash warn">最近附件处理未完成：{{ issue.error }} <a href="{{ issue.url }}" target="_blank" rel="noopener">查看附件来源</a>。历史可用原件仍保留。</div>{% endfor %}

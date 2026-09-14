@@ -171,6 +171,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             "policy.html", p=p, versions=versions, attachments=attachments, cats=cats, material_issues=material_issues,
             provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid), agent_events=d.policy_agent_events(pid),
             cat_codes=CAT_CODES, _cat_label=_cat_label, review_style=_REVIEW_STYLE.get(p["review_status"], ""),
+            todo_meta=TODO_META, todo_order=TODO_ORDER,
         )
 
     @app.get('/quality')
