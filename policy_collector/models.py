@@ -48,22 +48,29 @@ class Document:
 class Classification:
     """一份文件的识别分类结果。"""
 
-    is_investment_policy: str = "pending"  # yes / no / pending（待复核）
+    is_investment_policy: str = "pending"  # yes / no / pending（待判定）
     category: str = ""                     # guide/access/guarantee/incentive（可逗号多标签）
     category_names: str = ""               # 中文名，多标签用","分隔
     doc_type: str = "其他"
-    need_review: bool = False
+    need_review: bool = False              # 是否需人处理（candidate/scope/review 为真）
+    todo_type: str = "none"                # none/material/system/candidate/review/scope，见 classification.yaml
     reason: str = ""                       # 判断理由
     evidence: str = ""                     # 原文证据位置/片段
     confidence: Optional[float] = None     # LLM 自评置信度（仅供参考，不作"已确认"）
     model_version: str = ""
-    reviewer_hint: str = ""                # 待复核原因
+    reviewer_hint: str = ""                # 待办原因
     method: str = "rule"
     fallback_reason: str = ""
     input_truncated: bool = False
     input_tokens: int = 0
     output_tokens: int = 0
     usage_reported: bool = False
+
+    @property
+    def todo_name(self) -> str:
+        return {"none": "", "material": "待补材料", "candidate": "高置信候选",
+                "scope": "待定口径", "review": "待复核结论",
+                "system": "待修故障"}.get(self.todo_type, "")
 
 
 @dataclass

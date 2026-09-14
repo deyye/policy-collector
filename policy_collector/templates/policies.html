@@ -49,7 +49,8 @@
       <td>{{ p.region or '-' }}</td>
       <td class="meta">{{ (p.page_date or '')[:10] or '-' }}</td>
       <td>
-        {% if p.review_status == 'pending' %}<span class="tag warn">待复核</span>
+        {% if p.todo_type in todo_names %}
+          <span class="tag {{ 'warn' if p.todo_type in ['review','scope'] else 'ok' }}">{{ todo_names[p.todo_type] }}</span><span class="dim">{{ todo_owners[p.todo_type] }}</span>
         {% elif p.review_status == 'rejected' %}<span class="tag bad">已剔除</span>
         {% else %}<span class="tag ok">{{ {'confirmed':'人工确认','confirmed_auto':'模型通过','adjusted':'已调整'}.get(p.review_status, p.review_status) }}</span>
         {% endif %}

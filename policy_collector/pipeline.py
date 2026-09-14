@@ -8,6 +8,7 @@ import urllib.parse
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
+from .attachment_parsers import is_permanent_download_error
 from .classifier import Classifier
 from .todo import document_incomplete
 from .collector import Collector,ListPageParser,list_page_url
@@ -311,7 +312,17 @@ class Pipeline:
                     # Metadata backfill remains supported on same-source reparses.
                     for key in ('wenhao','page_date','doc_date','issuing_authority'):
                         if not old.get(key) and getattr(doc,key):fields[key]=getattr(doc,key)
-                    if (changed or reclassify) and not stats.attachments_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
+                    # 重判的两道门槛都要"无视已失效的附件"，否则一条死链会把结论永久冻住：
+                    #   · 站点 404/410 的附件机器永远补不到，挡着重判没有意义；
+                    #   · 但暂时性失败（超时/5xx）仍必须挡住——那才是"等补采"的正常情况。
+                    def _dead(a):
+                        return is_permanent_download_error(a.get('error'))
+                    _repairable_failed = any(
+                        a.get('parse_status') == 'failed' and not _dead(a) for a in doc.attachments)
+                    _material_ok = (not doc.parse_error and not _repairable_failed and
+                                    all((a.get('parsed_text') or '').strip()
+                                        for a in doc.attachments if not _dead(a)))
+                    if (changed or (reclassify and _material_ok)) and not _repairable_failed and old['review_status'] not in ('confirmed','adjusted','rejected'):
                         cls=self._classify_document(doc,prefer);self._count_classification(cls,stats)
                         rowfields=self._policy_row(source,doc,cls,fid)
                         fields.update({k:v for k,v in rowfields.items() if k not in ('title','wenhao','page_date','doc_date','issuing_authority','region','site','page_url','source_fetch_id')})
@@ -342,14 +353,16 @@ class Pipeline:
                                 (decision.policy_id, 'metadata_backfill',
                                  json.dumps({k:current.get(k) for k in filled},ensure_ascii=False),
                                  json.dumps(filled,ensure_ascii=False), '同一来源重采补齐空字段：'+url, now()))
-                reclassify = reclassify or self._needs_model_retry(self.db.get_policy(decision.policy_id), prefer)
-                if reclassify and not doc.parse_error and all(a['parse_status']=='ok' for a in doc.attachments) and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
+                # 重新分类的前提是「正文已拿到」。parse_status='partial'（转换有损但已出文本）
+                # 也应允许重判——否则经 textutil 等回退方案解析出的内容永远进不了判定环节。
+                _all_parsed = all((a.get('parsed_text') or '').strip() for a in doc.attachments)
+                if reclassify and not doc.parse_error and _all_parsed and self.db.get_policy(decision.policy_id)['review_status'] not in ('confirmed','adjusted','rejected'):
                     cls=self._classify_document(doc,prefer)
                     self._count_classification(cls,stats)
                     fields=self._policy_row(source,doc,cls,fid)
                     keys=('category','category_names','is_investment_policy','need_review','reason','evidence',
                           'model_version','review_status','reviewer_hint','classification_method','fallback_reason',
-                          'input_truncated','input_tokens','output_tokens','doc_type','parse_requires_review')
+                          'input_truncated','input_tokens','output_tokens','doc_type','todo_type')
                     self.db.update_policy(decision.policy_id,**{k:fields[k] for k in keys})
                     stats.reclassified+=1
                 else:stats.duplicates+=1
@@ -357,13 +370,11 @@ class Pipeline:
                 self.db.update_fetch(fid,status=status,processed_at=now(),error='附件需补采' if stats.attachments_failed else '')
                 return stats
             cls=self._classify_document(doc,prefer)
-            # 材料完整性判据统一在 todo.document_incomplete（勿再手写 parse_status != 'ok'）
-            if document_incomplete(doc) or stats.attachments_failed:
-                cls.need_review=True
-                cls.reviewer_hint+='；原文或附件不完整，需补采/解析复核'
-                if cls.is_investment_policy=='no':cls.is_investment_policy='pending'
+            # 材料完整性判断已由 Classifier.classify 统一处理（todo_type=material）。
+            # 此处只补一种情况：附件存在但尚未解析出正文，同属材料未齐。
             if doc.attachments and not any(a.get('parsed_text') for a in doc.attachments):
-                cls.need_review=True;cls.reviewer_hint+='；附件正文尚未解析'
+                cls.todo_type='material';cls.need_review=False
+                cls.reviewer_hint+='；附件正文尚未解析，待重解析'
                 if cls.is_investment_policy=='no':cls.is_investment_policy='pending'
             self._count_classification(cls,stats)
             self.db.update_fetch(fid,classification_json=json.dumps(asdict(cls),ensure_ascii=False))
@@ -416,13 +427,25 @@ class Pipeline:
         else:stats.rule_classified+=1
         stats.input_tokens+=cls.input_tokens;stats.output_tokens+=cls.output_tokens
 
+    @staticmethod
+    def _review_status(cls):
+        """人工审核状态。
+        待办类型为 material/system 时不计入业务待办队列，但结论尚未确定，故仍保持 pending。
+        """
+        if cls.need_review or cls.is_investment_policy=='pending':
+            return 'pending'
+        if cls.is_investment_policy=='no':
+            return 'rejected'
+        return 'confirmed_auto'
+
     def _policy_row(self,source,doc,cls,fid):
         return dict(title=doc.title,wenhao=doc.wenhao,issuing_authority=doc.issuing_authority,
             page_date=doc.page_date,doc_date=doc.doc_date,region=source.region,site=source.site,page_url=doc.page_url,
             doc_type=cls.doc_type,category=cls.category,category_names=cls.category_names,
-            is_investment_policy=cls.is_investment_policy,need_review=int(cls.need_review),reason=cls.reason,
+            is_investment_policy=cls.is_investment_policy,need_review=int(cls.need_review),
+            todo_type=cls.todo_type,reason=cls.reason,
             evidence=cls.evidence,confidence=cls.confidence,model_version=cls.model_version,
-            review_status='pending' if cls.need_review else ('rejected' if cls.is_investment_policy=='no' else 'confirmed_auto'),
+            review_status=self._review_status(cls),
             content=doc.content,content_sha256=content_hash(doc),source_fetch_id=fid,reviewer_hint=cls.reviewer_hint,
             raw_page_sha256=doc.raw_bytes_sha256,analysis_sha256=hashlib.sha256(doc.analysis_text.encode()).hexdigest(),parse_error=doc.parse_error,
             parse_requires_review=int(document_incomplete(doc)),

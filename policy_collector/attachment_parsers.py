@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 import posixpath
+import re
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,18 @@ from pathlib import Path
 from lxml import etree
 
 PARSER_VERSION = 'attachments-v3'
+
+# 永久性下载失败：站点明确表示"该文件不存在"，重试到天荒地老也不会成功。
+# 必须与暂时性失败（超时、连接重置、5xx）区分开——后者才值得机器重试。
+# 实测：浙江省发改委某文件的附件确实已从站点移除（HTTP 404），
+# 但另一附件完好（HTTP 200 / 22106 字节）；若不区分，该政策会被永久钉在
+# "待补材料"队列里空转，队列再也排不空。
+_PERMANENT_DOWNLOAD_ERROR = re.compile(r'HTTP\s*4(?:04|10)\b|not\s+found', re.I)
+
+
+def is_permanent_download_error(err) -> bool:
+    """该附件下载失败是否属永久性（文件已不存在，重试无意义）。"""
+    return bool(err) and bool(_PERMANENT_DOWNLOAD_ERROR.search(str(err)))
 
 
 def detect_format(data, declared):

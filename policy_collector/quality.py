@@ -7,9 +7,8 @@ import uuid
 from collections import Counter, defaultdict
 from pathlib import Path
 from .models import now
-from .attachment_parsers import PARSER_VERSION
+from .attachment_parsers import PARSER_VERSION, is_permanent_download_error
 from .locking import ingestion_lock
-from .todo import is_stale_conclusion
 
 
 def attachment_quality(a):
@@ -22,7 +21,7 @@ def attachment_quality(a):
     # "第2页含图形/模板或缺少文本，需渲染核对"），这是真实的材料缺口，
     # 详情页要照常提示"材料待核对"。
     #
-    # 它与 todo.derive 的"材料待补"**不是一回事**：后者只认"有没有正文"，
+    # 它与待办类型 `material`（待补材料）**不是一回事**：后者只认"有没有正文"，
     # 因为那一格的责任方是机器（补采/重解析）。partial 这类缺口机器重试也修不掉
     # （要靠渲染+OCR 能力），所以归"结论待确认"由人判断，不能记到机器账上。
     parsed=bool(a.get('parsed_text','').strip()) and a.get('parse_status')=='ok'
@@ -58,7 +57,8 @@ def attachment_report(db, source=''):
         'by_format':{k:dict(v) for k,v in sorted(formats.items(),key=lambda kv:-kv[1]['needs_attention'])}, 'details':details}
 
 
-def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', policy_id=None):
+def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', policy_id=None,
+                     reclassify=False):
     from .pipeline import RunStats
     from .collector import allowed_url
     if limit<1:raise ValueError('limit必须大于0')
@@ -75,8 +75,13 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
             if source and row['source_name']!=source:continue
             if policy_id and row['id']!=policy_id:continue
             attachments=pipe.db.list_attachments(row['id'])
+            # 永久失效的附件（站点 404/410）机器修不了：既不该反复重试刷请求，
+            # 也不该让整条政策一直占着"待补材料"队列排不空。
+            def _needs_repair(a):
+                if is_permanent_download_error(a.get('error')):return False
+                return not attachment_quality(a)['parse_complete'] or a.get('parser_version')!=PARSER_VERSION
             if not policy_id and not row.get('parse_error') and not any(
-                not attachment_quality(a)['parse_complete'] or a.get('parser_version')!=PARSER_VERSION for a in attachments):continue
+                _needs_repair(a) for a in attachments):continue
             selected.append(row)
             if len(selected)==limit:break
         run_id='repair-'+uuid.uuid4().hex[:16];pipe.db.start_run(run_id,None,'repair');started=time.monotonic()
@@ -85,20 +90,24 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
             src=pipe.cfg.sources.get(row['source_name'])
             if not src or not allowed_url(row['page_url'],src) or not path.is_file():
                 total.failed+=1;outcomes.append({'policy_id':row['id'],'error':'来源不匹配或缺少网页原件，需常规重采'});continue
-            # 补材料的意义就是"材料变了 → 结论要跟着重判"。不重判的话，
-            # 补齐的正文永远进不了判定环节，条目会一直挂在"材料待补"里
-            # （实测 401 条里 221 条的待办原因是附件问题，全都卡在这里）。
-            #
-            # 只对**结论已过期**的条目重判，而不是一律重判：
-            # 过期 = 它现在还属于"材料待补"（见 todo.is_stale_conclusion）。
-            # 重判成功后它就不再属于 material，下次不会重复触发 → 天然幂等；
-            # 若一律重判，每次 repair 都会把所有条目再跑一遍模型。
-            stale = is_stale_conclusion(row, pipe.db.list_attachments(row['id']))
             # Repair reuses saved originals, downloading only missing attachments unless local_only.
+            #
+            # 重判（reclassify）的触发条件要精确，否则会破坏 repair 的幂等性
+            # （重复跑同一批不应反复重判、反复写 review_events）：
+            #
+            #   ① 材料确实变了 —— 由 pipeline 里的 `changed` 自动覆盖，不在此处传参。
+            #   ② 结论已过期 —— 条目还挂在待补材料队列（todo_type='material'），
+            #      但材料早已补齐（例如上一轮 repair 已把正文解析出来了，却没重判）。
+            #      这是本函数存在的意义：**材料变了结论必须跟着变**。
+            #      一旦重判成功，todo_type 就不再是 material，故天然幂等。
+            #
+            # 实测教训：14 条被选中、附件全部已解析出正文，却因未传该标志而全部落进
+            # duplicates 分支——结论永远停留在"待补材料"，队列就此堵死。
+            stale_verdict = (row.get('todo_type') == 'material')
             stats=pipe._ingest_url(src,row['page_url'],raw=path.read_bytes(),prefer=prefer,
-                                   reuse_cached=True,local_only=local_only,reclassify=stale)
-            total+=stats;outcomes.append({'policy_id':row['id'],'reclassified' if stale else 'kept_verdict':stale,
-                                          **stats.to_dict()})
+                                   reuse_cached=True,local_only=local_only,
+                                   reclassify=(reclassify or stale_verdict))
+            total+=stats;outcomes.append({'policy_id':row['id'],**stats.to_dict()})
         total.elapsed_seconds=round(time.monotonic()-started,3)
         pipe.db.finish_run(run_id,total.to_dict(),status='partial' if total.has_errors else 'ok',
                            note='原件补采与重解析；'+('仅使用本地原件' if local_only else '允许补采缺失附件'))

@@ -137,7 +137,9 @@ def test_incomplete_material_guard_also_applies_outside_pipeline(sample,monkeypa
     c=Classifier(cfg)
     monkeypatch.setattr(c,'_classify',lambda *a:Classification(is_investment_policy='no',method='llm'))
     out=c.classify(Document(content='通知详见附件',attachments=[{'parse_status':'failed'}]))
-    assert out.need_review and out.is_investment_policy=='pending'
+    # 材料不完整：结论必须挂起（不得算已确认），但归入「待补材料」由机器自修，不计入业务待办。
+    assert out.todo_type=='material' and out.is_investment_policy=='pending'
+    assert out.need_review is False
 
 
 def test_partial_llm_failure_keeps_known_token_usage(sample,monkeypatch):

@@ -22,15 +22,18 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from .config import AppConfig
 from .db import Database
 from .pipeline import Pipeline
-from .todo import MATERIAL, REVIEW, SYSTEM, TODO_META, TODO_ORDER
+from .todo import TODO_META, TODO_ORDER
 
 CAT_CODES = {"guide": "引导类", "access": "准入类", "guarantee": "保障类", "incentive": "激励约束类"}
 
 
-def derive_todo(policy: dict, attachments: list) -> str:
-    """页面用：把待办类型附到行上（派生逻辑统一在 policy_collector/todo.py）。"""
-    from .todo import derive
-    return derive(policy, attachments)
+def row_todo(policy: dict) -> str:
+    """行上的待办类型：**直接读列**（判定环节派生后落库）。
+
+    合并前这里是用 CASE 临时推导的（两条分支各写一套）；合并后统一读
+    `policies.todo_type`，查询层不再重复实现派生逻辑。
+    """
+    return policy.get("todo_type") or "none"
 
 # 串行化"运行采集"，避免同一时刻多线程重复抓取同一来源
 _RUN_LOCK = threading.Lock()
@@ -128,7 +131,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         regions = sorted({r["region"] for r in d.query_policies(limit=2000) if r["region"]})
         # 把待办类型附到每行，列表里就能直接看出"这条该谁处理"
         for r in rows:
-            r["todo"] = derive_todo(r, d.list_attachments(r["id"]))
+            r["todo"] = row_todo(r)
         return render_template(
             "policies.html", rows=rows, q=q, category=category, region=region, review=review, todo=todo,
             page=page, has_more=has_more, regions=regions, cat_codes=CAT_CODES, _cat_label=_cat_label,

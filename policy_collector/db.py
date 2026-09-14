@@ -254,7 +254,13 @@ class Database:
                        review_status: str = "", todo: str = "", limit: int = 100,
                        offset: int = 0) -> list[dict]:
         sql, args = "SELECT p.* FROM policies p WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)", []
-        if not review_status:
+        if todo:
+            # 待办类型由**分类环节派生后落库**（policies.todo_type），筛选直接读列。
+            # 早期实现是用 CASE 表达式临时推导（两条并行分支各写一套），
+            # 合并后统一为"存一次、各处读"，避免派生口径与统计口径漂移。
+            sql += " AND todo_type=?"
+            args.append(todo)
+        elif not review_status:
             sql += " AND review_status != 'rejected'"
         if region:
             sql += " AND region=?"
@@ -270,12 +276,6 @@ class Database:
         elif review_status:
             sql += " AND review_status=?"
             args.append(review_status)
-        if todo:
-            # 待办类型是派生的（见 policy_collector/todo.py），不是表里的列。
-            # 用同一份 CASE 表达式过滤，保证与统计口径完全一致。
-            from .todo import sql_case
-            sql += f" AND {sql_case()} = ?"
-            args.append(todo)
         sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
         args += [limit, offset]
         with self._conn:
@@ -373,7 +373,8 @@ class Database:
                          "input_tokens": "INTEGER DEFAULT 0", "output_tokens": "INTEGER DEFAULT 0",
                          "related_policy_key": "TEXT DEFAULT ''", "raw_page_sha256":"TEXT DEFAULT ''",
                          "analysis_sha256":"TEXT DEFAULT ''", "parse_error":"TEXT DEFAULT ''",
-                         "parse_requires_review":"INTEGER DEFAULT 0"},
+                         "parse_requires_review":"INTEGER DEFAULT 0",
+                         "todo_type":"TEXT DEFAULT 'none'"},
             "attachments": {"error": "TEXT DEFAULT ''", "parser_version":"TEXT DEFAULT ''",
                 "parse_method":"TEXT DEFAULT ''", "total_pages":"INTEGER DEFAULT 0", "parsed_pages":"INTEGER DEFAULT 0"},
         }
@@ -503,16 +504,28 @@ class Database:
             def one(sql: str, *a: Any) -> int:
                 return int(self._conn.execute(sql, a).fetchone()[0])
 
+            latest = "version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"
+
+            def todo(kind: str) -> int:
+                """按待办类型计数。todo_type 由判定环节自动推导，不含手工置位。"""
+                return one(f"SELECT COUNT(*) FROM policies p WHERE todo_type=? AND {latest}", kind)
+
             return {
                 "sources": one("SELECT COUNT(*) FROM source_configs"),
                 "sources_enabled": one("SELECT COUNT(*) FROM source_configs WHERE enabled=1"),
                 "policies": len(self.query_policies(limit=1000000)),
-                "pending_review": one("SELECT COUNT(*) FROM policies p WHERE need_review=1 AND version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"),
-                "confirmed": one("SELECT COUNT(*) FROM policies p WHERE review_status IN ('confirmed','adjusted') AND version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)"),
-                "rejected": len(self.query_policies(review_status='rejected',limit=1000000)),
+                "pending_review": one("SELECT COUNT(*) FROM policies p WHERE need_review=1 AND " + latest),
+                "confirmed": one("SELECT COUNT(*) FROM policies p WHERE review_status IN ('confirmed','adjusted') AND " + latest),
+                "rejected": len(self.query_policies(review_status='rejected', limit=1000000)),
                 "fetches": one("SELECT COUNT(*) FROM fetch_records"),
                 "runs": one("SELECT COUNT(*) FROM run_logs"),
                 "attachments": one("SELECT COUNT(*) FROM attachments"),
+                # 待办三分法：机器自修的、要业务方看的、要运维处理的，分开计数
+                "todo_material": todo("material"),
+                "todo_review": todo("review"),
+                "todo_scope": todo("scope"),
+                "todo_system": todo("system"),
+                "auto_confirmed": one(f"SELECT COUNT(*) FROM policies p WHERE todo_type='none' AND review_status='confirmed_auto' AND {latest}"),
             }
 
     def region_overview(self) -> list[dict]:
@@ -525,9 +538,8 @@ class Database:
         只统计当前版本、未被剔除的条目，与列表页口径保持一致；
         否则页面上各省之和会大于"政策记录"总数，看起来像数据错了。
 
-        待办列用 need_review（本分支的字段）。注意另一条并行分支
-        （feat/scope-criteria-and-acceptance）把"待复核"细分成了 todo_type，
-        两条线在 policies 表结构上已不同（37 列 vs 40 列）——合并时要对齐。
+        待办列读 `need_review`（"需要人看一眼"的条目），不是全部待办——
+        材料待补与系统待修属于机器/运维，混进来会让这一列失去意义。
         """
         with self._conn:
             rows = self._conn.execute(
@@ -550,30 +562,33 @@ class Database:
         return [dict(r) for r in rows]
 
     def todo_overview(self) -> dict:
-        """各待办类型的条目数（派生，不改表结构）。
+        """各待办类型的条目数（直接读 `policies.todo_type`）。
 
-        这是"待办清单"的数据源：把混装的 need_review 拆成
-        材料待补（机器自修）/ 系统待修（运维）/ 结论待确认（业务），
-        让首页回答"现在该谁做什么"，而不是给一个没有行动指向的总数。
+        这是"待办清单"的数据源：把待办拆成机器能修的（material）、运维要配的
+        （system）、业务要看的（candidate/review/scope），让页面回答
+        "现在该谁做什么"，而不是给一个没有行动指向的总数。
+
+        类型由判定环节派生后落库，这里只负责计数——**不再在查询层临时推导**：
+        两条并行分支曾各写一套派生逻辑（一为 CASE 表达式、一为列），合并后
+        统一为"存一次、各处读"，否则两套口径一旦漂移，页面上对不上账。
         """
-        from .todo import NONE, REVIEW, SYSTEM, MATERIAL, TODO_META, TODO_ORDER, sql_case
-        case = sql_case()
+        from .todo import HUMAN_QUEUES, MATERIAL, NONE, SYSTEM, TODO_META, TODO_ORDER
         with self._conn:
             counted = {r["todo"]: int(r["n"]) for r in self._conn.execute(
-                f"""SELECT {case} AS todo, COUNT(*) AS n
-                    FROM policies p
-                    WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
-                      AND p.review_status != 'rejected'
-                    GROUP BY todo"""
+                """SELECT p.todo_type AS todo, COUNT(*) AS n
+                   FROM policies p
+                   WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                     AND p.review_status != 'rejected'
+                   GROUP BY todo"""
             )}
         # 单条样本：让人点进去之前先看到"典型长什么样"
         samples = {}
         for key in TODO_ORDER:
             row = self._conn.execute(
-                f"""SELECT p.id, p.title FROM policies p
-                    WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
-                      AND p.review_status != 'rejected' AND {case} = ?
-                    ORDER BY p.id DESC LIMIT 1""", (key,)).fetchone()
+                """SELECT p.id, p.title FROM policies p
+                   WHERE p.version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                     AND p.review_status != 'rejected' AND p.todo_type = ?
+                   ORDER BY p.id DESC LIMIT 1""", (key,)).fetchone()
             samples[key] = dict(row) if row else None
         cells = []
         for key in TODO_ORDER:
@@ -584,8 +599,9 @@ class Database:
             "cells": cells,
             "counts": counted,
             "total": sum(counted.values()),
-            # "需你处理"只算真正要人判断的：机器和运维的活不该算到人头上
-            "human": counted.get(REVIEW, 0),
+            # "需你处理"只算需要人**逐条**判断的；
+            # candidate 是抽检（不逐条）、material/system 是机器与运维的活，都不计
+            "human": sum(counted.get(k, 0) for k in HUMAN_QUEUES),
             "machine": counted.get(MATERIAL, 0),
             "system": counted.get(SYSTEM, 0),
             "clear": counted.get(NONE, 0),

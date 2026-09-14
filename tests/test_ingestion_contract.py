@@ -17,10 +17,21 @@ def config(tmp_path):
 
 
 def test_two_generic_keywords_are_not_a_policy(tmp_path):
+    """两个通用词（投资/项目）不足以判「收」——这是本库的底线。
+
+    合并后判据来自另一条分支的分档设计：弱词不单独构成理由，正文弱词需达到
+    `weak_pending_threshold`（默认 4）才转待判定；正式文件若同时命中某类特征条款，
+    走兜底转待判定。本例两者都不满足 → 判否（不收）。
+
+    ⚠️ 已知残留风险（不要在没想清楚前"顺手修掉"）：若一份**事务性通知**通篇只在
+    顺带提及处出现 1–3 个通用词、且不命中任何类别特征条款，它会被直接判否，
+    属**漏收**方向。这是用"低误收"换来的代价——分档阈值调低会立刻放大人工量。
+    业务验收样本集（validation/acceptance_cases.json）持续跟踪该风险。
+    """
     rule=RuleClassifier(config(tmp_path).classification)
     out=rule.classify(Document(title='关于报送工作总结的通知',content='今年投资增长较快，项目推进顺利。'))
-    assert out.is_investment_policy == 'pending'
-    assert not out.evidence
+    assert out.is_investment_policy != 'yes', '通用词不能构成"收"的理由'
+    assert out.todo_type == 'none' and not out.evidence
 
 
 @pytest.mark.parametrize('title,body,category',[

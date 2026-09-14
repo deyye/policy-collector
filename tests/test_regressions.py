@@ -104,7 +104,9 @@ def test_periodic_refresh_not_skip_processed(pipe,cfg,monkeypatch):
 def test_fallback_explicit_and_full_document_segments(cfg,monkeypatch):
     monkeypatch.delenv('LLM_API_KEY',raising=False)
     out=Classifier(cfg).classify(Document(title='日常活动',content='新闻报道'))
-    assert out.method=='rule_fallback' and out.need_review and out.is_investment_policy=='pending'
+    # 模型故障属运维事项：仍须保持待判定（不得静默丢弃），但不再占用业务待办队列。
+    assert out.method=='rule_fallback' and out.todo_type=='system' and out.is_investment_policy=='pending'
+    assert out.need_review is False
     monkeypatch.setenv('LLM_API_KEY','test-placeholder')
     cfg.llm.model='mock';cfg.llm.enabled=True;cfg.llm.chunk_chars=500;cfg.llm.max_chunks=8
     c=LLMClassifier(cfg,cfg.classification);seen=[]
