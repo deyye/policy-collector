@@ -1,0 +1,122 @@
+{
+  "checked_at": "2026-09-11T09:51:36.681188+00:00",
+  "pages_limit": 2,
+  "details_limit": 2,
+  "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率",
+  "results": [
+    {
+      "source": "yn_policies",
+      "region": "云南",
+      "column": "其他文件",
+      "url": "https://yndrc.yn.gov.cn/html/zhengwugongkai/zhengcewenjian/qitawenjian/",
+      "discovered": 50,
+      "discovery": {
+        "pages_fetched": 2,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "errors": [],
+      "sample_count": 2,
+      "samples": [
+        {
+          "url": "https://yndrc.yn.gov.cn/html/2026/qitawenjian_0731/27861.html",
+          "title": "云南省发展和改革委员会 云南省民政厅 云南省财政厅 云南省市场监督管理局关于进一步完善殡葬服务收费政策的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-31",
+            "doc_date": "2026-07-29",
+            "wenhao": "云发改价格〔2026〕615号"
+          },
+          "body_chars": 3423,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "云南省殡葬服务基础项目清单",
+              "url": "https://yndrc.yn.gov.cn/uploadfile/s2/2026/0731/20260731105857388.pdf",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "https://yndrc.yn.gov.cn/html/2026/qitawenjian_0702/27507.html",
+          "title": "关于印发云南省加快场景培育和开放推动新场景大规模应用工作方案的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 2,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-02",
+            "doc_date": "2026-06-25",
+            "wenhao": "云发改体改〔2026〕491号"
+          },
+          "body_chars": 4124,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "1.云南省场景培育和开放重点领域推进清单",
+              "url": "https://yndrc.yn.gov.cn/uploadfile/s2/2026/0702/20260702112636946.docx",
+              "parse_status": "ok",
+              "error": ""
+            },
+            {
+              "name": "2.云南省标志性重点应用场景项目清单（2026年版）",
+              "url": "https://yndrc.yn.gov.cn/uploadfile/s2/2026/0702/20260702112643535.docx",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    }
+  ]
+}

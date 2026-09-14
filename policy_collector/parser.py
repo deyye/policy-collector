@@ -77,6 +77,10 @@ class Parser:
                 from .attachment_parsers import ofd_text
                 doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = ofd_text(data)
             elif fmt in ('doc','wps'):
+                # 旧版 Word/WPS：优先 LibreOffice；macOS 上回退自带 textutil（零安装）。
+                from .attachment_parsers import legacy_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = legacy_text(data,fmt)
+            elif fmt in ('xls','ppt','pptx'):
                 from .attachment_parsers import legacy_to_pdf, pdf_text
                 doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = pdf_text(legacy_to_pdf(data,fmt))
                 doc.parse_method = 'libreoffice+' + doc.parse_method
@@ -91,6 +95,9 @@ class Parser:
                 doc.content = "\n".join(blocks).strip()
                 if d.element.xpath('.//w:drawing | .//w:pict'):
                     doc.parse_error = 'Word含图片，文本已提取，图片中的条款需人工核对或OCR'
+            elif fmt in ("xlsx",):
+                from .attachment_parsers import xlsx_text
+                doc.content,doc.parse_error,doc.total_pages,doc.parsed_pages,doc.parse_method = xlsx_text(data)
             elif fmt in ("txt",):
                 doc.content = data.decode("utf-8-sig")
             else:
@@ -173,7 +180,14 @@ class Parser:
                 tag.decompose()
             main = None
             for selector in ("#UCAP-CONTENT", "#zoom", ".TRS_Editor", ".TRS_UEDITOR", ".tyxlContent", "#zoomcon", ".article-content",
-                             ".tys-main-zt-show", ".article_con", ".art_con", ".bt_content", "#content", "article", ".content"):
+                             ".tys-main-zt-show", ".article_con", ".art_con", ".bt_content", "#content", "article", ".content",
+                             # 2026-09-13 省级接入实测补充：这几类是政务站（多为 Word 粘贴或 TRS 变体）真实承载正文的容器
+                             # 注意 Custom_UnionStyle 是 **class** 不是 id（实测 #Custom_UnionStyle 不命中、.Custom_UnionStyle 命中）
+                             ".Custom_UnionStyle", "#trs_editor_view", ".newscontnet", "#con_main", ".slh_wrap",
+                             "#Article_Con", "#nry", "#NewsContent", ".Article_content", ".conBox",
+                             # 2026-09-14：重庆 fzggw.cq.gov.cn 的行政规范性文件详情。该站 6/6 篇都
+                             # 定位不到正文（只能拿"仅供复核"的整页文本），实测正文在 .zcwjk-xlcon 内。
+                             ".zcwjk-xlcon"):
                 candidate = soup.select_one(selector)
                 if candidate and len(candidate.get_text(strip=True)) > 20:
                     main = candidate

@@ -38,6 +38,37 @@ def normalized_url(url: str) -> str:
     return urllib.parse.urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path, p.query, ""))
 
 
+def url_from_onclick(value: str) -> str:
+    """从 onclick 属性里提取 URL。
+
+    部分政府站 CMS 不给 <a> 写 href，把链接放进 onclick。实测天津：
+        <a onclick="isDownLoad(this,'https://fzgg.tj.gov.cn/xxfb/tzggx/202609/t20260911_7372816.html')">
+    这类页面的列表**是静态存在的**，但按 href 提取会得到"零文章链接"，
+    从而被误判成"列表由 JS 渲染"（需要另写数据接口）——实测天津、以及同类的
+    苏迪/托普系 CMS 都能被这个函数直接救回来。
+
+    只认看起来像链接的引号串（含路径分隔，或以 html/jsp/php/do 结尾），
+    避免把 `void(0)`、`this`、`true` 之类的参数当成链接。
+    """
+    if not value:
+        return ""
+    for quoted in re.findall(r"""['"]([^'"]+)['"]""", value):
+        s = quoted.strip()
+        if not s or s.startswith(("#", "javascript:", "mailto:", "void")):
+            continue
+        if re.search(r"(?:^https?://|/|\.s?html?$|\.jsp$|\.aspx?$|\.do$|\.php$)", s, re.I):
+            return s
+    return ""
+
+
+def anchor_target(a) -> str:
+    """取一个 <a> 的跳转目标：优先 href，href 缺失或是 javascript: 伪链接时回退 onclick。"""
+    raw = (a.get("href") or "").strip()
+    if not raw or raw.startswith(("#", "javascript:", "mailto:")):
+        raw = url_from_onclick(a.get("onclick") or "")
+    return raw
+
+
 def allowed_url(url: str, src: SourceConfig) -> bool:
     p = urllib.parse.urlsplit(url)
     origin = urllib.parse.urlsplit(src.list_url)
@@ -149,8 +180,8 @@ class ListPageParser:
             anchors += frag.select(selector) if selector else frag.find_all("a")
         links, seen = [], set()
         for a in anchors:
-            href = (a.get("href") or "").strip()
-            if not href or href.startswith(("#", "javascript:", "mailto:")):
+            href = anchor_target(a)
+            if not href:
                 continue
             href = normalized_url(urllib.parse.urljoin(base_url or self.src.list_url, href))
             if href in seen or not self._match(href):
@@ -218,8 +249,8 @@ def unit_list_links(list_html: str, src: SourceConfig, base_url: str = "") -> li
     soup = BeautifulSoup(list_html, "lxml")
     links, seen = [], set()
     for a in soup.find_all("a"):
-        href = (a.get("href") or "").strip()
-        if not href or href.startswith(("#", "javascript:", "mailto:")):
+        href = anchor_target(a)
+        if not href:
             continue
         href = normalized_url(urllib.parse.urljoin(base_url or src.list_url, href))
         if href in seen or not allowed_url(href, src):
@@ -237,7 +268,7 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
     翻页：每页带 paramJson={"pageNo":N,"pageSize":15,"search":""}（与 unitbuild.js 的
     paramsMap 分支同构），空页自动停止；接口 JSON 原件逐页落盘留证。
     """
-    collector.discovery_status[src.name] = {'pages_fetched': 0, 'end_reached': False}
+    collector.discovery_status[src.name] = {'pages_fetched': 0, 'end_reached': False, 'stop_reason': 'page_limit'}
     spec = extract_unitbuild_spec(page_raw.decode("utf-8", "ignore"))
     if spec is None:
         raise ValueError("栏目页未发现 unitbuild 构建参数（结构变化或反爬页）")
@@ -274,7 +305,97 @@ def discover_zj_unit_links(collector: Collector, src: SourceConfig, page_raw: by
         links.extend(fresh)
         if not page_links:      # 空页：翻页到底
             collector.discovery_status[src.name]['end_reached'] = True
+            collector.discovery_status[src.name]['stop_reason'] = 'empty_page'
             break
         if not fresh:           # 重复页不等于已采完，提示翻页参数/接口需维护。
             raise DiscoveryError(f"第{page_no}页完全重复，未确认历史列表采完", links)
+    return links
+
+
+def next_page_link(raw: bytes, page_url: str) -> str:
+    """Follow only an explicit same-origin next-page link, never guessed URLs."""
+    soup = BeautifulSoup(raw, 'lxml')
+    # Yunnan's public template encodes only the pager HTML; decode data, never JS.
+    pager = soup.select_one('#pages')
+    if pager and not pager.find('a') and 'window.atob' in raw.decode('utf-8', 'ignore'):
+        import base64
+        try:
+            fragment = urllib.parse.unquote_plus(base64.b64decode(pager.get_text(strip=True), validate=True).decode('utf-8'))
+            pager.replace_with(BeautifulSoup(fragment, 'lxml'))
+        except (ValueError, UnicodeError):
+            pass
+    for a in soup.find_all('a'):
+        label = a.get_text(strip=True)
+        title = (a.get('title') or '').strip()
+        if ('next' not in a.get('rel', []) and label not in ('下一页', '下页', '下一頁', 'Next', 'next', '>')
+                and title not in ('下一页', '下页', '下一頁', 'Next', 'next')):
+            continue
+        # 链接可能在 onclick 里而不在 href（实测辽宁慧点 CMS 的"下一页"就是这样：
+        # `<a title="下一页" onclick="queryArticleByCondition(this,'…-2.shtml')">`）。
+        href = anchor_target(a)
+        if not href:
+            continue
+        url = normalized_url(urllib.parse.urljoin(page_url, href))
+        p, origin = urllib.parse.urlsplit(url), urllib.parse.urlsplit(page_url)
+        if p.scheme in ('http', 'https') and p.netloc == origin.netloc and url != normalized_url(page_url):
+            return url
+    return ''
+
+
+def _jpage_group(raw: bytes, src: SourceConfig, base_url: str):
+    """Use the first policy-bearing datastore (desktop/mobile often duplicate it)."""
+    text = raw.decode('utf-8-sig', 'replace')
+    groups = re.findall(r'<datastore\b[^>]*>.*?</datastore>', text, re.S | re.I)
+    if not groups:
+        raise ValueError('jpage响应缺少datastore，可能为验证页或结构变化')
+    for group in groups:
+        links = ListPageParser(src).parse(re.sub(r"<!\[CDATA\[|\]\]>", "", group), base_url)
+        if not links:
+            continue
+        match = re.search(r'<nextgroup\b[^>]*>(.*?)</nextgroup>', group, re.S | re.I)
+        next_url = ''
+        if match:
+            fragment = re.sub(r'<!\[CDATA\[|\]\]>', '', match.group(1))
+            anchor = BeautifulSoup(fragment, 'lxml').find('a', href=True)
+            if anchor and anchor['href'].strip():
+                next_url = urllib.parse.urljoin(base_url, anchor['href'])
+        return links, next_url
+    # An explicit empty recordset is distinguishable from non-policy records.
+    if re.search(r'<record\b', text, re.I):
+        raise ValueError('jpage有记录但无符合范围的详情，需检查过滤规则')
+    return [], ''
+
+
+def discover_jpage_links(collector: Collector, src: SourceConfig, raw: bytes,
+                         page_url: str, max_pages: int) -> list[CandidateLink]:
+    status = {'pages_fetched': 0, 'end_reached': False, 'stop_reason': 'page_limit'}
+    collector.discovery_status[src.name] = status
+    links, seen, seen_urls = [], set(), {normalized_url(page_url)}
+    current = page_url
+    for page in range(1, max_pages + 1):
+        try:
+            found, next_url = _jpage_group(raw, src, current)
+        except ValueError as exc:
+            raise DiscoveryError(str(exc), links) from exc
+        status['pages_fetched'] += 1
+        fresh = [x for x in found if x.url not in seen]
+        if found and not fresh:
+            raise DiscoveryError('jpage分组完全重复，翻页未完成', links)
+        links.extend(fresh); seen.update(x.url for x in fresh)
+        if not next_url:
+            status.update(end_reached=not found, stop_reason='empty_recordset' if not found else 'no_next_group')
+            return links
+        endpoint, origin = urllib.parse.urlsplit(next_url), urllib.parse.urlsplit(page_url)
+        if endpoint.scheme not in ('http','https') or endpoint.netloc != origin.netloc or endpoint.path != '/module/web/jpage/dataproxy.jsp':
+            raise DiscoveryError('jpage下一组不在官网同源公开dataproxy接口', links)
+        if normalized_url(next_url) in seen_urls:
+            raise DiscoveryError('jpage下一组网址循环，未确认采完', links)
+        if page == max_pages:
+            break
+        seen_urls.add(normalized_url(next_url))
+        result = collector.fetch(next_url)
+        if not result.ok:
+            raise DiscoveryError(f'jpage第{page+1}组请求失败: {result.error}', links)
+        collector.save(src.name, next_url, result.content, 'xml')
+        raw, current = result.content, next_url
     return links

@@ -33,3 +33,38 @@ def _isolate_local_model_settings(monkeypatch):
         return real_settings_path(cfg)
 
     monkeypatch.setattr(model_settings, 'settings_path', guarded)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_project_dotenv(monkeypatch):
+    """测试不继承**项目根**的 `.env`（本机密钥/服务地址/模型名）。
+
+    问题背景：要用模型就必须配 `.env`，而它一旦存在就会污染测试：
+    `.env` 里的 `LLM_BASE_URL` 会覆盖本机配置，进而触发
+    「更换服务地址即清空已保存密钥」的逻辑，把用例刚保存的测试密钥抹掉。
+    实测：配好 `.env` 后 89 项里 3 项转红——
+      test_agent_flow::test_actual_local_compatible_api_without_key
+      test_expansion::test_model_page_does_not_echo_key_and_save_works
+      test_regressions::test_model_http_contract_and_truncated_response
+    表现是 `cfg.llm.api_key` 从 `'test-secret'` 变成 `''`。
+
+    对策：只屏蔽项目根那一个 `.env` 文件，**不禁用 `_load_dotenv` 本身**——
+    否则专门验证 .env 解析与优先级规则的用例会一起挂。
+    """
+    from policy_collector import config as config_mod
+
+    real_load = config_mod._load_dotenv
+    project_env = (Path(config_mod.PROJECT_ROOT) / '.env').resolve()
+
+    def guarded(path):
+        try:
+            if Path(path).resolve() == project_env:
+                return None
+        except OSError:  # 路径不可解析时不干预
+            pass
+        return real_load(path)
+
+    monkeypatch.setattr(config_mod, '_load_dotenv', guarded)
+    # .env 用 setdefault 注入，一旦进过进程环境就会残留，逐用例清掉
+    for name in ('LLM_API_KEY', 'LLM_BASE_URL', 'LLM_MODEL', 'DASHSCOPE_API_KEY'):
+        monkeypatch.delenv(name, raising=False)

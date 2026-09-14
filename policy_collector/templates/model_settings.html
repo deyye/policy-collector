@@ -6,10 +6,10 @@
 <div class="settings-layout"><section class="panel"><div class="panel-heading"><h2>服务连接配置</h2><span class="tag {{ 'ok' if key_configured else 'neutral' }}">{{ '已填写密钥' if key_configured else '密钥未配置' }}</span></div>
 <form method="post" class="settings-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <div class="form-grid">
-<label class="form-field full">服务类型<select name="provider"><option value="dashscope" {% if provider=='dashscope' %}selected{% endif %}>阿里云百炼</option><option value="custom" {% if provider=='custom' %}selected{% endif %}>其他兼容服务 / 本机模型</option></select></label>
-<label class="form-field full">服务地址 <span class="dim">Base URL</span><input name="base_url" value="{{ base_url }}" placeholder="填写兼容接口地址"><small>百炼留空采用北京兼容地址；使用其他地域或业务空间时，填写对应地址。</small></label>
+<label class="form-field full">服务类型<select name="provider"><option value="dashscope" {% if provider=='dashscope' %}selected{% endif %}>阿里云百炼</option><option value="custom" {% if provider=='custom' %}selected{% endif %}>兼容API / 本地模型</option></select></label>
+<label class="form-field full">服务地址 <span class="dim">Base URL</span><input name="base_url" value="{{ base_url }}" placeholder="填写兼容接口地址"><small>本地模型可填 http://127.0.0.1:8000/v1（vLLM）或 http://127.0.0.1:11434/v1（Ollama）；填写实际服务地址。</small></label>
 <label class="form-field full">模型名称<input name="model" value="{{ model }}" placeholder="例如 qwen-plus"><small>百炼留空时使用 qwen-plus，其他服务请填写实际部署的模型名。</small></label>
-<label class="form-field full">访问密钥 <span class="dim">API Key</span><input type="password" name="api_key" autocomplete="new-password" placeholder="输入新密钥；留空保留同地址旧密钥"><small>密钥仅保存到本机，不在页面回显。更换服务地址时需重新填写。</small></label>
+<label class="form-field full">访问密钥 <span class="dim">API Key</span><input type="password" name="api_key" autocomplete="new-password" placeholder="输入新密钥；留空保留同地址旧密钥"><small>云端填写密钥；本机免认证服务可留空。没有模型时仍可用本地规则判断。</small></label>
 <label class="form-field full">密钥环境变量 <span class="dim">选填</span><input name="api_key_env" placeholder="留空采用对应服务的默认名称"><small>环境变量配置优先于本机配置。</small></label>
 </div><div class="form-actions"><button class="btn primary" name="action" value="save">{{ icon('check') }} 保存配置</button><span class="hint">保存后可进行连接检查</span></div></form></section>
 <aside class="settings-aside"><section class="panel"><div class="panel-heading"><h2>接入步骤</h2></div><div class="settings-steps">

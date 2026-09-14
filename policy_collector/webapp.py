@@ -80,7 +80,28 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         stats = d.dashboard()
         recent = d.query_policies(limit=8)
         runs = d.list_runs(limit=5)
-        return render_template("index.html", stats=stats, recent=recent, runs=runs)
+        return render_template("index.html", stats=stats, recent=recent, runs=runs,
+                               regions=[r for r in d.region_overview() if r["region"] != "样例"])
+
+    # ---------------- 按省份浏览 ----------------
+    @app.route("/provinces")
+    def provinces():
+        """把"全都在一个列表里"拆成"按地区分开"。
+
+        用户反馈：政策全部堆在一个列表里看不出各省分布。这里按 region 分组，
+        并把四类小计一起给出——一眼能看出某省是"只收了准入类"还是四类齐全。
+        """
+        d = db()
+        rows = d.region_overview()
+        # 中央与地方分开呈现：把"国家"混在省里，会让人误以为它是一个省。
+        central = [r for r in rows if r["region"] in ("国家", "中央", "全国")]
+        local = [r for r in rows if r["region"] and r["region"] not in ("国家", "中央", "全国", "样例")]
+        samples = [r for r in rows if r["region"] == "样例"]
+        unlabeled = [r for r in rows if not r["region"]]
+        return render_template("provinces.html", central=central, local=local,
+                               samples=samples, unlabeled=unlabeled,
+                               local_count=len(local),
+                               local_total=sum(r["total"] for r in local))
 
     # ---------------- 政策库 ----------------
     @app.route("/policies")
@@ -115,7 +136,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         cats = _policy_category_names(p)
         return render_template(
             "policy.html", p=p, versions=versions, attachments=attachments, cats=cats, material_issues=material_issues,
-            provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid),
+            provenance=d.policy_sources(p["policy_key"]), history=d.review_history(pid), agent_events=d.policy_agent_events(pid),
             cat_codes=CAT_CODES, _cat_label=_cat_label, review_style=_REVIEW_STYLE.get(p["review_status"], ""),
         )
 
@@ -147,18 +168,73 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         for s in rows:
             s["in_config"] = s["name"] in cfg.sources
             s["note"] = cfg.sources[s["name"]].note if s["in_config"] else ""
-        return render_template("sources.html", rows=rows)
+        from .llm_client import LLMClient
+        return render_template("sources.html", rows=rows, model_ready=LLMClient(cfg.llm).available)
 
-    def _run_worker(source_name: str, prefer: str) -> None:
-        with _RUN_LOCK:
+    def _run_worker(source_name: str, prefer: str, retry_only=False) -> None:
+        pipe = None
+        try:
             pipe = Pipeline(cfg)
+            pipe.run_source(source_name, prefer=prefer, limit=200, retry_only=retry_only)
+        finally:
+            if pipe: pipe.close()
+            _RUN_LOCK.release()
+
+    def _run_all_worker(run_id: str, prefer: str, retry_only=False) -> None:
+        pipe = None
+        try:
+            pipe = Pipeline(cfg)
+            # create_run=False：批次行已由路由预先登记，保证跳转到进度页时它已存在
+            pipe.run_all_sources(prefer=prefer, limit=200, retry_only=retry_only,
+                                 batch_run_id=run_id, create_run=False)
+        except Exception as exc:                                   # noqa: BLE001
             try:
-                stats = pipe.run_source(source_name, prefer=prefer, limit=200)
-                print(f"[web] run {source_name} done: {stats.to_dict()}")
-            except Exception as e:  # noqa: BLE001
-                print(f"[web] run {source_name} failed: {e}")
+                d = Database(cfg.db_path)
+                try:
+                    d.finish_run(run_id, {}, status='failed', note=f'批次异常：{exc}')
+                finally:
+                    d.close()
+            except Exception:                                      # noqa: BLE001
+                pass
+        finally:
+            if pipe: pipe.close()
+            _RUN_LOCK.release()
+
+    @app.route("/sources/run-all", methods=["POST"])
+    def source_run_all():
+        """一键全国采集：不必逐个来源点「开始采集」。"""
+        prefer = request.form.get('prefer', 'llm')
+        if prefer not in ('llm', 'rule'): abort(400)
+        names = [n for n, s in cfg.sources.items()
+                 if s.enabled and not s.list_url.startswith('file:')]
+        if not names:
+            flash('没有已启用的来源，请先在来源配置中启用并完成验收。', 'warn')
+            return redirect(url_for('sources'))
+        if not _RUN_LOCK.acquire(blocking=False):
+            flash('已有采集任务运行，请等待完成', 'warn')
+            return redirect(url_for('runs'))
+        run_id = f"batch-{secrets.token_hex(8)}"
+        # 先登记批次行再起线程：否则跳转到进度页时会因记录尚未写入而 404
+        try:
+            d = Database(cfg.db_path)
+            try:
+                d.start_run(run_id, None, kind='batch')
+                d.run_progress(run_id, total=len(names), completed=0, stage='starting',
+                               message=f'准备采集 {len(names)} 个来源', results=[])
             finally:
-                pipe.close()
+                d.close()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        t = threading.Thread(target=_run_all_worker,
+                             args=(run_id, prefer, request.form.get('retry_only') == '1'),
+                             daemon=True)
+        try: t.start()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        flash(f"已启动一键全国采集：{len(names)} 个来源将依次执行，可离开此页。", "ok")
+        return redirect(url_for("run_detail", run_id=run_id))
 
     @app.route("/sources/<name>/run", methods=["POST"])
     def source_run(name: str):
@@ -168,12 +244,15 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             return redirect(url_for("sources"))
         prefer = request.form.get('prefer', 'llm')
         if prefer not in ('llm','rule'): abort(400)
-        if _RUN_LOCK.locked():
+        if not _RUN_LOCK.acquire(blocking=False):
             flash('已有采集任务运行，请等待完成', 'warn')
             return redirect(url_for('runs'))
-        t = threading.Thread(target=_run_worker, args=(name, prefer), daemon=True)
-        t.start()
-        flash(f"已开始运行来源 [{name}]（{prefer} 模式），可在运行日志查看进度", "ok")
+        t = threading.Thread(target=_run_worker, args=(name, prefer, request.form.get('retry_only') == '1'), daemon=True)
+        try: t.start()
+        except Exception:
+            _RUN_LOCK.release()
+            raise
+        flash("任务已启动，下方会自动显示处理进度。", "ok")
         return redirect(url_for("runs"))
 
     # ---------------- 运行日志 ----------------
@@ -181,16 +260,29 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
     def runs():
         d = db()
         rows = d.list_runs(limit=50)
-        smap = {s["id"]: s["name"] for s in d.list_sources()}
+        smap = {s["id"]: (s["site"] or s["name"]) for s in d.list_sources()}
         parsed = []
         for r in rows:
             try:
                 r["summary_obj"] = json.loads(r["summary"] or "{}")
+                r["progress_obj"] = json.loads(r.get("progress") or "{}")
             except Exception:  # noqa: BLE001
                 r["summary_obj"] = {}
+                r["progress_obj"] = {}
             parsed.append(r)
-        running = any(r["status"] == "running" for r in rows)
+        running = _RUN_LOCK.locked() or any(r["status"] == "running" for r in rows)
         return render_template("runs.html", rows=parsed, running=running, smap=smap)
+
+    @app.get('/runs/<run_id>')
+    def run_detail(run_id):
+        d=db()
+        row=d._conn.execute('SELECT * FROM run_logs WHERE run_id=?',(run_id,)).fetchone()
+        if row is None: abort(404)
+        r=dict(row)
+        r['summary_obj']=json.loads(r['summary'] or '{}')
+        r['progress_obj']=json.loads(r.get('progress') or '{}')
+        source=next((s for s in d.list_sources() if s['id']==r['source_id']),{})
+        return render_template('run_detail.html',r=r,source=source,events=d.run_events(run_id),running=r['status']=='running')
 
     @app.get('/attachments/<int:aid>/download')
     def attachment_download(aid):

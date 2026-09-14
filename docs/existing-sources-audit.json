@@ -1,0 +1,383 @@
+{
+  "checked_at": "2026-09-11T09:52:55.443980+00:00",
+  "pages_limit": 2,
+  "details_limit": 1,
+  "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率",
+  "results": [
+    {
+      "source": "ndrc_zcwj",
+      "region": "国家",
+      "column": "政策通知",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/",
+      "discovered": 50,
+      "discovery": {
+        "pages_fetched": 2,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202609/t20260910_1407524.html",
+          "title": "关于重要工业品低价无序竞争成本核算有关事项的通知(发改价格〔2026〕1303号)",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-10",
+            "doc_date": "2026-09-03",
+            "wenhao": "发改价格〔2026〕1303号"
+          },
+          "body_chars": 999,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "ndrc_ghxwj",
+      "region": "国家",
+      "column": "规范性文件",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/",
+      "discovered": 50,
+      "discovery": {
+        "pages_fetched": 2,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202605/t20260519_1405292.html",
+          "title": "关于印发《核电厂退役准备管理暂行办法》的通知(发改能源规〔2026〕582号)",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 2,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-05-19",
+            "doc_date": "2026-04-23",
+            "wenhao": "发改能源规〔2026〕582号"
+          },
+          "body_chars": 262,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "《核电厂退役准备管理暂行办法》.pdf",
+              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202605/P020260519577470429013.pdf",
+              "parse_status": "ok",
+              "error": ""
+            },
+            {
+              "name": "《核电厂退役准备管理暂行办法》.ofd",
+              "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/202605/P020260519577470636345.ofd",
+              "parse_status": "ok",
+              "error": ""
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "gov_latest",
+      "region": "国家",
+      "column": "最新政策",
+      "url": "https://www.gov.cn/zhengce/zuixin/",
+      "discovered": 40,
+      "discovery": {
+        "pages_fetched": 1,
+        "end_reached": false,
+        "stop_reason": "feed_window"
+      },
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://www.gov.cn/zhengce/content/202609/content_7080735.htm",
+          "title": "市场监督管理所条例_其他_中国政府网",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-06",
+            "wenhao": "国令第846号"
+          },
+          "body_chars": 1506,
+          "parse_error": "",
+          "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "cq_normative",
+      "region": "重庆",
+      "column": "行政规范性文件",
+      "url": "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/",
+      "discovered": 0,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "error"
+      },
+      "errors": [
+        "https://fzggw.cq.gov.cn/zwgk/zfxxgkml/zcwj/: ReadTimeout"
+      ],
+      "sample_count": 0,
+      "samples": [],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "zjfgw_gsgg",
+      "region": "浙江",
+      "column": "行政规范性文件",
+      "url": "https://fzggw.zj.gov.cn/col/col1229565788/index.html",
+      "discovered": 30,
+      "discovery": {
+        "pages_fetched": 2,
+        "end_reached": false
+      },
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://fzggw.zj.gov.cn/col/col1229123351/art/2026/art_937add6719f140bdac86d5b97c525d28.html",
+          "title": "省发展改革委关于印发《浙江省固定资产投资项目节能审查和碳排放评价实施办法》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 1,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "failed",
+          "metadata": {
+            "page_date": "2026-06-05",
+            "doc_date": "2026-06-02",
+            "wenhao": "浙发改能源〔2026〕116号"
+          },
+          "body_chars": 136,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "省发展改革委关于印发《浙江省固定资产投资项目节能审查和碳排放评价实施办法》的通知无痕迹稿.wps",
+              "url": "https://fzggw.zj.gov.cn/api-gateway/jpaas-web-server/front/document/download?fileUrl=YW5UzzlvCwcM%2FNHHX%2FtT6LrYNhq0U62PycPHz4zOVn0wj0GllW7w%2FpWMSD%2Fal%2FOZyHaYcw2AW3zRdgKFgzh%2FxYJkKsNSwuBi77Y2NKhuXXOTpYxsoccH1HqOLYCbWn0ZwNQCA9Oz%2BvYwWWMSuz7Bo99vbFAEgCDqmQ5OjCu8aKE%3D&fileName=%E7%9C%81%E5%8F%91%E5%B1%95%E6%94%B9%E9%9D%A9%E5%A7%94%E5%85%B3%E4%BA%8E%E5%8D%B0%E5%8F%91%E3%80%8A%E6%B5%99%E6%B1%9F%E7%9C%81%E5%9B%BA%E5%AE%9A%E8%B5%84%E4%BA%A7%E6%8A%95%E8%B5%84%E9%A1%B9%E7%9B%AE%E8%8A%82%E8%83%BD%E5%AE%A1%E6%9F%A5%E5%92%8C%E7%A2%B3%E6%8E%92%E6%94%BE%E8%AF%84%E4%BB%B7%E5%AE%9E%E6%96%BD%E5%8A%9E%E6%B3%95%E3%80%8B%E7%9A%84%E9%80%9A%E7%9F%A5%E6%97%A0%E7%97%95%E8%BF%B9%E7%A8%BF.wps",
+              "parse_status": "failed",
+              "error": "HTTP 403"
+            }
+          ],
+          "error": "附件下载失败，等待补采"
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "jsfgw_tzgg",
+      "region": "江苏",
+      "column": "通知公告",
+      "url": "https://fzggw.jiangsu.gov.cn/col/col284/index.html",
+      "discovered": 138,
+      "discovery": {
+        "pages_fetched": 2,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "https://fzggw.jiangsu.gov.cn/art/2026/9/11/art_284_11828542.html",
+          "title": "江苏省成品油价格调整公告（2026年第17号）",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 1,
+            "excluded": 0,
+            "attachments_downloaded": 0,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 1,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "",
+            "wenhao": ""
+          },
+          "body_chars": 416,
+          "parse_error": "未定位正文容器，整页文本仅供复核，需维护来源适配",
+          "attachments": [],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "fj_normative",
+      "region": "福建",
+      "column": "行政规范性文件",
+      "url": "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/",
+      "discovered": 0,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "error"
+      },
+      "errors": [
+        "https://fgw.fujian.gov.cn/zfxxgkzl/zfxxgkzc/gfwjk/: ReadTimeout"
+      ],
+      "sample_count": 0,
+      "samples": [],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "sx_normative",
+      "region": "陕西",
+      "column": "行政规范性文件",
+      "url": "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/",
+      "discovered": 0,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "error"
+      },
+      "errors": [
+        "https://sndrc.shaanxi.gov.cn/zfxxgk/zc/fgwj/xzgfxwj/: ReadTimeout"
+      ],
+      "sample_count": 0,
+      "samples": [],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    },
+    {
+      "source": "hn_local_rules",
+      "region": "湖南",
+      "column": "地方性法规规章",
+      "url": "https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/newxxgklist.html",
+      "discovered": 0,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "error"
+      },
+      "errors": [
+        "https://fgw.hunan.gov.cn/fgw/xxgk_70899/zcfg/dfxfg/newxxgklist.html: ReadTimeout"
+      ],
+      "sample_count": 0,
+      "samples": [],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": false
+    }
+  ]
+}

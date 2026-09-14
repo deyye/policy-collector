@@ -2,11 +2,9 @@
 {% from '_ui.html' import icon, page_head, empty, status %}
 {% block title %}工作总览 · 投资政策{% endblock %}
 {% block content %}
-{% call page_head('OVERVIEW / 工作空间', '工作总览', '汇集政策资料，掌握采集进展，有序开展投资政策研究。') %}<a class="btn primary" href="{{ url_for('sources') }}">{{ icon('globe') }} 开始采集</a>{% endcall %}
-<section class="hero">
-<div class="hero-copy"><span class="hero-label"><i></i> 投资政策研究 · 信息支撑</span><h2>汇聚政策信息<br>服务投资研判</h2><p>从政策归集到分类复核，让每一份资料有据可查。</p><a href="{{ url_for('policies') }}">进入政策资料库 {{ icon('arrow') }}</a></div>
-<div class="hero-art" aria-hidden="true"><svg viewBox="0 0 570 250" fill="none"><defs><linearGradient id="hero-line"><stop stop-color="#8eb6d6" stop-opacity=".13"/><stop offset="1" stop-color="#b3c6d7" stop-opacity=".55"/></linearGradient></defs><g stroke="url(#hero-line)" stroke-width="1"><path d="M0 225 280 85l285 140M40 245 280 125l245 120M70 185v-64l55-28 55 28v72m-55-100v100M200 182V59l75-38 75 38v123M275 21v161M370 194V102l58-29 58 29v112M428 73v140M200 74l75 38 75-38M200 103l75 38 75-38M200 132l75 38 75-38M370 127l58 29 58-29M370 152l58 29 58-29M70 143l55 28 55-28"/><path d="m0 202 210-105m150 0 205 105M0 250l280-140L565 250M120 250l160-80 160 80"/></g><circle cx="275" cy="21" r="4" fill="#c6ab75"/><circle cx="428" cy="73" r="3" fill="#a7c4d8"/><path d="M360 47h104m-52-10v20" stroke="#a7c4d8" opacity=".3"/></svg><span>汇集 · 理解 · 研判</span></div>
-</section>
+{% call page_head('OVERVIEW / 工作空间', '工作总览', '汇集政策资料，掌握采集进展，有序开展投资政策研究。') %}<a class="btn primary" href="{{ url_for('sources') }}">{{ icon('globe') }} 开始采集</a>{% endcall %}<section class="panel agent-progress"><h2>今天先做什么？</h2><div class="form-actions"><a class="btn primary" href="{{ url_for('sources') }}">1. 采集文件</a><a class="btn" href="{{ url_for('runs') }}">2. 查看处理进度</a><a class="btn" href="{{ url_for('policies',review='pending') }}">3. 确认待复核文件</a></div>
+<form method="post" action="{{ url_for('source_run_all') }}" class="inline-run"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="prefer" value="llm"><button class="btn" type="submit">{{ icon('globe') }} 一键全国采集（{{ stats.sources_enabled }} 个来源）</button><span class="hint">按来源依次采集，可离开此页；某一站失败不中断整批。</span></form>
+<p class="hint">系统自动检查材料、判断政策并留存依据。需要你处理的内容会进入待复核或材料缺口列表。</p></section>
 <div class="metrics-grid">
 {% for value,label,glyph,sub in [(stats.policies,'政策记录','file','当前版本 · 含待复核'),(stats.pending_review,'待人工复核','clock','分类与相关性待确认'),(stats.sources_enabled,'启用来源','globe','已配置来源共 ' ~ stats.sources ~ ' 个'),(stats.runs,'累计运行批次','activity','采集任务运行记录')] %}
 <div class="metric {{ 'attention' if loop.index==2 else '' }}"><div class="metric-top"><span>{{ label }}</span><span class="metric-icon">{{ icon(glyph) }}</span></div><div class="metric-value">{{ value }}<span>{{ '个' if loop.index==3 else '批' if loop.index==4 else '份' }}</span></div><div class="metric-sub">{{ sub }}</div></div>
@@ -18,13 +16,22 @@
 <a class="category-card {{ code }}" href="{{ url_for('policies',category=name) }}"><span class="category-icon">{{ icon(glyph) }}</span><div><h3>{{ name }}<span>{{ question }}</span></h3><p>{{ description }}</p></div>{{ icon('arrow','category-arrow') }}</a>
 {% endfor %}
 </div>
+{% if regions %}
+<div class="section-heading"><h2>按地区浏览</h2><a class="text-link" href="{{ url_for('provinces') }}">全部地区 {{ icon('arrow') }}</a></div>
+<div class="region-strip">
+{% for r in regions[:14] %}
+<a class="region-chip" href="{{ url_for('policies', region=r.region) }}"><span class="region-name">{{ r.region }}</span><span class="region-count">{{ r.total }}</span></a>
+{% endfor %}
+{% if regions|length > 14 %}<a class="region-chip region-chip-more" href="{{ url_for('provinces') }}">其余 {{ regions|length - 14 }} 个地区 {{ icon('arrow') }}</a>{% endif %}
+</div>
+{% endif %}
 <div class="dashboard-columns">
 <section class="panel latest-panel"><div class="panel-heading"><h2>最近入库</h2><a class="text-link" href="{{ url_for('policies') }}">全部资料 {{ icon('arrow') }}</a></div>
 {% if recent %}<div class="policy-feed">{% for p in recent %}<a class="feed-row" href="{{ url_for('policy_detail',pid=p.id) }}"><span class="document-icon">{{ icon('file') }}</span><div class="feed-content"><h3>{{ p.title }}</h3><p><span>{{ p.region or '地区未标注' }}</span><span>{{ p.wenhao or '文号未标注' }}</span><span>{{ (p.page_date or p.created_at or '')[:10] }}</span></p></div>{% if p.need_review %}<span class="tag warn">待复核</span>{% else %}<span class="tag ok">{{ '人工确认' if p.review_status in ['confirmed','adjusted'] else '自动通过' }}</span>{% endif %}</a>{% endfor %}</div>
 {% else %}{{ empty('政策资料库待充实','前往采集来源，选择官网栏目开始归集政策文件。') }}{% endif %}
 </section>
 <div class="dashboard-aside"><section class="review-callout"><div class="callout-top">{{ icon('check') }}<span>人工复核工作区</span></div><h3>让资料更准确<br>让判断有依据</h3><p>核对政策原文、分类依据及附件完整性。</p><a class="btn" href="{{ url_for('policies',review='pending') }}">处理待复核 <span>{{ stats.pending_review }}</span>{{ icon('arrow') }}</a></section>
-<section class="panel"><div class="panel-heading"><h2>最近运行</h2><a class="text-link" href="{{ url_for('runs') }}">查看全部</a></div>{% if runs %}<div class="run-feed">{% for r in runs %}<div class="run-item"><span class="timeline-dot {{ r.status }}"></span><div>{{ status(r.status) }}<p>{{ {'manual':'手动采集','scheduled':'定时采集','demo':'样例演示'}.get(r.kind,r.kind) }}<span>{{ (r.started_at or '')[:16] }}</span></p></div></div>{% endfor %}</div>{% else %}{{ empty('暂无运行记录','采集开始后可在这里查看进展。','activity') }}{% endif %}</section>
+<section class="panel"><div class="panel-heading"><h2>最近运行</h2><a class="text-link" href="{{ url_for('runs') }}">查看全部</a></div>{% if runs %}<div class="run-feed">{% for r in runs %}<div class="run-item"><span class="timeline-dot {{ r.status }}"></span><div>{{ status(r.status) }}<p>{{ {'manual':'手动采集','scheduled':'定时采集','batch':'全国采集','demo':'样例演示'}.get(r.kind,r.kind) }}<span>{{ (r.started_at or '')[:16] }}</span></p></div></div>{% endfor %}</div>{% else %}{{ empty('暂无运行记录','采集开始后可在这里查看进展。','activity') }}{% endif %}</section>
 </div></div>
 <div class="overview-strip"><div>{{ icon('folder') }}<span>累计采集记录</span><strong>{{ stats.fetches }}</strong></div><div>{{ icon('link') }}<span>登记附件</span><strong>{{ stats.attachments }}</strong></div><p>已入库不等于已确认，请结合复核状态使用资料。</p></div>
 {% endblock %}

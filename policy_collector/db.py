@@ -252,7 +252,7 @@ class Database:
 
     def query_policies(self, region: str = "", category: str = "", keyword: str = "",
                        review_status: str = "", limit: int = 100, offset: int = 0) -> list[dict]:
-        sql, args = "SELECT * FROM policies p WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)", []
+        sql, args = "SELECT p.* FROM policies p WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)", []
         if not review_status:
             sql += " AND review_status != 'rejected'"
         if region:
@@ -262,8 +262,8 @@ class Database:
             sql += " AND (category LIKE ? OR category_names LIKE ?)"
             args += [f"%{category}%", f"%{category}%"]
         if keyword:
-            sql += " AND (title LIKE ? OR content LIKE ? OR wenhao LIKE ?)"
-            args += [f"%{keyword}%"] * 3
+            sql += " AND (title LIKE ? OR content LIKE ? OR wenhao LIKE ? OR EXISTS (SELECT 1 FROM attachments a WHERE a.policy_id=p.id AND a.parsed_text LIKE ?))"
+            args += [f"%{keyword}%"] * 4
         if review_status == 'pending':
             sql += " AND (review_status='pending' OR parse_requires_review=1)"
         elif review_status:
@@ -272,7 +272,22 @@ class Database:
         sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
         args += [limit, offset]
         with self._conn:
-            return [dict(r) for r in self._conn.execute(sql, args)]
+            rows = [dict(r) for r in self._conn.execute(sql, args)]
+            if keyword and rows:
+                by_id = {r['id']: r for r in rows}
+                marks = ','.join('?' for _ in rows)
+                matches = self._conn.execute(
+                    f"SELECT policy_id,name,parsed_text FROM attachments WHERE policy_id IN ({marks}) AND parsed_text LIKE ? ORDER BY id",
+                    [*by_id, f'%{keyword}%'])
+                for match in matches:
+                    row = by_id[match['policy_id']]
+                    if 'matched_attachment' in row:
+                        continue
+                    text = match['parsed_text']
+                    position = max(0, text.lower().find(keyword.lower()))
+                    row['matched_attachment'] = match['name']
+                    row['attachment_excerpt'] = text[max(0, position-30):position+len(keyword)+70]
+            return rows
 
     # ---------- 附件 ----------
     def add_attachment(self, policy_id: int, att: dict) -> int:
@@ -310,13 +325,40 @@ class Database:
         with self._conn:
             return [dict(r) for r in self._conn.execute("SELECT * FROM run_logs ORDER BY id DESC LIMIT ?", (limit,))]
 
+    def agent_event(self, run_id, fetch_id, action, status, message):
+        with self.tx() as cur:
+            cur.execute('INSERT INTO agent_events(run_id,fetch_id,action,status,message,created_at) VALUES(?,?,?,?,?,?)',
+                        (run_id,fetch_id,action,status,message,now()))
+
+    def run_progress(self, run_id, **fields):
+        if not run_id: return
+        with self.tx() as cur:
+            row=cur.execute('SELECT progress FROM run_logs WHERE run_id=?',(run_id,)).fetchone()
+            data=json.loads(row['progress'] or '{}') if row else {}
+            data.update(fields)
+            cur.execute('UPDATE run_logs SET progress=? WHERE run_id=?',(json.dumps(data,ensure_ascii=False),run_id))
+
+    def run_events(self, run_id, limit=100):
+        return [dict(r) for r in self._conn.execute('SELECT * FROM agent_events WHERE run_id=? ORDER BY id DESC LIMIT ?', (run_id,limit))][::-1]
+
+    def policy_agent_events(self, pid):
+        return [dict(r) for r in self._conn.execute("""SELECT * FROM agent_events WHERE fetch_id IN
+            (SELECT fetch_id FROM policy_sources WHERE policy_id=?) ORDER BY id DESC LIMIT 30""",(pid,))][::-1]
+
     def get_run_summary(self, run_id: str) -> Optional[dict]:
         with self._conn:
             r = self._conn.execute("SELECT * FROM run_logs WHERE run_id=?", (run_id,)).fetchone()
             return dict(r) if r else None
 
     def _migrate(self):
+        self._conn.executescript("""CREATE TABLE IF NOT EXISTS agent_events (
+            id INTEGER PRIMARY KEY, run_id TEXT NOT NULL DEFAULT '', fetch_id INTEGER,
+            action TEXT, status TEXT, message TEXT, created_at TEXT);
+            CREATE INDEX IF NOT EXISTS idx_agent_run ON agent_events(run_id,id);
+            CREATE INDEX IF NOT EXISTS idx_agent_fetch ON agent_events(fetch_id,id);""")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_attachment_policy ON attachments(policy_id)")
         additions = {
+            "run_logs": {"progress":"TEXT DEFAULT '{}'"},
             "source_configs": {"last_success_at": "TEXT", "last_error": "TEXT DEFAULT ''"},
             "fetch_records": {"last_checked_at": "TEXT", "policy_id": "INTEGER", "classification_json": "TEXT DEFAULT ''", "document_json":"TEXT DEFAULT ''"},
             "policies": {"reviewer_hint": "TEXT DEFAULT ''", "classification_method": "TEXT DEFAULT ''",
@@ -408,6 +450,19 @@ class Database:
         r=self._conn.execute("SELECT * FROM attachments WHERE id=?", (aid,)).fetchone()
         return dict(r) if r else None
 
+    def material_pending(self, pid):
+        row = self.get_policy(pid)
+        if row and row.get('parse_error'):
+            return True
+        from .quality import attachment_quality
+        if any(not attachment_quality(a)['parse_complete'] for a in self.list_attachments(pid)):
+            return True
+        return bool(self._conn.execute("""SELECT 1 FROM attachment_attempts t
+            WHERE t.fetch_id IN (SELECT fetch_id FROM policy_sources WHERE policy_id=?)
+            AND t.id=(SELECT MAX(t2.id) FROM attachment_attempts t2
+                      WHERE t2.fetch_id=t.fetch_id AND t2.url=t.url)
+            AND (t.download_status!='ok' OR t.parse_status!='ok') LIMIT 1""", (pid,)).fetchone())
+
     def audit(self, pid, action, categories=None, note=""):
         before=self.get_policy(pid)
         if not before:
@@ -420,8 +475,9 @@ class Database:
             raise ValueError("请选择有效的政策分类")
         if action == "confirm" and not before["category"]:
             raise ValueError("未分类政策请先调整分类后采纳")
+        material_pending = self.material_pending(pid)
         fields={"review_status": {"confirm":"confirmed","adjust":"adjusted","reject":"rejected"}[action],
-                "need_review":0, "parse_requires_review":0, "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
+                "need_review":int(material_pending and action != 'reject'), "parse_requires_review":int(material_pending), "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
         if action=="adjust":
             fields.update(category=",".join(cats),category_names=",".join(CATEGORY_CN[c] for c in cats))
         with self.tx() as c:
@@ -451,6 +507,40 @@ class Database:
                 "runs": one("SELECT COUNT(*) FROM run_logs"),
                 "attachments": one("SELECT COUNT(*) FROM attachments"),
             }
+
+    def region_overview(self) -> list[dict]:
+        """按地区汇总政策数量与四类分布，供"按省份浏览"使用。
+
+        地区取 policies.region（由来源的 region 落库）。一个地区可能对应多个来源
+        （如"国家"下有发改委、中国政府网），这里按地区合并——用户要的是
+        "哪个省收了多少、都是哪几类"，不是来源台账。
+
+        只统计当前版本、未被剔除的条目，与列表页口径保持一致；
+        否则页面上各省之和会大于"政策记录"总数，看起来像数据错了。
+
+        待办列用 need_review（本分支的字段）。注意另一条并行分支
+        （feat/scope-criteria-and-acceptance）把"待复核"细分成了 todo_type，
+        两条线在 policies 表结构上已不同（37 列 vs 40 列）——合并时要对齐。
+        """
+        with self._conn:
+            rows = self._conn.execute(
+                """
+                SELECT region,
+                       COUNT(*) AS total,
+                       MAX(page_date) AS latest_date,
+                       SUM(CASE WHEN category LIKE '%guide%'     THEN 1 ELSE 0 END) AS guide,
+                       SUM(CASE WHEN category LIKE '%access%'    THEN 1 ELSE 0 END) AS access,
+                       SUM(CASE WHEN category LIKE '%guarantee%' THEN 1 ELSE 0 END) AS guarantee,
+                       SUM(CASE WHEN category LIKE '%incentive%' THEN 1 ELSE 0 END) AS incentive,
+                       SUM(CASE WHEN need_review=1 THEN 1 ELSE 0 END) AS todo
+                FROM policies p
+                WHERE version=(SELECT MAX(version) FROM policies v WHERE v.policy_key=p.policy_key)
+                  AND review_status != 'rejected'
+                GROUP BY region
+                ORDER BY total DESC, region
+                """
+            ).fetchall()
+        return [dict(r) for r in rows]
 
     def record_attachment_attempts(self, fid, attachments):
         with self.tx() as c:

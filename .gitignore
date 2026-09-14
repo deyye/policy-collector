@@ -10,3 +10,13 @@ export_policies.csv
 .env.*
 !.env.example
 *.ingest.lock
+
+# 测试/调试临时目录（pytest 需要工作区内的 TMPDIR，不能落到系统 /tmp）
+.dvtmp/
+.tv*/
+.dbg*/
+.tmp*/
+
+# macOS
+.DS_Store
+.tf*/

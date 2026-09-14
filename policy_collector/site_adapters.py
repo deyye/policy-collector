@@ -217,3 +217,17 @@ def _jsfgw_detail(soup: BeautifulSoup, page_url: str) -> Optional[DetailResult]:
 
     return DetailResult(title=title[:300], content=content,
                         page_date=page_date, attachments=attachments)
+
+
+@register_detail_parser("yndrc.yn.gov.cn")
+def _yunnan_detail(soup: BeautifulSoup, page_url: str) -> Optional[DetailResult]:
+    con = soup.select_one(".show-content")
+    if con is None:
+        return None
+    content = _clean_text(con.get_text("\n", strip=True))
+    if not content:
+        return None
+    title = soup.find('meta', attrs={'name':'ArticleTitle'})
+    date = soup.find('meta', attrs={'name':'PubDate'})
+    return DetailResult(title=title.get('content','') if title else '', content=content,
+                        page_date=date.get('content','')[:10] if date else '')
