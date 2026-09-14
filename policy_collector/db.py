@@ -484,8 +484,21 @@ class Database:
         if action == "confirm" and not before["category"]:
             raise ValueError("未分类政策请先调整分类后采纳")
         material_pending = self.material_pending(pid)
+        # 必须**同时**更新 todo_type：页面统计与列表筛选读的都是 todo_type，
+        # 只清 need_review 的话，人复核完的这一条会继续挂在待办队列里出不去。
+        #   · 剔除      → 结论已定，出队
+        #   · 材料没齐  → 出人工队列，改挂"材料待补"（那是机器/运维的活）
+        #   · 其余      → 人的判断已经做完，出队
+        from .todo import HUMAN_QUEUES, MATERIAL, NONE
+        if action == "reject":
+            todo_type = NONE
+        elif material_pending:
+            todo_type = MATERIAL
+        else:
+            todo_type = NONE
         fields={"review_status": {"confirm":"confirmed","adjust":"adjusted","reject":"rejected"}[action],
-                "need_review":int(material_pending and action != 'reject'), "parse_requires_review":int(material_pending), "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
+                "need_review":int(todo_type in HUMAN_QUEUES), "todo_type":todo_type,
+                "parse_requires_review":int(material_pending), "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
         if action=="adjust":
             fields.update(category=",".join(cats),category_names=",".join(CATEGORY_CN[c] for c in cats))
         with self.tx() as c:

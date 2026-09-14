@@ -63,16 +63,28 @@ def test_search_attachment_and_web_excerpt(pipe):
 
 @pytest.mark.parametrize('action',['confirm','adjust'])
 def test_business_review_keeps_material_warning(pipe,action):
+    """人复核完、但材料还没齐 —— 材料提示不能丢，也不能还占着人的队列。
+
+    ⚠️ 这条断言改过一次（2026-09-14）：原来断言 `need_review==1`，
+    但合并后引入 `todo_type` 后，`need_review` 的含义收窄为"**业务**要看的"，
+    材料问题由 `todo_type='material'` 承载（与分类环节同一口径）。
+    所以现在断言更强的两件事：**出人工队列**（todo_type 不是 review/scope）
+    **且**材料缺口照常标记（todo_type='material' 且 parse_requires_review=1）。
+    """
     ingest(pipe);row=pipe.db.query_policies()[0]
     pipe.db.update_policy(row['id'],parse_error='正文尚不完整')
     pipe.db.audit(row['id'],action,['guarantee'],'已核对分类，等待补采')
     current=pipe.db.get_policy(row['id'])
-    assert current['need_review']==current['parse_requires_review']==1
+    assert current['todo_type']=='material', '材料没齐 → 挂"材料待补"，这是机器/运维的活'
+    assert current['todo_type'] not in ('review','scope','candidate'), '不能继续占人的队列'
+    assert current['parse_requires_review']==1
     assert current['review_status'] in ('confirmed','adjusted')
     assert pipe.db.query_policies(review_status='pending')
     pipe.db.update_policy(row['id'],parse_error='')
     pipe.db.audit(row['id'],'confirm')
-    assert pipe.db.get_policy(row['id'])['parse_requires_review']==0
+    settled=pipe.db.get_policy(row['id'])
+    assert settled['parse_requires_review']==0
+    assert settled['todo_type']=='none', '材料补齐后人已复核 → 彻底出队，不再出现在待办清单'
 
 
 def test_attachment_failure_cannot_be_cleared_by_confirm(pipe):
