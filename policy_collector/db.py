@@ -458,7 +458,25 @@ class Database:
         r=self._conn.execute("SELECT * FROM attachments WHERE id=?", (aid,)).fetchone()
         return dict(r) if r else None
 
-    def material_pending(self, pid):
+    def material_gaps(self, pid):
+        """材料是否存在**解析缺口**——用于 `parse_requires_review`（详情页"材料待核对"提示）。
+
+        ⚠️ **这不是"待办类型 material"的判据，别混用。** 两者是不同的问题：
+
+        | | 问的是 | 判据 | 用途 |
+        |---|---|---|---|
+        | 本方法 `material_gaps` | 材料**有没有解析缺口**（含 `partial`：正文已提取、个别页是图形/模板） | 要求 `parse_status` 恰好为 `ok` | `parse_requires_review`、详情页警告 |
+        | `todo.document_incomplete` | 材料**有没有拿到正文** | 正文为空才算缺 | `todo_type='material'`（机器自修） |
+
+        区别的后果很实际：实测 116 条同时发了 PDF 与 OFD 两个版本，
+        PDF 解析 `ok`、OFD `partial`——**正文其实拿到了两遍**。
+        按本方法判会出现"材料没齐"，按 `document_incomplete` 判则是"材料是好的"。
+        所以**待办派生必须用后者**（`partial` 这类缺口机器重试修不掉，
+        归"结论待确认"由人判断，不该记到机器账上）。
+
+        方法名原先叫 `material_pending`，与"待办里的材料待补"极易混淆
+        （合并时就因此被误用进了 `audit()`），故改名。
+        """
         row = self.get_policy(pid)
         if row and row.get('parse_error'):
             return True
@@ -483,22 +501,29 @@ class Database:
             raise ValueError("请选择有效的政策分类")
         if action == "confirm" and not before["category"]:
             raise ValueError("未分类政策请先调整分类后采纳")
-        material_pending = self.material_pending(pid)
+        gaps = self.material_gaps(pid)
+        # 待办类型用 `todo.document_incomplete`（材料有没有**拿到正文**），
+        # **不是** `material_gaps`（材料有没有解析缺口，含 partial）。
+        # 两者混用会让"PDF 解析成功、OFD 只给 partial"这类条目被判成"材料待补"
+        # ——正文其实拿到了两遍（实测 116 条属于这种双份形态）。
         # 必须**同时**更新 todo_type：页面统计与列表筛选读的都是 todo_type，
         # 只清 need_review 的话，人复核完的这一条会继续挂在待办队列里出不去。
-        #   · 剔除      → 结论已定，出队
-        #   · 材料没齐  → 出人工队列，改挂"材料待补"（那是机器/运维的活）
-        #   · 其余      → 人的判断已经做完，出队
-        from .todo import HUMAN_QUEUES, MATERIAL, NONE
+        #   · 剔除            → 结论已定，出队
+        #   · 材料没拿到正文  → 出人工队列，改挂"材料待补"（机器/运维的活）
+        #   · 其余            → 人的判断已经做完，出队
+        from types import SimpleNamespace
+        from .todo import HUMAN_QUEUES, MATERIAL, NONE, document_incomplete
+        doc = SimpleNamespace(parse_error=(before or {}).get('parse_error') or '',
+                              attachments=self.list_attachments(pid))
         if action == "reject":
             todo_type = NONE
-        elif material_pending:
+        elif document_incomplete(doc):
             todo_type = MATERIAL
         else:
             todo_type = NONE
         fields={"review_status": {"confirm":"confirmed","adjust":"adjusted","reject":"rejected"}[action],
                 "need_review":int(todo_type in HUMAN_QUEUES), "todo_type":todo_type,
-                "parse_requires_review":int(material_pending), "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
+                "parse_requires_review":int(gaps), "is_investment_policy":"no" if action=="reject" else "yes", "updated_at":now()}
         if action=="adjust":
             fields.update(category=",".join(cats),category_names=",".join(CATEGORY_CN[c] for c in cats))
         with self.tx() as c:

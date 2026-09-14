@@ -15,7 +15,7 @@
 
 该标记在入库时写入，之后材料状态可能变化（补采成功、重新解析、人工复核），
 标记不会自动跟着变。实测存在"材料早已修好、标记仍为 1"的记录，
-会让复核人看到一个不成立的警告。判据直接用 `db.material_pending()`——
+会让复核人看到一个不成立的警告。判据直接用 `db.material_gaps()`——
 与补采选择、人工复核用的是同一口径，本脚本不引入新规则。
 
 **注意**：它与 `todo.derive` 的"材料待补"**不是一回事**。待办那一格只认
@@ -52,7 +52,7 @@ def main() -> int:
 
     will_clear, will_set, unchanged = [], [], 0
     for r in rows:
-        want = 1 if db.material_pending(r['id']) else 0
+        want = 1 if db.material_gaps(r['id']) else 0
         have = int(r['parse_requires_review'] or 0)
         if want == have:
             unchanged += 1

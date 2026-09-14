@@ -94,6 +94,29 @@ def test_attachment_failure_cannot_be_cleared_by_confirm(pipe):
     assert pipe.db.get_policy(row['id'])['parse_requires_review']==1
 
 
+def test_audit_judges_material_by_text_not_by_parse_status(pipe):
+    """复核后挂不挂"材料待补"，看**有没有拿到正文**，不看 `parse_status` 是否恰好 ok。
+
+    实测形态（116 条）：政务站常把同一个文件同时发 PDF 与 OFD 两个版本，
+    PDF 解析 `ok`、OFD `partial`——**正文拿到了两遍**。若按 `parse_status` 判，
+    这类条目会被记成"材料待补"丢给机器，而机器根本无从下手（PDF 那份早就读完了）。
+    这正是本项目反复踩的那类错（把"拿到了一半"当成"没拿到"）。
+    """
+    ingest(pipe);row=pipe.db.query_policies()[0];pid=row['id']
+    with pipe.db.tx() as c:
+        c.execute("DELETE FROM attachments WHERE policy_id=?",(pid,))
+        for name,status in (('规划.pdf','ok'),('规划.ofd','partial')):
+            c.execute("INSERT INTO attachments(policy_id,name,parse_status,parsed_text) VALUES(?,?,?,?)",
+                      (pid,name,status,'正文段落。'*80))
+    pipe.db.update_policy(pid,parse_error='')
+
+    assert pipe.db.material_gaps(pid) is True, '有 partial 附件 → "材料待核对"提示该留'
+    pipe.db.audit(pid,'confirm')
+    cur=pipe.db.get_policy(pid)
+    assert cur['todo_type']=='none', '正文已拿到两遍，不该记成"材料待补"丢给机器'
+    assert cur['parse_requires_review']==1, '"材料待核对"是另一回事，照常保留'
+
+
 def test_reopen_confirmed_and_rejected_with_note_and_csrf(pipe):
     ingest(pipe);row=pipe.db.query_policies()[0]
     pipe.db.audit(row['id'],'confirm')

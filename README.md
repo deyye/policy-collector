@@ -974,26 +974,27 @@ c108363（解读）等 10 个子栏目聚在一页，实测 64 条文章链接**
 这样天然幂等，重判成功后它不再属于 `material`，下次不会重复触发（若一律重判，
 每次 repair 都会把全部条目再跑一遍模型）。
 
-**二、“材料是否完整”这句话，全仓库收敛成一个判据。**
-此前它在**五处**各写一遍，且都写成 `parse_status != 'ok'`：
+**二、两个"材料"判据必须分清——本项目反复踩的就是这一个。**
 
-- `Classifier.classify`
-- `pipeline._policy_row` 的 `parse_requires_review`
-- `pipeline` 的材料告警分支
-- `quality.attachment_quality` 的 `parse_complete`
-- `db.material_pending`
+| 判据 | 问的是 | 实现 | 用途 |
+|---|---|---|---|
+| **材料有没有拿到正文** | 拿不到才算缺 | `todo.document_incomplete()` / `missing_text()` | `todo_type='material'`（机器自修）、repair 是否重判 |
+| **材料有没有解析缺口** | 要求 `parse_status` 恰好为 `ok`（含 `partial`） | `db.material_gaps()`、`quality.attachment_quality` 的 `parse_complete` | `parse_requires_review`、详情页"材料待核对"提示 |
 
-于是 `partial`（文本已提取、只是转换过程有提示）被当成缺失。现已统一到
-`todo.document_incomplete()` / `todo.missing_text()`，新增判据一律复用。
+历史教训：这句话曾在**五处**各写一遍，且都写成 `parse_status != 'ok'`，于是 `partial`
+（文本已提取、只是转换过程有提示）被当成缺失——`material` 一度虚高，实测从 78 条降到 **32 条**。
 
-**三、但 `parse_requires_review`（"材料待核对"）不是同一个东西，别混用。**
-它的含义是"**材料有解析缺口**"，包含 `partial` 这类情况——实测 OFD 附件报
-"第2页含图形/模板或缺少文本，需渲染核对"：正文提取出来了，但个别页可能没读到。
-**机器重试修不掉**（要靠渲染 + OCR），所以它不该进"材料待补"那一格（责任方是机器），
-而要归"结论待确认"由人判断。**待办派生因此刻意不看这个字段**，
-详情页的"材料待核对"提示照常保留。
+`partial` 的实情是 OFD 附件报"第2页含图形/模板或缺少文本，需渲染核对"：正文提取出来了，
+个别页可能没读到。**机器重试修不掉**（要靠渲染 + OCR），所以它不该进"材料待补"那一格。
 
-实测影响：`material` 从 78 条降到 **32 条**——那 46 条材料其实是好的或只有图形页缺口。
+**结论：待办派生一律用第一个判据；第二个判据只用于"提示"，不参与待办。**
+
+**2026-09-14 实测的典型形态**：政务站常把同一份文件**同时发 PDF 与 OFD 两份**。
+607 条里 **116 条**两者判据不一致（PDF `ok` + OFD `partial`）——正文其实拿到了两遍。
+合并时 `audit()` 曾误用第二个判据（当时方法名 `material_pending`，与"待办里的材料待补"
+极易混淆），会让复核完这类条目被改挂"材料待补"、丢给机器。已改用第一个判据，
+并把方法**改名为 `material_gaps`** 以免再混；两者差异由
+`tests/test_review_fixes.py::test_audit_judges_material_by_text_not_by_parse_status` 锁住。
 
 ### 结果
 
