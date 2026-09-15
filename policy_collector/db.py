@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Optional
@@ -537,6 +538,70 @@ class Database:
         return [dict(r) for r in self._conn.execute("SELECT * FROM review_events WHERE policy_id=? ORDER BY id DESC", (pid,))]
 
     # ---------- 仪表盘统计 ----------
+    # ---------- 维护：备份 / 清空 ----------
+    # 清空是**破坏性**动作，因此固定三件事：
+    #   ① 先备份库文件（可回滚）  ② 口令里带当前条数（范围漂移守卫）  ③ 采集运行中拒绝
+    # `source_configs`（来源配置）**永不参与清空**——它是配置不是数据，清掉就得重配 34 个来源。
+    CLEARABLE_TABLES = {
+        "library": ("review_events", "attachment_attempts", "attachments",
+                    "policy_sources", "policies"),
+        "logs": ("run_logs", "agent_events"),
+    }
+    PROTECTED_TABLES = ("source_configs",)
+
+    def _table_names(self) -> set:
+        return {r[0] for r in self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
+
+    def storage_stats(self) -> dict:
+        """各表行数与库文件体积——清空前先让人看清要清掉多少。"""
+        counts = {t: self._conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                  for t in sorted(self._table_names())}
+        p = Path(self.db_path)
+        return {"counts": counts, "db_bytes": p.stat().st_size if p.exists() else 0,
+                "protected": list(self.PROTECTED_TABLES)}
+
+    def backup(self, label: str = "manual") -> str:
+        """在线备份一份库文件。
+
+        用 SQLite 的 backup API，而不是直接拷贝文件：库跑在 WAL 模式下，
+        已提交但尚未 checkpoint 的内容还在 -wal 里，`cp policy.db` 会丢这部分。
+        """
+        dest_dir = Path(self.db_path).parent / "backups"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / f"policy-{time.strftime('%Y%m%d-%H%M%S')}-{label}.db"
+        with self._lock:
+            dst = sqlite3.connect(str(dest))
+            try:
+                self._conn.backup(dst)
+            finally:
+                dst.close()
+        return str(dest)
+
+    def clear(self, scope: str = "library") -> dict:
+        """清空业务数据。scope: library（政策库）/ logs（运行日志）/ all。"""
+        if scope not in ("library", "logs", "all"):
+            raise ValueError(f"未知的清空范围：{scope}")
+        groups = ("library", "logs") if scope == "all" else (scope,)
+        existing = self._table_names()
+        deleted: dict[str, int] = {}
+        with self._lock, self.tx() as cur:
+            for g in groups:
+                for t in self.CLEARABLE_TABLES[g]:
+                    if t not in existing:
+                        continue
+                    cur.execute(f"SELECT COUNT(*) FROM {t}")
+                    deleted[t] = cur.fetchone()[0]
+                    cur.execute(f"DELETE FROM {t}")
+                    # 自增游标一并归零，清空后编号从 1 开始（旧链接本就已失效）
+                    cur.execute("DELETE FROM sqlite_sequence WHERE name=?", (t,))
+            if "library" in groups and "fetch_records" in existing:
+                # fetch_records 保留（它是采集台账，重采时的处理队列就读它），
+                # 但**必须解开指向已删政策的引用**：quality.py 靠这个字段 JOIN 取来源名，
+                # 留着悬空 id 会让统计静默少行——这正是本项目反复出现的"静默丢数据"。
+                cur.execute("UPDATE fetch_records SET policy_id=NULL WHERE policy_id IS NOT NULL")
+        return {"scope": scope, "deleted": deleted, "total": sum(deleted.values())}
+
     def dashboard(self) -> dict:
         with self._conn:
             def one(sql: str, *a: Any) -> int:

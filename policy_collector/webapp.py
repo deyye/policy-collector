@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import threading
 import secrets
+import time
 from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, url_for, g, session, send_file
@@ -348,6 +349,58 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         return render_template('model_settings.html',base_url=cfg.llm.base_url,model=cfg.llm.effective_model,
             key_env=cfg.llm.api_key_env,key_configured=bool(cfg.llm.api_key),result=result,
             provider='dashscope' if 'aliyun' in cfg.llm.base_url else 'custom')
+
+    # ---------------- 数据维护：备份 / 清空 ----------------
+    def _backup_dir() -> Path:
+        return Path(cfg.db_path).parent / "backups"
+
+    def _list_backups(limit: int = 8) -> list:
+        d = _backup_dir()
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("policy-*.db"), key=lambda x: x.stat().st_mtime, reverse=True)[:limit]:
+            st = p.stat()
+            out.append({"name": p.name, "mb": round(st.st_size / 1048576, 1),
+                        "at": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime))})
+        return out
+
+    def _clear_token(d: Database, scope: str) -> str:
+        """口令 = CLEAR-<本次将被清掉的总条数>。
+
+        数字进口令是一道**范围漂移守卫**：页面渲染时算出的清空范围，若在提交前
+        又采进了新数据，服务端会因口令不符而**拒绝**，而不是照着旧范围把新数据一并清掉。
+        """
+        counts = d.storage_stats()["counts"]
+        groups = ("library", "logs") if scope == "all" else (scope,)
+        n = sum(counts.get(t, 0) for g in groups for t in Database.CLEARABLE_TABLES[g])
+        return f"CLEAR-{n}"
+
+    @app.route("/maintenance")
+    def maintenance():
+        d = db()
+        return render_template("maintenance.html", stats=d.storage_stats(),
+                               backups=_list_backups(), running=_RUN_LOCK.locked(),
+                               tokens={s: _clear_token(d, s) for s in ("library", "logs", "all")})
+
+    @app.route("/maintenance/clear", methods=["POST"])
+    def maintenance_clear():
+        d = db()
+        if _RUN_LOCK.locked():
+            flash("采集任务正在运行，已拒绝清空——请等它跑完再操作。", "warn")
+            return redirect(url_for("maintenance"))
+        scope = (request.form.get("scope") or "").strip()
+        if scope not in ("library", "logs", "all"):
+            abort(400)
+        expect = _clear_token(d, scope)
+        if not secrets.compare_digest((request.form.get("confirm") or "").strip(), expect):
+            flash(f"确认口令已过期（当前应为 {expect}）。多半是页面打开后又采进了新数据，请刷新后重试。", "warn")
+            return redirect(url_for("maintenance"))
+        backup = d.backup(label="before-clear")
+        result = d.clear(scope)
+        label = {"library": "政策库", "logs": "运行日志", "all": "政策库与运行日志"}[scope]
+        flash(f"已清空{label}，共 {result['total']} 条记录。清空前已自动备份：{Path(backup).name}", "ok")
+        return redirect(url_for("maintenance"))
 
     @app.get("/health")
     def health():

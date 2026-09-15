@@ -1,5 +1,5 @@
 {% from '_ui.html' import icon %}
-{% set page_names = {'index':'工作总览','policies':'政策资料库','policy_detail':'政策详情','todos':'待办清单','provinces':'省份浏览','sources':'采集来源','runs':'处理进度','run_detail':'处理过程','model_settings':'模型配置','material_quality':'材料质量'} %}
+{% set page_names = {'index':'工作总览','policies':'政策资料库','policy_detail':'政策详情','todos':'待办清单','provinces':'省份浏览','sources':'采集来源','runs':'处理进度','run_detail':'处理过程','model_settings':'模型配置','material_quality':'材料质量','maintenance':'数据维护'} %}
 <!DOCTYPE html><html lang="zh-CN"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#132d4c">
@@ -11,7 +11,7 @@
 <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span><strong>投资政策</strong><small>智能归集 · 研究工作台</small></span></a>
 <div class="nav-caption">工作空间 <span>WORKSPACE</span></div>
 <nav class="side-nav">
-{% for endpoint, name, glyph in [('index','工作总览','grid'),('todos','待办清单','check'),('policies','政策资料库','file'),('provinces','省份浏览','flag'),('sources','采集来源','globe'),('runs','处理进度','activity'),('material_quality','材料质量','shield'),('model_settings','模型配置','model')] %}
+{% for endpoint, name, glyph in [('index','工作总览','grid'),('todos','待办清单','check'),('policies','政策资料库','file'),('provinces','省份浏览','flag'),('sources','采集来源','globe'),('runs','处理进度','activity'),('material_quality','材料质量','shield'),('model_settings','模型配置','model'),('maintenance','数据维护','folder')] %}
 {% set active = request.endpoint == endpoint or (endpoint == 'policies' and request.endpoint == 'policy_detail') or (endpoint == 'runs' and request.endpoint == 'run_detail') %}
 <a href="{{ url_for(endpoint) }}" class="nav-item {{ 'active' if active else '' }}" {% if active %}aria-current="page"{% endif %}>{{ icon(glyph) }}<span>{{ name }}</span>{% if active %}<span class="nav-indicator"></span>{% endif %}</a>
 {% endfor %}
