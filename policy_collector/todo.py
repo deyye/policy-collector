@@ -58,8 +58,15 @@ HUMAN_QUEUES = (REVIEW, SCOPE)
 
 
 def missing_text(attachments) -> bool:
-    """附件里是否存在**拿不到正文**的。"""
-    return any(not (a.get("parsed_text") or "").strip() for a in attachments or [])
+    """附件里是否存在**拿不到正文**的。
+
+    判定与质量统计共用 `quality.attachment_no_text`，**不要在这里再手写一遍**：
+    此前这里写成"任何附件没有正文就算缺"，而湖北**每篇都挂一个 `<id>.zip`**
+    （站点提供的"本条内容打包下载"），结果刚采回来的 **913 条政策全部**被判成
+    "材料待补"——演示时看着像系统一堆问题，其实材料是齐的。
+    """
+    from .quality import attachment_no_text
+    return any(attachment_no_text(a) for a in attachments or [])
 
 
 def document_incomplete(doc) -> bool:

@@ -90,16 +90,23 @@ def main() -> int:
                                         for a in atts])
             cls = rule.classify(doc)
             todo = cls.todo_type
-            # material 由材料完整性决定：规则分类器不看附件，这里补上
-            if (r.get("parse_error") or "").strip() or any(
-                    not (a.get("parsed_text") or "").strip() for a in atts):
+            # material 由材料完整性决定：规则分类器不看附件，这里补上。
+            # 判据必须用 quality 里那**一个**（含打包件豁免）——这里原先自己写了一遍
+            # "任何附件没正文就算材料待补"，会把湖北那种 <id>.zip 打包件误判成缺口。
+            from policy_collector.quality import count_attachment_gaps
+            if (r.get("parse_error") or "").strip() or count_attachment_gaps(atts) > 0:
                 todo = MATERIAL
             fields = {"is_investment_policy": cls.is_investment_policy, "category": cls.category,
                       "category_names": cls.category_names, "doc_type": cls.doc_type,
                       "need_review": int(cls.need_review), "reason": cls.reason,
                       "reviewer_hint": cls.reviewer_hint, "model_version": cls.model_version}
         after[todo] += 1
-        if todo != (r.get("todo_type") or "none"):
+        # 重判过的条目**一律写回**，不只在待办类型变化时写。
+        # 原因：结论字段（is_investment_policy / category / reason / model_version）
+        # 本身也可能变，而"待办类型没变"不等于"结论没变"。只在变化时写，
+        # 会让 model_version 停在旧值上——"这条究竟用哪版规则判的"就查不出来了。
+        # `--mode todo` 的 fields 为空，行为保持不变（只写变化项）。
+        if todo != (r.get("todo_type") or "none") or fields:
             updates.append((todo, r["id"], fields))
 
     print(f"模式 {args.mode}｜{'写库' if args.apply else '干跑（不写库）'}｜库内 {len(rows)} 条")

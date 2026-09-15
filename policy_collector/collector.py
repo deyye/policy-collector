@@ -231,7 +231,9 @@ class Collector:
                                        content_type=resp.headers.get("Content-Type", ""),
                                        sha256=hashlib.sha256(data).hexdigest())
             except requests.RequestException as e:
-                last_err = type(e).__name__
+                # 记**完整信息**，不只异常类型名。湖北那次 293 条失败只留下 "ProxyError"
+                # 三个字，复现时手工请求却是 200——查不出到底是超时、连接重置还是代理。
+                last_err = f"{type(e).__name__}: {str(e)[:180]}"
                 if attempt < self.cfg.fetch.retries:
                     time.sleep(min(10, self.cfg.fetch.retry_backoff_seconds * (attempt + 1)))
         return FetchResult(ok=False, url=url, error=last_err)

@@ -132,20 +132,25 @@ def is_pack(att: dict) -> bool:
     return (att.get('name') or '').lower().endswith(PACK_SUFFIXES)
 
 
+def attachment_no_text(att: dict) -> bool:
+    """这个附件是否**没给我们正文**。
+
+    打包件不算——它是"本条内容的打包下载"，不是一个独立材料。
+    与 `is_attachment_gap` 的区别只有一个：**这里不管下载是否成功**。
+    待办派生要的是这个语义（没下下来同样算"材料没拿到"）；
+    质量统计把"没下下来"归 `attachments_failed`、不重复计，那边才用 `is_attachment_gap`。
+    """
+    if (att.get('parsed_text') or '').strip():
+        return False
+    return not is_pack(att)
+
+
 def is_attachment_gap(att: dict, siblings=None) -> bool:
-    """单个附件是否构成"材料缺口"：**没拿到可用正文**才算。
+    """单个附件是否构成"材料缺口"（**统计口径**）：没拿到正文、且确实下载下来了。
 
-    两条都实测过，别按直觉改回去：
-
-    1. `partial`（已出文本、只是转换过程留了提示）**不算缺口**。
-    2. **打包件不算缺口**——它不是一个独立材料，而是"本条内容的打包下载"。
-       湖北每篇都挂一个 `<id>.zip`，逐个拆开核对过：里面是正文的 PDF 版
-       （成品油调价那条）、同页其他附件的副本（招标文件那条），甚至是**空包**。
-       原件照旧下载留存（`error` 写明"原件保留"）、详情页也照旧标注它未展开，
-       所以这不是"假装拿到"，只是不把它记进缺口而让人白跑一趟。
-
-    下载就没成功的（无 sha256）归 `attachments_failed`，这里不重复计。
-    `siblings` 仅作调用方留白，当前判据不依赖同条目其他附件。
+    打包件豁免的实测依据：湖北每篇都挂一个 `<id>.zip`，逐个拆开核对过——
+    里面是正文的 PDF 版（成品油调价那条）、同页其他附件的副本（招标文件那条），
+    甚至**空包**。原件照旧留存、详情页照旧标注它未展开，只是不记成缺口。
     """
     if (att.get('parsed_text') or '').strip():
         return False
