@@ -21,6 +21,33 @@ DEFAULT_SOURCES = PROJECT_ROOT / "config" / "sources.yaml"
 DEFAULT_CLASSIFY = PROJECT_ROOT / "config" / "classification.yaml"
 
 
+# 由项目 `.env` 注入的键名。见 `shell_env()` 的说明：不记来源就分不清
+# "shell 显式 export" 与 "本机 .env 文件"，也就排不出正确的优先级。
+_DOTENV_KEYS: set = set()
+
+
+def shell_env(name: str) -> str:
+    """取**用户 shell 显式设置**的环境变量；由项目 `.env` 注入的不算。
+
+    排优先级用。`.env` 和界面保存的 `llm.local.json` 都是"本机文件"：
+    界面是更明确的一次操作，应当盖住 `.env`。而 shell 里 export 的变量
+    用于 CI/运维，仍然最高优先。
+
+    不区分这两者的话，用户在界面上改密钥**永远无效**——他填、他保存、页面
+    显示"已保存"，实际用的还是 `.env` 那份。这正是"配置写了但没接上"。
+    """
+    if not name or name in _DOTENV_KEYS:
+        return ""
+    return (os.environ.get(name) or "").strip()
+
+
+def dotenv_env(name: str) -> str:
+    """取由项目 `.env` 注入的值；只在没有任何本机界面配置时作兜底。"""
+    if not name or name not in _DOTENV_KEYS:
+        return ""
+    return (os.environ.get(name) or "").strip()
+
+
 def _load_dotenv(path: Path) -> None:
     """极简 .env 读取：KEY=VALUE（支持引号与 # 注释），不覆盖已存在的环境变量。
 
@@ -44,7 +71,9 @@ def _load_dotenv(path: Path) -> None:
             continue
         value = " ".join(parts)
         if value:  # .env.example 的空值不覆盖 YAML/本机配置
-            os.environ.setdefault(key, value)
+            if key not in os.environ:
+                os.environ[key] = value
+                _DOTENV_KEYS.add(key)   # 记下来源，供 shell_env/dotenv_env 区分
 
 
 
@@ -64,11 +93,18 @@ class LLMConfig:
 
     @property
     def api_key(self) -> str:
-        return os.environ.get("LLM_API_KEY") or os.environ.get(self.api_key_env) or self.local_api_key
+        """优先级：shell 显式环境变量 > 界面保存的本机配置 > 项目 `.env`。
+
+        界面加在中间是刻意的：用户在页面上刚改过密钥，就不该再被 `.env` 里的旧值盖住。
+        """
+        return (shell_env("LLM_API_KEY") or shell_env(self.api_key_env)
+                or self.local_api_key
+                or dotenv_env("LLM_API_KEY") or dotenv_env(self.api_key_env))
 
     @property
     def effective_model(self) -> str:
-        return os.environ.get("LLM_MODEL") or self.model
+        # 同 api_key：shell 显式设置优先；`.env` 的值已由 load_model_settings 兜底写进 self.model
+        return shell_env("LLM_MODEL") or self.model
 
 
 @dataclass

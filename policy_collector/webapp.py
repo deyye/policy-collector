@@ -28,6 +28,21 @@ from .todo import TODO_META, TODO_ORDER
 CAT_CODES = {"guide": "引导类", "access": "准入类", "guarantee": "保障类", "incentive": "激励约束类"}
 
 
+def _form_prefer(cfg) -> str:
+    """采集实际使用的判定方式：**停用大模型后一律回落本地规则**。
+
+    这是「启用/停用」开关在采集链路上的落点。若这里不生效，开关就只是个显示项：
+    页面写着"已停用"，采集却照样调用模型——既花钱，又因为两边说法不一致而难以自查。
+    """
+    requested = request.form.get("prefer", "llm")
+    if requested not in ("llm", "rule"):
+        abort(400)
+    if requested == "llm" and not cfg.llm.enabled:
+        flash("当前未启用大模型，本次采集使用本地规则。可在「模型配置」中启用。", "warn")
+        return "rule"
+    return requested
+
+
 def row_todo(policy: dict) -> str:
     """行上的待办类型：**直接读列**（判定环节派生后落库）。
 
@@ -204,7 +219,8 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
             s["in_config"] = s["name"] in cfg.sources
             s["note"] = cfg.sources[s["name"]].note if s["in_config"] else ""
         from .llm_client import LLMClient
-        return render_template("sources.html", rows=rows, model_ready=LLMClient(cfg.llm).available)
+        return render_template("sources.html", rows=rows, model_ready=LLMClient(cfg.llm).available,
+                               model_enabled=bool(cfg.llm.enabled))
 
     def _run_worker(source_name: str, prefer: str, retry_only=False) -> None:
         pipe = None
@@ -238,8 +254,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
     @app.route("/sources/run-all", methods=["POST"])
     def source_run_all():
         """一键全国采集：不必逐个来源点「开始采集」。"""
-        prefer = request.form.get('prefer', 'llm')
-        if prefer not in ('llm', 'rule'): abort(400)
+        prefer = _form_prefer(cfg)
         names = [n for n, s in cfg.sources.items()
                  if s.enabled and not s.list_url.startswith('file:')]
         if not names:
@@ -277,8 +292,7 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
         if src is None or not src.enabled:
             flash(f"来源 {name} 不在当前 sources.yaml 中", "warn")
             return redirect(url_for("sources"))
-        prefer = request.form.get('prefer', 'llm')
-        if prefer not in ('llm','rule'): abort(400)
+        prefer = _form_prefer(cfg)
         if not _RUN_LOCK.acquire(blocking=False):
             flash('已有采集任务运行，请等待完成', 'warn')
             return redirect(url_for('runs'))
@@ -329,26 +343,35 @@ def create_app(cfg: AppConfig | None = None) -> Flask:
 
     @app.route('/settings/model', methods=['GET','POST'])
     def model_settings():
-        from .model_settings import save_model_settings, connection_check
+        from .model_settings import (provider_options, describe_settings,
+                                     save_model_settings, set_enabled, connection_check)
         result=None
         if request.method=='POST':
             if _RUN_LOCK.locked():
                 flash('采集运行中，请结束后再修改或检查模型配置','warn')
                 return redirect(url_for('model_settings'))
+            action=request.form.get('action','save')
             try:
-                if request.form.get('action')=='check':
+                if action=='check':
                     result=connection_check(cfg)
+                elif action=='toggle':
+                    want=request.form.get('enabled')=='1'
+                    set_enabled(cfg,want)
+                    flash('已启用大模型：后续采集使用大模型判断。' if want else
+                          '已停用大模型：后续采集一律使用本地规则，不产生模型调用费用。','ok')
+                    return redirect(url_for('model_settings'))
                 else:
+                    # enabled=None = 保留当前开关状态：保存配置不改变启用与否
                     save_model_settings(cfg,request.form.get('provider','dashscope'),
                         request.form.get('base_url',''),request.form.get('model',''),
-                        request.form.get('api_key','').strip(),request.form.get('api_key_env',''))
-                    flash('配置已保存在本机，后续新采集任务使用新配置；可点击检查连接。','ok')
+                        request.form.get('api_key','').strip(),request.form.get('api_key_env',''),
+                        enabled=None)
+                    flash('配置已保存在本机（密钥不回显）。','ok')
                     return redirect(url_for('model_settings'))
             except ValueError as exc:
                 flash(str(exc),'warn')
-        return render_template('model_settings.html',base_url=cfg.llm.base_url,model=cfg.llm.effective_model,
-            key_env=cfg.llm.api_key_env,key_configured=bool(cfg.llm.api_key),result=result,
-            provider='dashscope' if 'aliyun' in cfg.llm.base_url else 'custom')
+        return render_template('model_settings.html',providers=provider_options(),
+            state=describe_settings(cfg),result=result)
 
     # ---------------- 数据维护：备份 / 清空 ----------------
     def _backup_dir() -> Path:

@@ -293,7 +293,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--review", default="", help="可限定 confirmed/adjusted/pending")
 
     p=sub.add_parser('configure-llm',help='交互配置本机真实模型服务，密钥不回显')
-    p.add_argument('--provider',choices=['dashscope','custom'],default='dashscope')
+    from .model_settings import PROVIDER_ORDER   # 与「模型配置」页同一份预设清单
+    p.add_argument('--provider',choices=PROVIDER_ORDER,default='dashscope')
     p.add_argument('--base-url',default='')
     p.add_argument('--model',default='')
     p.add_argument('--key-env',default='')

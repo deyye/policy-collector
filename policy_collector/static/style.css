@@ -2247,3 +2247,18 @@ pre.content {
 .todo-chip.review    { background:#faeeed; color:#a8605a }
 .todo-chip.scope     { background:#f0eefa; color:#6b5c9a }
 .feed-why { color:#9b7a41 }
+
+/* ── 模型配置：启用开关（2026-09-15）────────────────────────────
+   这个页面的主线是"现在到底走不走大模型"，所以状态块给足视觉重量：
+   圆点分三态（可用 / 已启用但缺配置 / 未启用），右侧是一键开关。 */
+.panel.model-state { display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:22px 26px; margin-bottom:14px }
+.model-state .dot { flex:none; width:10px; height:10px; border-radius:50%; background:#c3ccd6; box-shadow:0 0 0 4px #eef2f6 }
+.model-state .dot.on { background:#4f8a5b; box-shadow:0 0 0 4px #e8f2ea }
+.model-state .dot.idle { background:#c08a3e; box-shadow:0 0 0 4px #f8f0e2 }
+.model-state-text { flex:1; min-width:240px }
+.model-state-text h2 { font-size:15px; margin-bottom:6px }
+.model-state-text p { font-size:11px; color:var(--muted); line-height:1.9 }
+.model-kv { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; padding:18px 26px;
+  margin-bottom:22px; background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow) }
+.model-kv div { font-size:11px; color:var(--muted) }
+.model-kv strong { display:block; font-size:12px; font-weight:500; color:var(--ink); margin-top:6px; word-break:break-all }
