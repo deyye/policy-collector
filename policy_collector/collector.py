@@ -201,7 +201,14 @@ class Collector:
         host = urllib.parse.urlsplit(target).hostname or ""
         last_err = ""
         for attempt in range(self.cfg.fetch.retries + 1):
-            wait = self.cfg.fetch.request_interval_seconds - (time.monotonic() - self._last_request)
+            # 需要过动态防护的站，请求间隔**自动放慢**。实测湖北：按 0.5 秒连抓 1200+
+            # 条后触发风控——全站返回 412（300 条重试全军覆没、0.5 秒/条即失败），
+            # 而间隔 3 秒时 8/8 立刻恢复。这类站本来就是"需要客气对待"的站，
+            # 所以不必单独配置：只要过了握手，就按更保守的间隔走。
+            interval = self.cfg.fetch.request_interval_seconds
+            if host in self._handshakes:
+                interval = max(interval, 2.5)
+            wait = interval - (time.monotonic() - self._last_request)
             if wait > 0:
                 time.sleep(wait)
             self._last_request = time.monotonic()

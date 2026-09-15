@@ -492,6 +492,13 @@ class Pipeline:
             self._event('discover','running','正在发现官网政策文件；此阶段暂不估计总量')
             total=RunStats();start=time.monotonic();note=''
             try:
+                # 无论是否只重试失败项，都先过一次防护挑战。`--retry-only` 会**跳过
+                # discover**，也就跳过了写在 discover 里的那次握手——没有 cookie 时
+                # 详情页全是 412。实测 300 条重试因此"0.5 秒/条全军覆没"，看上去
+                # 像网络或限速问题，其实是没握手。ensure_handshake 自带缓存，
+                # 与 discover 里那次不会重复开浏览器。
+                if src.handshake:
+                    self.collector.ensure_handshake(src.handshake)
                 if not retry_only:
                     total+=self.discover(src,run_id)
                     note='\n'.join(self.discovery_errors)
