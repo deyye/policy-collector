@@ -166,6 +166,22 @@ def _key_source(cfg) -> str:
     return ''
 
 
+def effective_api_key_env_name(cfg, provider: str) -> str:
+    """密钥环境变量的**展示/快照**名称：跟随所选服务的预设，而不是 YAML 的默认值。
+
+    背景：`config.yaml` 的默认是 `DASHSCOPE_API_KEY`，一旦服务改用 DeepSeek，
+    这个默认值就与实际服务对不上——页面会显示成"服务是 DeepSeek、变量却是
+    DASHSCOPE_API_KEY"。
+
+    出现两处（页面展示、首次停用时的快照），故收敛到一处：同一件事写两遍，
+    迟早两边不一致。若该变量名**确实有值**（正在被使用），则原样保留。
+    """
+    env_name = (cfg.llm.api_key_env or '').strip()
+    if provider in PROVIDERS and not (os.environ.get(env_name) or '').strip():
+        return PROVIDERS[provider]['api_key_env']
+    return env_name
+
+
 def describe_settings(cfg) -> dict:
     """当前模型配置的**如实**状态，供页面显示。"""
     path = settings_path(cfg)
@@ -192,10 +208,9 @@ def describe_settings(cfg) -> dict:
         'provider_label': PROVIDERS[provider]['label'],
         'base_url': base_url,
         'model': cfg.llm.effective_model,
-        # 未保存过配置时跟随所选服务的预设名：否则会出现"服务是 DeepSeek、
-        # 密钥变量却是 DASHSCOPE_API_KEY"这种自相矛盾的展示（config.yaml 的默认值）。
+        # 未保存过配置时跟随所选服务的预设名，与首次停用的快照用同一判据
         'api_key_env': (cfg.llm.api_key_env if saved.get('api_key_env')
-                        else PROVIDERS[provider]['api_key_env']),
+                        else effective_api_key_env_name(cfg, provider)),
         'has_key': bool(cfg.llm.api_key),
         'key_source': source,
         'key_source_label': ('本机配置文件' if source == 'file'
@@ -280,11 +295,26 @@ def save_model_settings(cfg, provider='dashscope', base_url='', model='', api_ke
 
 
 def set_enabled(cfg, enabled: bool):
-    """只改启用开关，不动地址、模型与密钥——开关要能随手开合。"""
+    """只改启用开关，不动地址、模型与密钥——开关要能随手开合。
+
+    ⚠️ 配置文件**不存在也要能停用**。只用 `.env` / YAML 配密钥、从没在界面保存过的
+    用户（本机的现状就是如此）点"停用"时，原先会报"尚未配置模型服务"而失败——
+    他明明正在用大模型，却被拒绝关闭。截图复核时抓到的就是这个。
+
+    首次停用会把**当前实际生效**的地址与模型名一并快照落盘：否则下次加载时
+    `saved=True` 会让 `.env` 不再兜底，地址与模型名凭空消失。
+    密钥不快照（`local_api_key` 为空时留空），避免把 `.env` 的密钥复制一份到新文件。
+    """
     path = settings_path(cfg)
-    if not path.exists():
-        raise ValueError('尚未配置模型服务，请先填写并保存')
-    data = json.loads(path.read_text(encoding='utf-8'))
+    if path.exists():
+        data = json.loads(path.read_text(encoding='utf-8'))
+    else:
+        provider = detect_provider(cfg.llm.base_url)
+        data = {'provider': provider,
+                'base_url': cfg.llm.base_url, 'model': cfg.llm.model,
+                'api_key_env': effective_api_key_env_name(cfg, provider),
+                'api_key': cfg.llm.local_api_key,
+                'enable_thinking': cfg.llm.enable_thinking}
     data['enabled'] = bool(enabled)
     return _write(cfg, data)
 

@@ -6,6 +6,8 @@
   2. Web 层：页面不回显密钥、toggle 只改开关、保存不改开关
   3. 采集层：停用后请求"自动处理"会被强制回落为本地规则
 """
+import json
+
 import pytest
 
 from policy_collector.config import AppConfig, LLMConfig
@@ -100,10 +102,27 @@ def test_set_enabled_only_touches_the_flag(cfg):
     assert cfg.llm.api_key == 'key-1'
 
 
-def test_set_enabled_before_configure_raises(cfg):
-    with pytest.raises(ValueError, match='尚未配置'):
-        set_enabled(cfg, True)
+def test_set_enabled_works_before_any_save(cfg):
+    """只用 .env 配密钥、从没在界面保存过的用户，也必须能关闭大模型。
+
+    实测踩过：配置文件不存在时原先直接抛错，他明明在用大模型却点不动"停用"。
+    """
+    cfg.llm.base_url = 'https://api.deepseek.com/v1'
+    cfg.llm.model = 'deepseek-chat'
     assert not settings_path(cfg).exists()
+    set_enabled(cfg, False)
+    assert cfg.llm.enabled is False
+    # 首次停用要把当前生效的地址与模型快照下来，否则下次加载会丢失
+    assert cfg.llm.base_url == 'https://api.deepseek.com/v1'
+    assert cfg.llm.model == 'deepseek-chat'
+    saved = json.loads(settings_path(cfg).read_text(encoding='utf-8'))
+    assert saved['enabled'] is False and saved['base_url'] == 'https://api.deepseek.com/v1'
+    assert saved['api_key'] == '', '不该把 .env 里的密钥复制进新文件'
+    # 变量名跟服务走，不能留下 YAML 的 DASHSCOPE_API_KEY（与实际服务对不上）
+    assert saved['api_key_env'] == 'DEEPSEEK_API_KEY'
+    assert saved['provider'] == 'deepseek'
+    set_enabled(cfg, True)
+    assert cfg.llm.enabled is True and cfg.llm.base_url == 'https://api.deepseek.com/v1'
 
 
 def test_changing_host_requires_a_new_key(cfg):
