@@ -111,3 +111,53 @@ def repair_materials(pipe, source='', limit=20, local_only=False, prefer='llm', 
         pipe.db.finish_run(run_id,total.to_dict(),status='partial' if total.has_errors else 'ok',
                            note='原件补采与重解析；'+('仅使用本地原件' if local_only else '允许补采缺失附件'))
     return {'run_id':run_id,'selected':len(selected),'stats':total.to_dict(),'outcomes':outcomes}
+
+
+# ---------- 附件缺口判据（全仓库唯一口径）----------
+# 两件事反复踩过，所以集中到一处，别再各写一份：
+#   1) `partial`（已出文本、只是转换过程留了提示）**不算缺口**——按 parse_status != 'ok'
+#      直接数，会把附件其实已可判读的站点误判成接入未通过。
+#   2) **打包件（zip 等）在同条目其他附件已给出正文时不算缺口**。站点常附一个
+#      "全部附件打包下载"（湖北每篇都带 <id>.zip，解开就是同页那些 wps/pdf），
+#      我们不解压它，但材料并不缺。不分青红皂白地数，会把"材料齐了"报成"有缺口"。
+PACK_SUFFIXES = ('.zip', '.rar', '.7z', '.tar', '.gz', '.tgz', '.bz2', '.xz')
+
+
+def _attachment_key(att: dict):
+    return att.get('url') or att.get('name')
+
+
+def is_pack(att: dict) -> bool:
+    """是否是"打包下载"件（zip 等容器）。"""
+    return (att.get('name') or '').lower().endswith(PACK_SUFFIXES)
+
+
+def is_attachment_gap(att: dict, siblings=None) -> bool:
+    """单个附件是否构成"材料缺口"：**没拿到可用正文**才算。
+
+    两条都实测过，别按直觉改回去：
+
+    1. `partial`（已出文本、只是转换过程留了提示）**不算缺口**。
+    2. **打包件不算缺口**——它不是一个独立材料，而是"本条内容的打包下载"。
+       湖北每篇都挂一个 `<id>.zip`，逐个拆开核对过：里面是正文的 PDF 版
+       （成品油调价那条）、同页其他附件的副本（招标文件那条），甚至是**空包**。
+       原件照旧下载留存（`error` 写明"原件保留"）、详情页也照旧标注它未展开，
+       所以这不是"假装拿到"，只是不把它记进缺口而让人白跑一趟。
+
+    下载就没成功的（无 sha256）归 `attachments_failed`，这里不重复计。
+    `siblings` 仅作调用方留白，当前判据不依赖同条目其他附件。
+    """
+    if (att.get('parsed_text') or '').strip():
+        return False
+    if not (att.get('sha256') or '').strip():
+        return False
+    return not is_pack(att)
+
+
+def count_attachment_gaps(attachments) -> int:
+    return sum(1 for a in attachments if is_attachment_gap(a, attachments))
+
+
+def count_attachment_failures(attachments) -> int:
+    return sum(1 for a in attachments
+               if a.get('parse_status') != 'ok' and not (a.get('sha256') or '').strip())

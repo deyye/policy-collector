@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-14T15:56:31.267721+00:00",
+  "checked_at": "2026-09-15T03:05:06.069216+00:00",
   "pages_limit": 1,
   "details_limit": 1,
   "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率。含归属检查：聚合型栏目与中央文件转载子栏目会被判不通过（实测：福建 /zwgk/fgzd/ 下 gjfgwwj 会把国家发改委文件的归属错记成福建）",
@@ -1216,12 +1216,12 @@
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -1236,7 +1236,7 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
             "page_date": "2026-09-14",
             "doc_date": "2026-09-14",
@@ -1245,7 +1245,7 @@
           "body_chars": 782,
           "parse_error": "",
           "attachments": [],
-          "error": ""
+          "error": "命中事务性关键词「公示」，属事务公告而非政策正文，不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -1825,12 +1825,12 @@
             "discovered": 0,
             "downloaded": 1,
             "parsed": 1,
-            "ingested": 1,
+            "ingested": 0,
             "updated": 0,
             "duplicates": 0,
             "failed": 0,
-            "need_review": 1,
-            "excluded": 0,
+            "need_review": 0,
+            "excluded": 1,
             "attachments_downloaded": 0,
             "attachments_failed": 0,
             "attachments_unparsed": 0,
@@ -1845,7 +1845,7 @@
             "output_tokens": 0,
             "elapsed_seconds": 0
           },
-          "fetch_status": "processed",
+          "fetch_status": "excluded",
           "metadata": {
             "page_date": "2026-09-14",
             "doc_date": "2026-09-14",
@@ -1854,7 +1854,7 @@
           "body_chars": 921,
           "parse_error": "",
           "attachments": [],
-          "error": ""
+          "error": "命中事务性关键词「公示」，属事务公告而非政策正文，不收录"
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
@@ -2107,6 +2107,141 @@
           "parse_error": "",
           "attachments": [],
           "error": "未命中任何投资项目相关表述（文件类型：其他），不收录"
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "hubei_zcwj",
+      "region": "湖北",
+      "column": "其他主动公开文件",
+      "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/",
+      "discovered": 1219,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {
+        "tz": 894,
+        "gg": 325
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/zcwj/gg/202609/t20260911_6011956.shtml",
+          "title": "2026年9月11日24时起 湖北成品油价格调整",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-11",
+            "wenhao": ""
+          },
+          "body_chars": 491,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "6011956.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/6011956.zip?fileName=2026年9月11日24时起 湖北成品油价格调整&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "hubei_gfwj",
+      "region": "湖北",
+      "column": "规范性文件",
+      "url": "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/",
+      "discovered": 27,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {
+        "wj": 27
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 1,
+      "samples": [
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202607/t20260723_5981984.shtml",
+          "title": "省发改委 省财政厅 省农业农村厅 省供销社关于印发《湖北省省级农资商业储备管理办法》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-23",
+            "doc_date": "2026-07-14",
+            "wenhao": "鄂发改规〔2026〕2号"
+          },
+          "body_chars": 3890,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "5981984.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/5981984.zip?fileName=省发改委 省财政厅 省农业农村厅 省供销社关于印发《湖北省省级农资商业储备管理办法》的通知&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            }
+          ],
+          "error": ""
         }
       ],
       "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",

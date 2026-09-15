@@ -80,6 +80,8 @@ class FetchConfig:
     max_page_bytes: int = 20 * 1024 * 1024
     verify_ssl: bool = True
     request_interval_seconds: float = 0.5
+    # 动态防护（瑞数等）握手 cookie 的有效期。过期表现为重新 412，届时自动再握一次。
+    handshake_ttl_seconds: int = 1200
 
 
 @dataclass
@@ -186,3 +188,6 @@ class SourceConfig:
     list_format: str = "html"  # html / gov_json / zj_unit / jpage / jx_query
     feed_url: str = ""
     detail_url_pattern: str = ""
+    # 该站有动态防护（瑞数等）时，填握手入口 URL（通常就是站点首页）。
+    # 采集前会用真实浏览器过一次挑战换 cookie，之后列表/详情走纯 HTTP。
+    handshake: str = ""

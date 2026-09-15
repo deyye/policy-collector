@@ -1,0 +1,275 @@
+{
+  "checked_at": "2026-09-15T03:04:11.591508+00:00",
+  "pages_limit": 1,
+  "details_limit": 2,
+  "scope": "指定栏目的抽样接入验收；非全省政策覆盖率，非业务分类准确率。含归属检查：聚合型栏目与中央文件转载子栏目会被判不通过（实测：福建 /zwgk/fgzd/ 下 gjfgwwj 会把国家发改委文件的归属错记成福建）",
+  "results": [
+    {
+      "source": "hubei_zcwj",
+      "region": "湖北",
+      "column": "其他主动公开文件",
+      "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/",
+      "discovered": 1219,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {
+        "tz": 894,
+        "gg": 325
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 2,
+      "samples": [
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/zcwj/gg/202609/t20260911_6011956.shtml",
+          "title": "2026年9月11日24时起 湖北成品油价格调整",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-11",
+            "doc_date": "2026-09-11",
+            "wenhao": ""
+          },
+          "body_chars": 491,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "6011956.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/6011956.zip?fileName=2026年9月11日24时起 湖北成品油价格调整&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/zcwj/tz/202609/t20260902_6006475.shtml",
+          "title": "关于印发湖北省工程建设项目通用施工和铁路工程招标文件示范文本的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 5,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-09-02",
+            "doc_date": "2026-08-25",
+            "wenhao": "鄂发改公管〔2026〕234号"
+          },
+          "body_chars": 393,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "6006475.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/6006475.zip?fileName=关于印发湖北省工程建设项目通用施工和铁路工程招标文件示范文本的通知&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            },
+            {
+              "name": "湖北省工程建设项目通用施工招标文件示范文本（2022年电子化第二版修订）.wps",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/tz/202609/P020260903385479705260.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            },
+            {
+              "name": "湖北省铁路建设项目勘察设计招标文件示范文本（2018年电子化第一版修订）",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/tz/202609/P020260903385489759030.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            },
+            {
+              "name": "湖北省铁路工程施工招标文件示范文本（2024年电子化第四版修订）.wps",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/tz/202609/P020260903385493757964.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            },
+            {
+              "name": "湖北省铁路工程监理招标文件示范文本（2024年电子化第三版修订）.wps",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/tz/202609/P020260903385503425527.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    },
+    {
+      "source": "hubei_gfwj",
+      "region": "湖北",
+      "column": "规范性文件",
+      "url": "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/",
+      "discovered": 27,
+      "discovery": {
+        "pages_fetched": 0,
+        "end_reached": false,
+        "stop_reason": "page_limit"
+      },
+      "sub_columns": {
+        "wj": 27
+      },
+      "national_reposts": [],
+      "errors": [],
+      "sample_count": 2,
+      "samples": [
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202607/t20260723_5981984.shtml",
+          "title": "省发改委 省财政厅 省农业农村厅 省供销社关于印发《湖北省省级农资商业储备管理办法》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 1,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-07-23",
+            "doc_date": "2026-07-14",
+            "wenhao": "鄂发改规〔2026〕2号"
+          },
+          "body_chars": 3890,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "5981984.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/5981984.zip?fileName=省发改委 省财政厅 省农业农村厅 省供销社关于印发《湖北省省级农资商业储备管理办法》的通知&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            }
+          ],
+          "error": ""
+        },
+        {
+          "url": "http://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202606/t20260615_5958005.shtml",
+          "title": "省发改委关于印发 《湖北省服务业“专精特新”和“单项冠军” 企业认定管理办法（试行）》的通知",
+          "stats": {
+            "discovered": 0,
+            "downloaded": 1,
+            "parsed": 1,
+            "ingested": 1,
+            "updated": 0,
+            "duplicates": 0,
+            "failed": 0,
+            "need_review": 0,
+            "excluded": 0,
+            "attachments_downloaded": 4,
+            "attachments_failed": 0,
+            "attachments_unparsed": 0,
+            "documents_incomplete": 0,
+            "llm_classified": 0,
+            "rule_classified": 1,
+            "llm_fallback": 0,
+            "reclassified": 0,
+            "reparsed": 0,
+            "attachments_cached": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "elapsed_seconds": 0
+          },
+          "fetch_status": "processed",
+          "metadata": {
+            "page_date": "2026-06-15",
+            "doc_date": "2026-06-10",
+            "wenhao": "鄂发改规〔2026〕1号"
+          },
+          "body_chars": 4234,
+          "parse_error": "",
+          "attachments": [
+            {
+              "name": "5958005.zip",
+              "url": "https://fgw.hubei.gov.cn/pdfconvert/download/5958005.zip?fileName=省发改委关于印发 《湖北省服务业“专精特新”和“单项冠军” 企业认定管理办法（试行）》的通知&template=zcwj",
+              "parse_status": "unsupported",
+              "error": "暂不支持zip正文解析，原件保留"
+            },
+            {
+              "name": "湖北省服务业“专精特新”和“单项冠军”企业申报书",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202606/P020260615551900028995.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            },
+            {
+              "name": "湖北省服务业“专精特新”和“单项冠军”企业年度经营情况报告表",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202606/P020260615551902972861.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            },
+            {
+              "name": "湖北省服务业“专精特新”和“单项冠军”企业复核申报表",
+              "url": "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/wj/202606/P020260615551904993346.wps",
+              "parse_status": "partial",
+              "error": "经 textutil 转换（原格式 wps），需人工核对转换完整性"
+            }
+          ],
+          "error": ""
+        }
+      ],
+      "classification_validation": "规则模式仅验证流程，未验证真实大模型准确率",
+      "accepted_sample": true
+    }
+  ]
+}

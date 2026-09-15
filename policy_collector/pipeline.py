@@ -98,6 +98,11 @@ class Pipeline:
         links=[];seen_pages=set();seen_links=set();next_url=''
         self.collector.discovery_status[source.name] = {
             'pages_fetched': 0, 'end_reached': False, 'stop_reason': 'page_limit'}
+        # 该站有动态防护（瑞数等）时先过一次挑战换 cookie——**每个来源只做一次**，
+        # 之后列表页与详情页都走纯 HTTP。握手失败不在这里判死，让正常抓取路径
+        # 去暴露真实错误，免得把"握手没成功"笼统报成"站点不可达"。
+        if source.handshake:
+            self.collector.ensure_handshake(source.handshake)
         for page in range(1,source.max_pages+1):
             url=source.feed_url if source.list_format=='gov_json' else (next_url or list_page_url(source,page))
             if url in seen_pages:
@@ -129,6 +134,11 @@ class Pipeline:
                     from .collector import discover_jx_query_links
                     found = discover_jx_query_links(self.collector, source, raw, base,
                                                     max_pages=source.max_pages)
+                elif source.list_format == 'browser':
+                    # 条目由 JS 异步填充，HTTP 原文里没有它们
+                    # （湖北 zcwj 栏目：HTTP 只 1 条，浏览器渲染后 1833 条）
+                    from .collector import discover_browser_links
+                    found = discover_browser_links(self.collector, source, url)
                 elif custom:
                     from bs4 import BeautifulSoup
                     found=custom(BeautifulSoup(raw,'lxml'),source)
@@ -141,7 +151,7 @@ class Pipeline:
                     raise ValueError('列表页完全重复，未确认历史采完')
                 seen_links.update(item.url for item in fresh)
                 links.extend(fresh)
-                if source.list_format in ('zj_unit', 'jpage', 'jx_query'):
+                if source.list_format in ('zj_unit', 'jpage', 'jx_query', 'browser'):
                     break
                 status = self.collector.discovery_status[source.name]
                 status['pages_fetched'] += 1
@@ -220,16 +230,15 @@ class Pipeline:
                 att['error']=parsed.parse_error
                 att['parse_status']='partial' if parsed.content and parsed.parse_error else (
                     'ok' if parsed.content else 'unsupported' if fmt not in ('pdf','docx','txt','ofd','doc','wps') else 'needs_ocr')
-                # 计数只应统计"没拿到可用正文"的附件。parse_status='partial' 表示已出文本、
-                # 仅是转换过程留有提示（如 textutil 转换可能失真）——把它算成"未解析"，会让
-                # 广东/宁夏这类附件其实已可判读的站点在接入验收里被判为未通过。
-                if att['parse_status']!='ok' and not (att.get('parsed_text') or '').strip():
-                    stats.attachments_unparsed+=1
+                # 这里**不累加** attachments_unparsed：打包件算不算缺口，取决于同条目其他附件
+                # 有没有给出正文，必须等全部附件处理完才能判定（统一计算见 _ingest_url）。
             except Exception as e:
                 att['error']=str(e)[:500]
-                if att.get('sha256') and not (att.get('parsed_text') or '').strip():
-                    stats.attachments_unparsed+=1
-                else:stats.attachments_failed+=1
+                # 下载成功但**解析抛异常**（如 zip 交给解析器直接报错）：算不算"材料缺口"
+                # 留给统一计算处判定——打包件的豁免要看同条目其他附件有没有给出正文，
+                # 在这里判断会漏掉那层豁免（湖北每篇的 <id>.zip 正是走这条路径）。
+                if not att.get('sha256'):
+                    stats.attachments_failed+=1
 
     def ingest_url(self,source,url,raw=None,prefer='llm',reclassify=False):
         from .collector import allowed_url
@@ -271,13 +280,19 @@ class Pipeline:
                 raise ValueError(doc.parse_error or '正文解析为空')
             if not doc.title:doc.title=(existing or {}).get('title','') or '待核实标题'
             self._attachments(source,doc,stats,reuse_cached,local_only)
+            # 附件缺口必须**在全部附件处理完之后**统一算：打包件的豁免依赖"同条目其他附件
+            # 已给出正文"，边处理边累加会因顺序不同得出不同结果——zip 恰好排在 wps 前面时，
+            # 判它的时候后面的正文还没解析出来，于是"材料齐了"被误报成"有缺口"。
+            from .quality import count_attachment_gaps
+            stats.attachments_unparsed = count_attachment_gaps(doc.attachments)
             self.db.record_attachment_attempts(fid,doc.attachments)
             def repair(urls):
                 retry_stats=RunStats()
                 self._attachments(source,doc,retry_stats,only_urls=urls)
                 stats.attachments_downloaded += retry_stats.attachments_downloaded
-                stats.attachments_failed = sum(a.get('parse_status')!='ok' and not a.get('sha256') for a in doc.attachments)
-                stats.attachments_unparsed = sum(a.get('parse_status')!='ok' and bool(a.get('sha256')) for a in doc.attachments)
+                from .quality import count_attachment_failures, count_attachment_gaps
+                stats.attachments_failed = count_attachment_failures(doc.attachments)
+                stats.attachments_unparsed = count_attachment_gaps(doc.attachments)
                 self.db.record_attachment_attempts(fid,[a for a in doc.attachments if a['url'] in urls])
             if not local_only:
                 self.agent.classifier=self.classifier

@@ -105,9 +105,91 @@ class Collector:
         self.session.headers["User-Agent"] = cfg.fetch.user_agent
         self._last_request = 0.0
         self.discovery_status = {}
+        # 动态防护（瑞数等）的握手结果：host -> {"cookies": {...}, "at": 单调时钟}
+        self._handshakes: dict[str, dict] = {}
+        self._handshake_entry: dict[str, str] = {}
+        # 便于测试替换浏览器实现，默认用 browser_session.browser_cookies
+        self.handshake_fn = None
 
     def close(self):
         self.session.close()
+
+    # ---------- 动态防护（瑞数等）握手 ----------
+    def ensure_handshake(self, entry_url: str, force: bool = False) -> bool:
+        """过掉目标站的动态防护，把 cookie 装进 session；返回是否拿到。
+
+        湖北 `fgw.hubei.gov.cn` 这类站对每个请求都返回 412，且伪造完整浏览器头、
+        换 UA、手动三跳握手都无效——判定点在 TLS 指纹层。只有真实浏览器拿得到 cookie。
+        所以这里**只开一次浏览器**，之后列表页与详情页都走纯 HTTP，
+        而不是每页都开一次 Chrome。
+        """
+        host = urllib.parse.urlsplit(entry_url).hostname or ""
+        if not host:
+            return False
+        self._handshake_entry[host] = entry_url
+        cached = self._handshakes.get(host)
+        ttl = getattr(self.cfg.fetch, "handshake_ttl_seconds", 1200)
+        if cached and not force and (time.monotonic() - cached["at"]) < ttl:
+            self._apply_cookies(host, cached["cookies"])
+            return True
+        fn = self.handshake_fn
+        if fn is None:
+            from .browser_session import browser_cookies
+            fn = browser_cookies
+        cookies = fn(entry_url) or {}
+        if not cookies:
+            return False
+        self._handshakes[host] = {"cookies": cookies, "at": time.monotonic()}
+        self._apply_cookies(host, cookies)
+        return True
+
+    def _apply_cookies(self, host: str, cookies: dict) -> None:
+        """只把 cookie 挂到该 host 上。
+
+        不能写成 `jar.set(k, v)`：那样建出的是**无域** cookie，会被发往所有站点——
+        不但可能被目标站判为异常，也等于把 A 站的会话凭据送给 B 站。
+        """
+        jar = self.session.cookies
+        try:
+            jar.clear(domain=host)
+        except KeyError:
+            pass
+        for k, v in cookies.items():
+            jar.set(k, v, domain=host, path="/")
+
+    def _https_if_required(self, url: str) -> str:
+        """已握手的站若走 https，就把同源 http 链接升级过去。
+
+        湖北列表页里的 href 写死 `http://fgw.hubei.gov.cn/...`，而该站只在 https 上放行：
+        同一个 URL 换成 https 是 200（93KB），保持 http 就是 400。
+        不升级的表现很隐蔽——**列表能发现 1219 条，详情却一条也抓不回来**。
+        只在"握手入口本身就是 https"时升级，避免把仅有 http 的站改坏。
+        """
+        parts = urllib.parse.urlsplit(url)
+        if parts.scheme != "http" or parts.hostname not in self._handshakes:
+            return url
+        entry = self._handshake_entry.get(parts.hostname) or ""
+        if urllib.parse.urlsplit(entry).scheme != "https":
+            return url
+        return urllib.parse.urlunsplit(
+            ("https", parts.netloc, parts.path, parts.query, parts.fragment))
+
+    def adopt_cookies(self, entry_url: str, cookies: dict) -> None:
+        """接收一次**已经发生过**的握手结果。
+
+        列表页本身要浏览器渲染时，同一次会话已经过了防护，cookie 顺手带回来即可，
+        不必为了详情页再开一次浏览器。
+        """
+        host = urllib.parse.urlsplit(entry_url).hostname or ""
+        if not host or not cookies:
+            return
+        self._handshake_entry[host] = entry_url
+        self._handshakes[host] = {"cookies": cookies, "at": time.monotonic()}
+        self._apply_cookies(host, cookies)
+
+    @property
+    def handshaked_hosts(self) -> list:
+        return sorted(self._handshakes)
 
     def fetch(self, url: str, timeout: Optional[int] = None, params: Optional[dict] = None,
               form: Optional[dict] = None) -> FetchResult:
@@ -115,6 +197,8 @@ class Collector:
         POST 接口后面（如江西 CMS 的 /queryList），GET 会 404。"""
         if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
             return FetchResult(ok=False, url=url, error="仅允许 HTTP/HTTPS 下载")
+        target = self._https_if_required(url)
+        host = urllib.parse.urlsplit(target).hostname or ""
         last_err = ""
         for attempt in range(self.cfg.fetch.retries + 1):
             wait = self.cfg.fetch.request_interval_seconds - (time.monotonic() - self._last_request)
@@ -124,10 +208,16 @@ class Collector:
             try:
                 send = self.session.post if form else self.session.get
                 kwargs = {"data": form} if form else {"params": params}
-                with send(url, timeout=timeout or self.cfg.fetch.timeout_seconds,
+                with send(target, timeout=timeout or self.cfg.fetch.timeout_seconds,
                           verify=self.cfg.fetch.verify_ssl, stream=True, **kwargs) as resp:
+                    # 412 = 动态防护挑战，多半是握手 cookie 过期了：重握一次再试。
+                    # 只在本轮**第一次**尝试时刷新，免得把"站点真的不可达"变成无限重试。
+                    if (resp.status_code == 412 and attempt == 0
+                            and host in self._handshake_entry
+                            and self.ensure_handshake(self._handshake_entry[host], force=True)):
+                        continue
                     # Authentication / blocking / missing pages require source maintenance, not aggressive retries.
-                    if resp.status_code in (401, 403, 404):
+                    if resp.status_code in (401, 403, 404, 412):
                         return FetchResult(ok=False, url=url, error=f"HTTP {resp.status_code}")
                     resp.raise_for_status()
                     chunks, size = [], 0
@@ -403,6 +493,31 @@ def discover_jx_query_links(collector: Collector, src: SourceConfig, page_raw: b
         if not fresh:
             raise DiscoveryError(f"queryList 第{page_no}页无新增（过滤规则或接口结构变化）", links)
     return links
+
+
+def discover_browser_links(collector: Collector, src: SourceConfig, page_url: str,
+                           include: Optional[list] = None) -> list:
+    """列表数据由 JS 异步加载时，用真实浏览器渲染后取条目。
+
+    顺带把这次会话的 cookie 交给 collector：同一站多半也挂了动态防护，
+    详情页随后就能走纯 HTTP（实测湖北正是如此——**列表要渲染，详情只要 cookie**）。
+    """
+    from .browser_session import browser_list_and_cookies
+    entry = src.handshake or page_url
+    keys = include if include is not None else (src.include or None)
+    cookies, raw = browser_list_and_cookies(entry, page_url, include=keys)
+    if cookies:
+        collector.adopt_cookies(entry, cookies)
+    out, seen = [], set()
+    for href, title in raw:
+        if not href or href.startswith("javascript"):
+            continue
+        url = href.split("#")[0]
+        if url in seen:
+            continue
+        seen.add(url)
+        out.append(CandidateLink(url=url, title=(title or "").strip()))
+    return out
 
 
 def next_page_link(raw: bytes, page_url: str) -> str:

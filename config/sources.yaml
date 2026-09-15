@@ -481,6 +481,37 @@ sources:
     max_pages: 2
     note: "必须用 http（https 需 legacy renegotiation，直接 SSLError）。列表走 POST /queryList。"
 
+  - name: hubei_zcwj
+    site: 湖北省发展和改革委员会
+    region: 湖北
+    category: 其他主动公开文件
+    enabled: true
+    # 该站是**瑞数动态防护**：每个请求都返回 412，伪造 header / 换 UA / 手动三跳握手
+    # 全部无效（判定点在 TLS 指纹层）。但真实浏览器能过 —— 所以先过一次挑战换 cookie。
+    handshake: "https://fgw.hubei.gov.cn/"
+    list_url: "https://fgw.hubei.gov.cn/fbjd/zc/zcwj/"
+    # 条目由 JS 异步填充：HTTP 原文里只有 1 条，浏览器渲染后是 1833 条
+    list_format: browser
+    include: ["/fbjd/zc/zcwj/tz/", "/fbjd/zc/zcwj/gg/"]   # 通知、公告
+    exclude: [".pdf", ".doc", ".docx", ".ofd", ".xls"]
+    max_pages: 1
+    pagination: single
+    note: "防护站：列表要浏览器渲染，详情走握手 cookie。只收 tz/gg 子栏目（gs 人事公示、zcjd 解读不收）。"
+
+  - name: hubei_gfwj
+    site: 湖北省发展和改革委员会
+    region: 湖北
+    category: 规范性文件
+    enabled: true
+    handshake: "https://fgw.hubei.gov.cn/"
+    list_url: "https://fgw.hubei.gov.cn/fbjd/zc/gfwj/"
+    list_format: browser
+    include: ["/fbjd/zc/gfwj/wj/", "/fbjd/zc/gfwj/gf/"]   # 文件、规范性文件
+    exclude: [".pdf", ".doc", ".docx", ".ofd", ".xls"]
+    max_pages: 1
+    pagination: single
+    note: "同 hb_zcwj，另一栏目；gfxwj（清理结果公告）与 zcjd（解读）不收。"
+
   - name: demo_local
     site: 本地样例（合成数据）
     region: 样例
